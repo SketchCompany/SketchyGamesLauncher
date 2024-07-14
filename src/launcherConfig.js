@@ -93,7 +93,6 @@ async function setup(){
             actionAfterGameStarted: 1
         })))
         if(!func.exists(updatesFile)) await func.write(updatesFile, JSON.stringify({
-            version: "",
             updates: []
         }, null, 3))
 
