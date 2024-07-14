@@ -1,0 +1,67 @@
+{
+  "name": "sketchy-games-launcher",
+  "productName": "Sketchy Games Launcher",
+  "bugs": {
+    "url": "https://github.com/SketchCompany/SketchyGamesLauncher/issues",
+    "email": "sketch-company@web.de"
+  },
+  "version": "0.0.1",
+  "homepage": "https://github.com/SketchCompany/SketchyGamesLauncher",
+  "repository": {
+    "url": "https://github.com/SketchCompany/SketchyGamesLauncher",
+    "type": "github"
+  },
+  "description": "The official Sketchy Games Launcher of the Sketch Company.",
+  "main": "src/index.js",
+  "icon": "src/frontend/res/img/icon.png",
+  "scripts": {
+    "test": "nodemon --trace-warnings ./src/launcher.js",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.3.0",
+    "@electron-forge/maker-deb": "^7.3.0",
+    "@electron-forge/maker-rpm": "^7.3.0",
+    "@electron-forge/maker-squirrel": "^7.3.0",
+    "@electron-forge/maker-zip": "^7.3.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.3.0",
+    "@electron-forge/plugin-fuses": "^7.3.0",
+    "@electron-forge/publisher-github": "^7.4.0",
+    "@electron/fuses": "^1.7.0",
+    "electron": "29.1.1",
+    "nodemon": "^3.1.0"
+  },
+  "keywords": [
+    "application",
+    "software",
+    "launcher",
+    "sketchy",
+    "games",
+    "sketch",
+    "company"
+  ],
+  "author": {
+    "name": "Sketch Company",
+    "email": "sketch-company@web.de",
+    "url": "https://sketchy-games.sketch-company.de"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cheerio": "^1.0.0-rc.12",
+    "create-desktop-shortcuts": "^1.11.0",
+    "dotenv": "^16.4.5",
+    "electron-squirrel-startup": "^1.0.0",
+    "express": "^4.18.3",
+    "fs": "^0.0.1-security",
+    "nodemailer": "^6.9.12",
+    "nodemailer-smtp-transport": "^2.7.4",
+    "path": "^0.12.7",
+    "unzipper": "^0.12.1",
+    "update-electron-app": "^3.0.0"
+  }
+}

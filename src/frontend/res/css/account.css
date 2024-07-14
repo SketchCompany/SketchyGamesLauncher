@@ -1,0 +1,31 @@
+.accountSettings{
+    display: flex;
+    gap: 75px;
+    justify-content: space-between;
+}
+.accountSettings .block{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 50%;
+    animation: fadeinbottom 1s;
+}
+.accountSettings .block .crow{
+    display: flex;
+    justify-content: space-between;
+    gap: 50px;
+    align-items: center;
+}
+.accountSettings .block #logout{
+    animation: fadeinbottom 1s;
+    width: 100%;
+}
+.accountSettings .block .crow p{
+    margin: 0;
+}
+.accountSettings .block .crow input{
+    width: 300px;
+}
+.accountSettings .block .crow .input-viewable input{
+    width: 250px;
+}

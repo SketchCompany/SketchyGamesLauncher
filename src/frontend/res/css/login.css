@@ -1,0 +1,58 @@
+body{
+    background-image:url("/res?f=img/icon-white.png");
+    background-color: rgba(30,30,30);
+    background-size: 15%;
+    background-position-y: -40px;
+    background-position-x: -45px;
+    animation: moving 360s infinite;
+    animation-direction: alternate;
+    animation-timing-function: linear;
+    -webkit-app-region: drag;
+    overflow-y: auto;
+}
+@keyframes moving {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+padding{
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+.dialog .background{
+    backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.75);
+}
+.loginField{
+    display: flex;
+    align-items: center;
+    width: 500px;
+    flex-direction: column;
+    gap: 25px;
+    height: 500px;
+    -webkit-app-region:no-drag;
+}
+.loginField .crow{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+.loginField uh1, .loginField p{
+    text-align: center;
+    margin-bottom: 0;
+}
+.loginField button{
+    width: 100%;
+}
+.loginField a{
+    font-size: 14px;
+    text-align: center;
+}
+.loginField .crow p{
+    margin: 0;
+}

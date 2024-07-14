@@ -1,0 +1,146 @@
+.hero{
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.popular *{
+    pointer-events: none;
+}
+.popular{
+    position: relative;
+}
+.popular:hover{
+    cursor: pointer;
+}
+.popular img{
+    height: 750px;
+    object-fit: cover;
+    transition: 200ms opacity ease-in-out;
+    transition-delay: 200ms;
+}
+.popular .content{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 20px 35px 50px;
+    /* background-color: rgba(0,0,0, 0.8); */
+    background-image: linear-gradient(1deg, rgba(0,0,0, 0.8) 50%, transparent);
+    width: 100%;
+    max-height: 200px;
+    overflow-y: hidden;
+    border-radius: 6px;
+}
+.popular .content p{
+    max-width: 750px;
+}
+.navigation{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid var(--darkgray);
+    border-width: 0 0 0 1px;
+    padding: 0 0 0 25px;
+    width: 350px;
+}
+.navigation a{
+    padding: 35px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--b0);
+    background-color: var(--b0);
+    transition: all 100ms;
+    text-align: center;
+    font-size: 20px;
+}
+.navigation a:hover{
+    border-color: var(--darkgray);
+    background-color: var(--b1);
+    transform: scale(1.04);
+    text-decoration: none;
+    color: var(--f0);
+}
+.populars{
+    width: 100%;
+    height: fit-content;
+}
+.popularsHolder{
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    height: fit-content;
+    animation: fadeinbottom 1s;
+}
+.popularsHolder button{
+    width: 50px;
+    padding: 5px;
+    font-size: 30px;
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+.popularsHolder button:hover{
+    background-color: var(--b2);
+    color: var(--gray);
+    border: 1px solid var(--darkgray);
+}
+@media (max-width: 1500px){
+    .hero{
+        flex-direction: column;
+    }
+    .navigation{
+        border: 1px solid transparent;
+        width: 100%;
+        padding: 0 50px;
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+    .navigation a{
+        padding: 15px;
+        width: 49%;
+    }
+}
+.space{
+    padding: 75px;
+}
+.categorie{
+    display: flex;
+    flex-direction: column;
+}
+.categorieElement{
+    width: 500px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid transparent;
+    padding: 20px;
+    transition: all 100ms;
+    flex: 0 0 500px;
+    animation: fadeinbottom 1s;
+}
+.categorieElement img:not([src=""]){
+    object-fit: cover;
+    height: 250px;
+}
+.categorieElement:hover{
+    border: 1px solid var(--darkgray);
+    background-color: var(--b2);
+    cursor: pointer;
+    transform: scale(1.025);
+}
+.categorieElement p, .categorieElement h3{
+    margin: 0;
+}
+.categorieHolder::-webkit-scrollbar, .categorieHolder::-webkit-scrollbar-track, .categorieHolder::-webkit-scrollbar-thumb{
+    height: 10px;
+}
+.categorieHolder{
+    padding: 25px 30px;
+    overflow-x: auto;
+    mask-image: linear-gradient(to right, transparent 0%, black 30px, black calc(100% - 30px), transparent 100%);
+    height: fit-content;
+    display: flex;
+    gap: 10px;
+}

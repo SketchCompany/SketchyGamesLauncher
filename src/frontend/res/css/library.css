@@ -1,0 +1,51 @@
+.games, .softwares, .searchResults{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 50px;
+}
+.game, .software{
+    width: 525px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 30px 35px;
+    background-color: var(--b0);
+    border-radius: 12px;
+    border: 1px solid var(--b0);
+    transition: all 150ms;
+    box-shadow: 2px 4px 4px var(--bx0);
+    overflow-y: hidden;
+    animation: fadeinbottom 1s;
+}
+.game .cpanel, .software .cpanel{
+    max-height: 250px;
+    overflow-y: auto;
+}
+.game *:not(div, .caccordion), .software *:not(div, .caccordion){
+    pointer-events: none;
+}
+.game p, .software p{
+    font-size: 14px;
+}
+.game h3, .game p, .software h3, .software p{
+    margin: 0;
+}
+.game:hover, .software:hover{
+    background-color: var(--b1);
+    border-color: var(--darkgray);
+    cursor: pointer;
+    transform: scale(1.015);
+    overflow-y: auto;
+}
+.filter{
+    display: flex;
+    gap: 5px
+}
+.filter button{
+    min-width: 100px;
+}
+.searchbar{
+    width: 250px;
+}
