@@ -3,6 +3,7 @@ const path = require("path")
 const crypto = require("crypto")
 const electron = require('electron')
 const createDesktopShortcut = require('create-desktop-shortcuts');
+require("dotenv").config()
 
 
 async function createShortcut(name, filePath, icon){
@@ -222,7 +223,7 @@ function send(url, data){
     })
 }
 const algorithm = "aes-256-ctr"
-const key = crypto.createHash('sha256').update("SketchyGamesLauncherEncryptionKey").digest("hex")
+const key = crypto.createHash('sha256').update(process.env.ENCRYPTION_KEY).digest("hex")
 /**
  * used to encrypt ```data``` and return the result
  * @param {string | number | boolean | JSON} data the data that should be encrypted

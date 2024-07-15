@@ -43,7 +43,7 @@ const createWindow = async () => {
   require("update-electron-app").updateElectronApp()
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  !app.isPackaged ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")
 }
 
 // This method will be called when Electron has finished
