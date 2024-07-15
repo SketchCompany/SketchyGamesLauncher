@@ -40,7 +40,7 @@ const createWindow = async () => {
   }
   else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")
 
-  //require("update-electron-app").updateElectronApp()
+  require("update-electron-app").updateElectronApp()
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools()

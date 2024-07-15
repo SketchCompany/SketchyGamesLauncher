@@ -13,7 +13,7 @@
   },
   "description": "The official Sketchy Games Launcher of the Sketch Company.",
   "main": "src/index.js",
-  "icon": "src/frontend/res/img/icon.png",
+  "icon": "app.ico",
   "scripts": {
     "test": "nodemon --trace-warnings ./src/launcher.js",
     "start": "electron-forge start",

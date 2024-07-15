@@ -5,7 +5,7 @@ require("dotenv").config()
 module.exports = {
   packagerConfig: {
     asar: true,
-    icon: "/src/frontend/res/img/icon128x128.ico"
+    icon: "app"
   },
   publishers: [
     {
@@ -26,7 +26,12 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        icon: "/src/frontend/res/img/icon128x128.ico"
+        authors: "Sketch Company",
+        description: "The official Sketchy Games Launcher of the Sketch Company.",
+        noMsi: "false",
+        icon: "app.ico",
+        title: "Sketchy Games Launcher",
+        setupIcon: "appSetup.ico"
       },
     },
     {

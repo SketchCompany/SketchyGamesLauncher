@@ -586,20 +586,6 @@ async function downloadImage(product){
         })
     })
 }
-// async function downloadIcon(product){
-//     console.log("downloadIcon: started for", product.resourcesUrl + "icon.ico")
-//     return new Promise(cb => {
-//         https.get(product.resourcesUrl + "icon.ico", (response) => {
-//             const writeStream = fs.createWriteStream(config.installs + product.name + "/" + config.iconFile)
-//             response.pipe(writeStream)
-//             writeStream.on("finish", function(){
-//                 writeStream.close()
-//                 console.log("downloadIcon: finished for", product.resourcesUrl + "icon.ico")
-//                 cb()
-//             })
-//         })
-//     })
-// }
 router.get("/download/cancel", async (req, res) => {
     try{
         console.log("download:", "canceled")

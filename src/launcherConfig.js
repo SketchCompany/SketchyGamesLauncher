@@ -45,10 +45,6 @@ const imgFile = "image.png"
  * ```updatesFile``` is the file name for the updates that should be done.
  */
 const updatesFile = data + "updates" + ext
-// /**
-//  * ```iconFile``` is the file name for the icon of the game for a shortcut.
-//  */
-// const iconFile = "icon.ico"
 /**
  * ```packageExt``` is the file extension for files that are downloaded from the server and contain the important application files.
  */
