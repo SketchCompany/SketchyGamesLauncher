@@ -26,6 +26,14 @@ $(document).ready(async function(){
         createCategorieElement(".softwares", element.name, element.description, element.img)
     }
     startLoop()
+    createCtxMenu(".popular", "popular-element", `
+        <button>View</button>
+        <button>Download</button>
+    `, elementClicked)
+    createCtxMenu(".categorieElement", "categorie-element", `
+        <button>View</button>
+        <button>Download</button>
+    `, elementClicked)
 })
 const time = 10 * 1000
 let lastChange = Date.now()
@@ -55,7 +63,7 @@ function createPopularElement(name, teaser, img){
     const description = $(document.createElement("p")).html(teaser)
     const headline = $(document.createElement("h1")).html(name)
     const contentDiv = $(document.createElement("div")).addClass("content").append(headline).append(description)
-    const div = $(document.createElement("div")).addClass("popular").append(cover).append(contentDiv).click(() => openSite("/store/" + name))
+    const div = $(document.createElement("div")).addClass("popular").append(cover).append(contentDiv).click(() => openSite("/store/" + name)).attr("name", name)
     return div
 }
 $("#popularsBtnLeft").click(function(){
@@ -96,6 +104,15 @@ function createCategorieElement(type, name, description, img){
     const imgElement = $(document.createElement("img")).attr("src", img).attr("alt", "")
     const h3 = $(document.createElement("h3")).html(name)
     const p = $(document.createElement("p")).html(description)
-    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).append(p).click(() => openSite("/store/" + name))
+    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).append(p).click(() => openSite("/store/" + name)).attr("name", name)
     $(type).append(div)
+}
+function elementClicked(i, element){
+    const name = $(element).attr("name")
+    if(i == 0){
+        openSite("/store/" + name)
+    }
+    else if(i == 1){
+        openSite("/store/" + name + "?download=true")
+    }
 }

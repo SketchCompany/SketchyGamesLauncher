@@ -74,6 +74,12 @@ button:hover{
     background-color: rgb(0,75,255);
     cursor: pointer;
 }
+button:disabled{
+    border-color: var(--gray);
+    background-color: var(--darkgray);
+    cursor: not-allowed;
+    color: var(--gray);
+}
 input[type="checkbox"]{
     width: 25px;
     height: 25px;
@@ -212,6 +218,12 @@ button.marked:hover{
     border-color: rgb(150, 100, 255);
     background-color: rgb(100,75,255);
     cursor: pointer;
+}
+button.marked:disabled{
+    border-color: var(--b3);
+    background-color: var(--darkgray);
+    cursor: not-allowed;
+    color: var(--gray);
 }
 a.marked{
     color: mediumspringgreen;

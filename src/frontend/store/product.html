@@ -37,16 +37,18 @@
                 <h1 id="name"></h1>
                 <p id="version"></p>
                 <p id="description"></p>
-                <button onclick="download()" class="download marked">Download</button>
+                <button id="downloadBtn" onclick="download()" class="download marked">Download</button>
                 <div class="space"></div>
-                <uh2>Patch Notes</uh2>
-                <p>Die letzten fünf neusten Patch Notes:</p>
-                <div class="patchNotes">
-    
-                </div>
-                <div>
-                    <button id="more"><i class="bi bi-plus"></i></button>
-                    <button id="less" onclick="lessPatchNotes()"><i class="bi bi-dash"></i></button>
+                <div class="patchNotesHolder">
+                    <uh2>Patch Notes</uh2>
+                    <p>Die letzten fünf neusten Patch Notes:</p>
+                    <div class="patchNotes">
+        
+                    </div>
+                    <div>
+                        <button id="more"><i class="bi bi-plus"></i></button>
+                        <button id="less" onclick="lessPatchNotes()"><i class="bi bi-dash"></i></button>
+                    </div>
                 </div>
             </div>
         </div>

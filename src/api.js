@@ -50,7 +50,9 @@ router.post("/settings", async (req, res) => {
 })
 router.get("/settings", async (req, res) => {
     try{
+        const version = require("../package.json").version
         const settings = JSON.parse(func.decrypt(await func.read(config.settingsFile)))
+        settings.version = version
         res.json({
             status: 1,
             data: settings
@@ -497,7 +499,7 @@ function download(){
         if(downloadQueue.length > 0 && !isDownloading){
             const currentDownload = downloadQueue[0]
             console.log("download:", "started download for", currentDownload.name)
-            https.get(currentDownload.downloadUrl, (response) => {
+            https.get(currentDownload.downloadUrl, {sessionTimeout: 0, timeout: 0}, (response) => {
                 isDownloading = true
                 currentDownloadResponse = response
                 const downloadPath = config.downloads + currentDownload.name + config.packageExt
@@ -632,14 +634,27 @@ router.get("/download/state", (req, res) => {
         })
     }
 })
+let lastProgress = 0
 router.get("/download/progress", (req, res) => {
     try{
-        res.json({
-            state: 1,
-            data: {
-                progress
-            }
-        })
+        if(lastProgress == 99 && progress == 0){
+            lastProgress = progress
+            res.json({
+                state: 1,
+                data: {
+                    progress: 100
+                }
+            })
+        }
+        else{
+            lastProgress = progress
+            res.json({
+                state: 1,
+                data: {
+                    progress
+                }
+            })
+        }
     }
     catch(err){
         res.json({

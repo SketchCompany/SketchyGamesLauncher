@@ -5,21 +5,21 @@
     justify-content: space-between;
     gap: 75px;
 }
-.imagesHolder{
+.product .imagesHolder{
     padding: 10px 25px;
     display: flex;
     justify-content: space-between;
     align-items: stretch;
     animation: fadein 1s;
 }
-.imagesHolder .images{
+.product .imagesHolder .images{
     height: 100%;
 }
-.imagesHolder .images img{
+.product .imagesHolder .images img{
     object-fit: cover;
     height: 100%;
 }
-.content{
+.product .content{
     padding: 10px 25px;
     display: flex;
     flex-direction: column;
@@ -27,22 +27,22 @@
     max-width: 1500px;
     animation: fadein 1s;
 }
-.space{
+.product .space{
     margin-top: 50px;
 }
-.download{
+.product .download{
     width: 100%;
     font-size: 20px;
     height: 50px;
 }
-.imagesHolder button{
+.product .imagesHolder button{
     width: 50px;
     padding: 5px;
     font-size: 30px;
     background-color: transparent;
     border: 1px solid transparent;
 }
-.imagesHolder button:hover{
+.product .imagesHolder button:hover{
     background-color: var(--b2);
     color: var(--gray);
     border: 1px solid var(--darkgray);

@@ -5,7 +5,6 @@ $(document).ready(async function(){
     const res = await get("https://api.sketch-company.de/store")
     for (let i = 0; i < res.games.length; i++) {
         const element = res.games[i];
-        console.log(element)
         if(element.name == productName){
             element.categorie = "games"
             setup(element)
@@ -14,7 +13,6 @@ $(document).ready(async function(){
     }
     for (let i = 0; i < res.softwares.length; i++) {
         const element = res.softwares[i];
-        console.log(element)
         if(element.name == productName){
             element.categorie = "softwares"
             setup(element)
@@ -25,6 +23,15 @@ $(document).ready(async function(){
 
 function setup(element){
     product = element
+
+    if(element.isTeaser){
+        $("#downloadBtn").attr("disabled", "").html("Unreleased")
+    }
+
+    if(new URL(location.href).searchParams.get("download") && !element.isTeaser){
+        download()
+    }
+
     for (let i = 1; i < element.images +1; i++) {
         const img = $(document.createElement("img")).attr("src", element.resourcesUrl + i + ".png").attr("alt", "")
         if(i != 1){
@@ -36,16 +43,19 @@ function setup(element){
     $("#name").html(product.name)
     $("#version").html(element.versionLevel + " " + element.version)
     $("#description").html(element.description)
-    for (let i = 0; i < 5; i++) {
-        const note = element.patchNotes[i];
-        if(!note) break
-        const accardion = $(document.createElement("div")).addClass("caccordion").html(note.version)
-        const accardionPanel = $(document.createElement("div")).addClass("cpanel").html(note.notes.replaceAll("\n", "<br>"))
-        $(".patchNotes").append(accardion).append(accardionPanel)
+    if(!element.isTeaser){
+        for (let i = 0; i < 5; i++) {
+            const note = element.patchNotes[i];
+            if(!note) break
+            const accardion = $(document.createElement("div")).addClass("caccordion").html(note.version)
+            const accardionPanel = $(document.createElement("div")).addClass("cpanel").html(note.notes.replaceAll("\n", "<br>"))
+            $(".patchNotes").append(accardion).append(accardionPanel)
+        }
+        $("#more").click(() => morePatchNotes(element))
+        setAccordions()
+        $(".patchNotes").children().first().click()
     }
-    $("#more").click(() => morePatchNotes(element))
-    setAccordions()
-    $(".patchNotes").children().first().click()
+    else $(".patchNotesHolder").remove()
 }
 
 function morePatchNotes(element){
@@ -100,7 +110,6 @@ $(".btnRight").click(function(){
         }
     }
 })
-
 async function download(){
     console.log("download started", product.downloadUrl)
     const patchNotes = getPatchNotes(product.patchNotes, 5)

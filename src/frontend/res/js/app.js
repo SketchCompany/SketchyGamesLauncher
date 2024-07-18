@@ -1,3 +1,4 @@
+// a list of blocked sites, that should not have the default layout
 const blocked = [
     "/login",
     "/signup",
@@ -5,15 +6,19 @@ const blocked = [
     "/loading"
 ]
 
+// check if the current site is on the blocked list
 function notValid(){
     if(blocked.includes(location.pathname)) return true
     else return false
 }
+
+// check if the current site is not on the blocked list
 function isValid(){
     if(blocked.includes(location.pathname)) return false
     else return true
 }
 
+// get the current site name
 var siteName
 if(location.pathname == "/"){
     siteName = "Start"
@@ -22,19 +27,7 @@ else{
     siteName = decodeURI(location.pathname.substring(location.pathname.lastIndexOf("/") + 1).replace("/", "")).substring(0, 1).toUpperCase() + decodeURI(location.pathname.substring(location.pathname.lastIndexOf("/") + 1).replace("/", "")).substring(1)
 }
 
-if(isValid()){
-    createCtxMenu("html", "default", `
-        <button onclick="history.back()">Zurück</button>
-        <button onclick="location.reload()">Neuladen</button>
-        <button onclick="openSite('/')">Start</button>
-        <button onclick="openSite('/library')">Library</button>
-        <button onclick="openSite('/store')">Store</button>
-        <button onclick="openSite('/downloads')">Downloads</button>
-        <button onclick="openSite('/account')">Account</button>
-        <button onclick="openSite('/settings')">Einstellungen</button>
-    `, () => {})
-}
-
+// handle context menus
 let clicked
 function createCtxMenu(name, id, elements, event, blocked){
     $("body").prepend(`
@@ -55,7 +48,6 @@ function createCtxMenu(name, id, elements, event, blocked){
         $(element).attr("listener", "true")
         $(element).click(() => {
             event(i, clicked)
-            console.log(clicked)
             $("#" + id + "-ctx-menu").css("display", "none")
         })
     })
@@ -80,6 +72,8 @@ function createCtxMenu(name, id, elements, event, blocked){
         clicked = e.target
     })
 }
+
+// update a context menu by its name and id
 function updateCtxMenu(name, id, blocked){
     $(name).on("contextmenu", function(e){
         e.preventDefault()
@@ -101,12 +95,57 @@ function updateCtxMenu(name, id, blocked){
         clicked = e.target
     })
 }
+
+// remove a created context menu by it's id
 function removeCtxMenu(id){
     $("#" + id + "-ctx-menu").remove()
 }
 
-// offcanvas
+// check if the current site is valid before creating the default layout
 if(isValid()){
+    // create the default header
+    $("body").prepend(`
+    <header>
+        <span class="left">
+            <span class="bi bi-list" onclick="toggleOffcanvas()"></span>
+            <span onclick="openSite('/')" class="title"><img src="/res?f=img/icon.png"><p>ketchy Games Launcher</p></span>
+        </span>
+    </header>`)
+    
+    // create the default breadcrumb bar 
+    $("padding").prepend(`
+        <div class="breadcrumb">
+            <ul>
+                <li><a href="/">Start</a></li>
+            </ul>
+        </div>
+    `)
+
+    // handle the breadcrumbs for the current site
+    const breadcrumb = $(".breadcrumb").children("ul")[0]
+    const paths = location.pathname.split("/")
+    var before = ""
+    var links = []
+    for (let i = 1; i < paths.length; i++) {
+        const element = paths[i];
+        var link = before + "/" + element + location.search
+        before = link
+        links.push(link)
+    }
+    for (let i = 1; i < paths.length; i++) {
+        const element = paths[i]
+        if(/\S/.test(element)){
+            var linkName = element.substring(0, 1).toUpperCase() + element.substring(1)
+            const a = document.createElement("a")
+            a.href = links[i -1]
+            a.innerHTML = decodeURI(linkName.toString())
+            const li = document.createElement("li")
+            li.appendChild(a)
+            breadcrumb.appendChild(li)
+        }
+    }
+
+    // create the offcanvas
     $("body").prepend(`
         <offcanvas id="offcanvas" style="display: none;">
         <span class="top">
@@ -133,55 +172,21 @@ if(isValid()){
         </div>
         </offcanvas>
     `)
-    
-    // header
-    $("body").prepend(`
-    <header>
-        <span class="left">
-            <span class="bi bi-list" onclick="toggleOffcanvas()"></span>
-            <span onclick="openSite('/')" class="title"><img src="/res?f=img/icon.png"><p>ketchy Games Launcher</p></span>
-        </span>
-    </header>`)
-    
-    // footer
-    $("body").append(`
-    <footer>
-    
-    </footer>
-    `)
-    
-    // breadcrumb
-    $("padding").prepend(`
-        <div class="breadcrumb">
-            <ul>
-                <li><a href="/">Start</a></li>
-            </ul>
-        </div>
-    `)
-    const breadcrumb = $(".breadcrumb").children("ul")[0]
-    const paths = location.pathname.split("/")
-    var before = ""
-    var links = []
-    for (let i = 1; i < paths.length; i++) {
-        const element = paths[i];
-        var link = before + "/" + element + location.search
-        before = link
-        links.push(link)
-    }
-    for (let i = 1; i < paths.length; i++) {
-        const element = paths[i]
-        if(/\S/.test(element)){
-            var linkName = element.substring(0, 1).toUpperCase() + element.substring(1)
-            const a = document.createElement("a")
-            a.href = links[i -1]
-            a.innerHTML = decodeURI(linkName.toString())
-            const li = document.createElement("li")
-            li.appendChild(a)
-            breadcrumb.appendChild(li)
-        }
-    }
+
+    // create default context menu
+    createCtxMenu("html", "default", `
+        <button onclick="history.back()">Zurück</button>
+        <button onclick="location.reload()">Neuladen</button>
+        <button onclick="openSite('/')">Start</button>
+        <button onclick="openSite('/library')">Library</button>
+        <button onclick="openSite('/store')">Store</button>
+        <button onclick="openSite('/downloads')">Downloads</button>
+        <button onclick="openSite('/account')">Account</button>
+        <button onclick="openSite('/settings')">Settings</button>
+    `, () => {})
 }
 
+// change background color of the header when the user scrolled more than 30px
 window.addEventListener("scroll", () => {
     if(window.scrollY > 30){
         $("header").addClass("header-scrolling")
@@ -191,11 +196,13 @@ window.addEventListener("scroll", () => {
     }
 })
 
+// handle the input fields that are used for codes with multiple single input fields
 const inputCodes = $(".input-code").map(function(){return this}).get()
 for (let i = 0; i < inputCodes.length; i++) {
     const element = $(inputCodes[i]);
     element.children().first().focus()
     element.children().map(function(){return this}).get().forEach((codeInput, index) => {
+        $(codeInput).attr("maxlength", "1")
         $(codeInput).keyup(function(e){
             if(e.key == "Backspace"){
                 const prev = $(codeInput).prev()
@@ -213,6 +220,7 @@ for (let i = 0; i < inputCodes.length; i++) {
     })
 }
 
+// disable spellcheck and autocomplete attributes for input fields
 const inputs = $("input").map(function(){return this}).get()
 for (let i = 0; i < inputs.length; i++) {
     const element = $(inputs[i]);
@@ -220,6 +228,7 @@ for (let i = 0; i < inputs.length; i++) {
     element.attr("autocomplete", "off")
 }
 
+// input fields with a clickable eye on the right side to view input of password input fields
 const inputViewables = $(".input-viewable").map(function(){return this}).get()
 for (let i = 0; i < inputViewables.length; i++) {
     const element = $(inputViewables[i]);
@@ -239,6 +248,7 @@ for (let i = 0; i < inputViewables.length; i++) {
     })
 }
 
+// set buttons in the offcanvas to be expandable when arrow on the side is clicked
 const expandables = $(".expandable").map(function(){return this}).get()
 for(let i = 0; i < expandables.length; i++){
     const element = expandables[i];
@@ -250,7 +260,6 @@ for(let i = 0; i < expandables.length; i++){
     })
     element.parentElement.addEventListener("click", () => {
         const link = element.parentElement.getAttribute("fhref")
-        console.log(link)
         const a = document.createElement("a")
         a.href = link
         a.click()
@@ -267,6 +276,8 @@ for(let i = 0; i < expandables.length; i++){
         }
     })
 }
+
+// togle offcanvas on or off
 function toggleOffcanvas(){
     if(notValid()) return
     if($("#offcanvas").css("display") == "block"){
@@ -278,6 +289,8 @@ function toggleOffcanvas(){
         disableScroll()
     }
 }
+
+// wait for an element to load before using it (no usages)
 function waitForElement(selector) {
     return new Promise(resolve => {
         if (document.querySelector(selector)) {
@@ -297,14 +310,20 @@ function waitForElement(selector) {
         });
     });
 }
+
+// disable scroll if another element is opened on top like the offcanvas
 function disableScroll(){
     document.body.classList.add("disabledInput")
 }
+
+// enable scroll if another element is close on top like the offcanvas
 function enableScroll(){
     if(document.body.classList.contains("disabledInput")){
         document.body.classList.remove("disabledInput")
     }
 }
+
+// open another site
 function openSite(href, target){
     const a = document.createElement("a")
     a.href = href
@@ -312,6 +331,8 @@ function openSite(href, target){
     a.click()
     a.remove()
 }
+
+// fetch information from the backend with the GET method and return the data of the response
 function get(url){
     return new Promise(async cb => {
         const response = await fetch(url)
@@ -320,6 +341,8 @@ function get(url){
         cb(result.data)
     })
 }
+
+// fetch information from the backend with the GET method and return the complete response
 function get(url, raw){
     return new Promise(async cb => {
         const response = await fetch(url)
@@ -329,6 +352,8 @@ function get(url, raw){
         else cb(result.data)   
     })
 }
+
+// fetch information from the backend with the GET method and return the complete response but only log it when "log" was set to true
 function get(url, raw, log){
     return new Promise(async cb => {
         const response = await fetch(url)
@@ -338,6 +363,8 @@ function get(url, raw, log){
         else cb(result.data)   
     })
 }
+
+// fetch information from or to the backend with the POST method and return the data of the response
 function send(url, data){
     return new Promise(async cb => {
         const response = await fetch(url, {method: "post", body: JSON.stringify(data), headers: {"Content-Type": "application/json"}})
@@ -346,6 +373,8 @@ function send(url, data){
         cb(result.data)
     })
 }
+
+// fetch information from or to the backend with the POST method and return the complete response
 function send(url, data, raw){
     return new Promise(async cb => {
         const response = await fetch(url, {method: "post", body: JSON.stringify(data), headers: {"Content-Type": "application/json"}})
@@ -355,6 +384,8 @@ function send(url, data, raw){
         else cb(result.data)
     })
 }
+
+// fetch information from or to the backend with the POST method and return the complete response but only log it when "log" was set to true
 function send(url, data, raw, log){
     return new Promise(async cb => {
         const response = await fetch(url, {method: "post", body: JSON.stringify(data), headers: {"Content-Type": "application/json"}})
@@ -364,28 +395,12 @@ function send(url, data, raw, log){
         else cb(result.data)
     })
 }
-function downloadFromServer(url, progressChanged, loadStart, loadEnd){
-    const req = new XMLHttpRequest()
-    if(progressChanged){
-        req.onprogress = progressChanged
-    }
-    if(loadStart){
-        req.onloadstart = loadStart
-    }
-    if(loadEnd){
-        req.onloadend = loadEnd
-    }
-    req.onreadystatechange = function(){
-        if(req.readyState != 4) return
-        if(req.status == 200){
-            const data = req.response
-            console.log("downloadFromServer", url, data)
-        }
-    }
-    req.open("GET", url, true)
-    req.send()
-}
+
+// create an notification in the bottom right and call a callback when it was clicked
 async function notifyCb(title, message, type, cb){
+    const res = await get("/api/settings")
+    if(!res.notifications) return
+
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(title)).append($(document.createElement("p")).html(message)))
@@ -403,7 +418,6 @@ async function notifyCb(title, message, type, cb){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
-        console.log("clicked")
         cb()
     })
     $("body").append(element)
@@ -422,7 +436,11 @@ async function notifyCb(title, message, type, cb){
         }
     })
 }
+// create an notification in the bottom right
 async function notify(title, message, type){
+    const res = await get("/api/settings")
+    if(!res.notifications) return
+
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(title)).append($(document.createElement("p")).html(message)))
@@ -435,7 +453,6 @@ async function notify(title, message, type){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
-        console.log("clicked")
     })
     setTimeout(function(){
         element.css("animation", "notificationSlideOut 1000ms")
@@ -458,7 +475,12 @@ async function notify(title, message, type){
         }
     })
 }
+
+// create an notification in the bottom right with a specified duration and call a callback when it was clicked
 async function notifyCb(title, message, type, duration, cb){
+    const res = await get("/api/settings")
+    if(!res.notifications) return
+
     let finalDuration = (1000 * 7) + 1000
     if(duration) finalDuration = duration
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
@@ -477,7 +499,6 @@ async function notifyCb(title, message, type, duration, cb){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
-        console.log("clicked")
         cb()
     })
     $("body").append(element)
@@ -496,7 +517,12 @@ async function notifyCb(title, message, type, duration, cb){
         }
     })
 }
+
+// create an notification in the bottom right with a specified duration
 async function notify(title, message, type, duration){
+    const res = await get("/api/settings")
+    if(!res.notifications) return
+
     let finalDuration = (1000 * 7) + 1000
     if(duration) finalDuration = duration
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
@@ -515,7 +541,6 @@ async function notify(title, message, type, duration){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
-        console.log("clicked")
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
@@ -533,10 +558,17 @@ async function notify(title, message, type, duration){
         }
     })
 }
+
+// send a notification on the computer, like in windows the toast notification in the bottom right
 async function notifyComputer(title, message){
-    const res = await send("/api/notify", {title, message})
-    console.log("notifyComputer:", res)
+    const res = await get("/api/settings")
+    if(!res.desktopNotifications) return
+
+    const res2 = await send("/api/notify", {title, message})
+    console.log("notifyComputer:", res2)
 }
+
+// search for "caccordion" HTML elements and make them clickable if they not already are
 setAccordions()
 function setAccordions(){
     const accordions = $(".caccordion").map(function(){return this}).get()

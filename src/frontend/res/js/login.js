@@ -164,9 +164,9 @@ async function login(){
         notify("Fehlgeschlagen", res.data, "error", 15000)
     }
     else{
-        notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 3000, function(){
+        notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 2000, function(){
             openSite("/")
         })
-        setTimeout(() => openSite("/"), 4000)
+        setTimeout(() => openSite("/"), 2000)
     }
 }

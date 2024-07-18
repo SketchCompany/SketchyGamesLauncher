@@ -49,9 +49,9 @@ async function createCurrentDownload(current){
     `)
     progressInterval = setInterval(async () => {
         const progress = (await get("/api/download/progress")).progress
+        console.log("progress", progress)
         $("#progress").html(progress + "%")
         $(".cprogress").css("width", progress + "%")
-        console.log(progress)
         if(progress >= 100){
             finishDownload()
         }

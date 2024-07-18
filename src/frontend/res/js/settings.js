@@ -3,20 +3,24 @@ $(document).ready(async function(){
     console.log(settings)
 
     // set settings
+    $("#version").html(settings.version)
     $("#installationPath").val(settings.installationPath)
     if(settings.notifications){
         $("#notifications").attr("checked", "")
+    }
+    if(settings.desktopNotifications){
+        $("#desktopNotifications").attr("checked", "")
     }
     if(settings.loginOnStartup){
         $("#loginOnStartup").attr("checked", "")
     }
     $($("#actionAfterGameStarted").children().get(settings.actionAfterGameStarted)).attr("selected", "")
 
-
     $("#submit").click(async function(){
         const newSettings = {
             installationPath: $("#installationPath").val(),
             notifications: isChecked("#notifications"),
+            desktopNotifications: isChecked("#desktopNotifications"),
             loginOnStartup: isChecked("#loginOnStartup"),
             actionAfterGameStarted: getSelected("#actionAfterGameStarted"),
         }

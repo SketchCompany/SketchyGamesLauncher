@@ -85,6 +85,7 @@ async function setup(){
         if(!func.exists(settingsFile)) await func.write(settingsFile, func.encrypt(JSON.stringify({
             installationPath: installs,
             notifications: true,
+            desktopNotifications: true,
             loginOnStartup: true,
             actionAfterGameStarted: 1
         })))

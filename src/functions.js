@@ -5,7 +5,12 @@ const electron = require('electron')
 const createDesktopShortcut = require('create-desktop-shortcuts');
 require("dotenv").config()
 
-
+/**
+ * used to create a shortcut on the desktop
+ * @param {string} name for the shortcut to show on the desktop
+ * @param {string} filePath to the exe which will be executed when the shortcut is clicked
+ * @param {string} icon path to the icon of the shortcut
+ */
 async function createShortcut(name, filePath, icon){
     const shortcutsCreated = createDesktopShortcut({
         onlyCurrentOS: true,
@@ -31,7 +36,7 @@ async function sendNotification(title, message){
     const config = require("./launcherConfig")
     try{
         const settings = JSON.parse(decrypt(await read(config.settingsFile)))
-        if(settings.notifications) {
+        if(settings.desktopNotifications) {
             new electron.Notification({
                 title: "Sketchy Games Launcher",
                 subtitle: title,
