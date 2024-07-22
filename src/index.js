@@ -9,6 +9,8 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = async () => {
+  // check for updates
+  require("update-electron-app").updateElectronApp()
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -39,8 +41,6 @@ const createWindow = async () => {
     mainWindow.loadURL("http://localhost:" + config.PORT)
   }
   else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")
-
-  require("update-electron-app").updateElectronApp()
 
   // Open the DevTools.
   !app.isPackaged ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")

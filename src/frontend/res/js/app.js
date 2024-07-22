@@ -108,6 +108,11 @@ if(isValid()){
     <header>
         <span class="left">
             <span class="bi bi-list" onclick="toggleOffcanvas()"></span>
+            <span class="bi bi-bell" style="position: relative;" onclick="toggleNotificationsCenter()">
+                <span style="display: none; position: absolute; right: -10px; top: -5px; font-size: 12px; background-color: springgreen; padding: 1px; border-radius: 12px; min-width: 25px; text-align: center; color: white; text-shadow: var(--tx0); font-weight: bold;">
+                    0
+                </span>
+            </span>
             <span onclick="openSite('/')" class="title"><img src="/res?f=img/icon.png"><p>ketchy Games Launcher</p></span>
         </span>
     </header>`)
@@ -148,34 +153,59 @@ if(isValid()){
     // create the offcanvas
     $("body").prepend(`
         <offcanvas id="offcanvas" style="display: none;">
-        <span class="top">
-            <span>
-                <span class="bi bi-list"></span>
-                <span>Menu</span>
+            <span class="top">
+                <span>
+                    <span class="bi bi-list"></span>
+                    <span>Menu</span>
+                </span>
+                <span>
+                    <span onclick="toggleOffcanvas()" class="bi bi-x-lg"></span>
+                </span>
             </span>
-            <span onclick="toggleOffcanvas()" class="bi bi-x-lg"></span>
-        </span>
-        <p class="title">` + siteName + `</p>
-        <div class="wrapper">
-            <div class="content">
-                <a fhref="/"><span class="bi bi-caret-right expandable" style="display: none;"></span> <span class="bi bi-house"></span> Start</a>
-                <div style="display: none;">
-                    <a href="/news"><span class="bi bi-arrow-return-right" style="color: var(--clr-gray)"></span> News</a>
-                    <a href="/notes"><span class="bi bi-arrow-return-right" style="color: var(--clr-gray)"></span> Patch Notes</a>
+            <p class="title">` + siteName + `</p>
+            <div class="wrapper">
+                <div class="content">
+                    <a fhref="/"><span class="bi bi-caret-right expandable" style="display: none;"></span> <span class="bi bi-house"></span> Start</a>
+                    <div style="display: none;">
+                        <a href="/news"><span class="bi bi-arrow-return-right" style="color: var(--clr-gray)"></span> News</a>
+                        <a href="/notes"><span class="bi bi-arrow-return-right" style="color: var(--clr-gray)"></span> Patch Notes</a>
+                    </div>
+                    <a href="/library"><span class="bi bi-controller"></span> Library</a>
+                    <a href="/store"><span class="bi bi-shop"></span> Store</a>
+                    <a href="/downloads"><span class="bi bi-download"></span> Downloads</a>
+                    <a href="/account"><span class="bi bi-person"></span> Account</a>
+                    <a href="/settings"><span class="bi bi-gear"></span> Settings</a>
                 </div>
-                <a href="/library"><span class="bi bi-controller"></span> Library</a>
-                <a href="/store"><span class="bi bi-shop"></span> Store</a>
-                <a href="/downloads"><span class="bi bi-download"></span> Downloads</a>
-                <a href="/account"><span class="bi bi-person"></span> Account</a>
-                <a href="/settings"><span class="bi bi-gear"></span> Settings</a>
             </div>
-        </div>
         </offcanvas>
+    `)
+
+    // create the notification center
+    $("body").prepend(`
+        <notificationsCenter id="notificationsCenter" style="display: none;">
+            <span class="top">
+                <span>
+                    <span class="bi bi-list"></span>
+                    <span>Benachrichtigungen</span>
+                </span>
+                <span>
+                    <span onclick="toggleNotificationsCenter()" class="bi bi-x-lg"></span>
+                </span>
+            </span>
+            <div class="wrapper">
+                <div class="content">
+                    <div class="element">
+                        <h3>Test Benachrichtigung</h3>
+                        <p>Loremasdj aosljd lkjahsdlkj aslökdj alöskjd ölakjsdölkajsdöl kjasödl kjasödlk jasdlökj aslökdj aölsdjk asdfasd asd.</p>
+                    </div>
+                </div>
+            </div>
+        </notificationsCenter>
     `)
 
     // create default context menu
     createCtxMenu("html", "default", `
-        <button onclick="history.back()">Zurück</button>
+        <button onclick="back()">Zurück</button>
         <button onclick="location.reload()">Neuladen</button>
         <button onclick="openSite('/')">Start</button>
         <button onclick="openSite('/library')">Library</button>
@@ -290,6 +320,19 @@ function toggleOffcanvas(){
     }
 }
 
+// togle notificationsCenter on or off
+function toggleNotificationsCenter(){
+    if(notValid()) return
+    if($("#notificationsCenter").css("display") == "block"){
+        $("#notificationsCenter").css("display", "none")
+        enableScroll()
+    }
+    else{
+        $("#notificationsCenter").css("display", "block")
+        disableScroll()
+    }
+}
+
 // wait for an element to load before using it (no usages)
 function waitForElement(selector) {
     return new Promise(resolve => {
@@ -400,6 +443,8 @@ function send(url, data, raw, log){
 async function notifyCb(title, message, type, cb){
     const res = await get("/api/settings")
     if(!res.notifications) return
+
+    addToNotificationCenter(title, message, type, cb)
 
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
@@ -568,6 +613,10 @@ async function notifyComputer(title, message){
     console.log("notifyComputer:", res2)
 }
 
+function addToNotificationsCenter(title, message, type, cb){
+
+}
+
 // search for "caccordion" HTML elements and make them clickable if they not already are
 setAccordions()
 function setAccordions(){
@@ -605,4 +654,11 @@ function setAccordions(){
         })
         $(element).append($(document.createElement("i")).addClass(["caccordion-arrow", "bi", "bi-caret-down"]))
     }
+}
+
+console.log(document.referrer)
+// get back to last page if it was not the "loading" page
+function back(){
+    if(!/\S/.test(document.referrer) || document.referrer == location.href ) return
+    else history.back()
 }

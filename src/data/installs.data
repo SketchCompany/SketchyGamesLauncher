@@ -1,42 +1,5 @@
 {
-   "games": [
-      {
-         "name": "Multyverse Multiplayer",
-         "version": "0.0.6",
-         "versionLevel": "Playtest",
-         "patchNotes": "0.0.6<br>Einige Bugs gefixed<br><br>0.0.5<br>Keine Informationen verfügbar<br><br>0.0.4<br>Keine Informationen verfügbar<br><br>0.0.3<br>Keine Informationen verfügbar<br><br>0.0.2<br>Keine Informationen verfügbar<br><br>",
-         "description": "ist ein Test für ein Multiplayer Spiel der Sketch Company! Bis jetzt kann im Spiel noch nicht viel gemacht werden, da es ein reiner Test der Multiplayer Funktion ist. Bitte beachte, dass es einige Bugs und Fehler geben kann und das Spiel nur ein Test ist! Bei Bugs oder Fehlern melde dich bei unserem Discord Server!",
-         "downloadUrl": "https://api.sketch-company.de/store/games/Multyverse_Multiplayer",
-         "resourcesUrl": "https://api.sketch-company.de/store/games/Multyverse_Multiplayer/resources/",
-         "images": 1,
-         "categorie": "games",
-         "start": "C:\\Users\\mtb20\\Documents\\VS-Code\\electron\\sketchy-games-launcher-github\\src/installs/Multyverse Multiplayer/Multyverse Multiplayer.exe"
-      },
-      {
-         "name": "2D Adventure One",
-         "version": "1.9.4",
-         "versionLevel": "Early Access",
-         "patchNotes": "1.9.4<br>- Level Editor Bugs gefixed<br>- Ein neues Schwert wurde hinzugefügt<br><br>1.9.3<br>Keine Informationen verfügbar<br><br>1.9.2<br>Keine Informationen verfügbar<br><br>1.9.1<br>Keine Informationen verfügbar<br><br>1.9.0<br>Keine Informationen verfügbar<br><br>",
-         "description": "ist ein 2D Plattformer wo ihr Abenteuer in den verschiedenen Welten und Leveln erleben könnt, denn die Schwierigkeit variiert in den einzelnen Leveln, wobei die meisten nicht gerade einfach sind. HINWEIS: Alle Level sind möglich, denn sie wurden ausführlich getestet. Ein Vorteil dieses Spiels ist, dass es ebenso auf dem Handy spielbar ist. Ihr könnt die verschiedenen Versionen auf der Website von 2D Adventure One herunterladen. Dieses Spiel wurde bereits von mehreren Testern positiv bewertet.",
-         "downloadUrl": "https://api.sketch-company.de/store/games/2D_Adventure_One",
-         "resourcesUrl": "https://api.sketch-company.de/store/games/2D_Adventure_One/resources/",
-         "images": 1,
-         "categorie": "games",
-         "start": "C:\\Users\\mtb20\\Documents\\VS-Code\\electron\\sketchy-games-launcher-github\\src/installs/2D Adventure One/2D Adventure One.exe"
-      },
-      {
-         "name": "DONT GET CAUGHT",
-         "version": "1.0.1",
-         "patchNotes": "1.0.1<br>Das Icon des Spiels wurde geändert<br><br>1.0.0<br>Die Veröffentlichung des Spiels<br><br>",
-         "versionLevel": "Early Access",
-         "description": "ist ein Horror Spiel welches in einem großen Labyrinth statt findet. Der Spielablauf ist wie folgt: Fünf Schlüssel, in Form von roten Diamanten, müssen gefunden werden, um das Spiel erfolgreich zu meistern. Dabei wird man dauerhaft von einer gruseligen Gestalt verfolgt. Das Spiel wurde meist Positiv bewertet da der jetztige Preis bei 0,00€ liegt und dafür ein schauriges Spielerlebnis liefert.",
-         "downloadUrl": "https://api.sketch-company.de/store/games/DONT_GET_CAUGHT",
-         "resourcesUrl": "https://api.sketch-company.de/store/games/DONT_GET_CAUGHT/resources/",
-         "images": 1,
-         "categorie": "games",
-         "start": "C:\\Users\\mtb20\\Documents\\VS-Code\\electron\\sketchy-games-launcher-github\\src/installs/DONT GET CAUGHT/DONT GET CAUGHT.exe"
-      }
-   ],
+   "games": [],
    "softwares": [],
    "other": []
 }

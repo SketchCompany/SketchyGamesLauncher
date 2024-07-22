@@ -1,9 +1,9 @@
 $(document).ready(function(){
     $("input").map(function(){return this}).get(0).focus()
     createCtxMenu("html", "login-default", `
-        <button onclick="history.back()">Zurück</button>
+        <button onclick="back()">Zurück</button>
         <button onclick="location.reload()">Neuladen</button>
-    `)
+    `, () => {})
     
     if(localStorage.getItem("signUpData")){
         const oldData = localStorage.getItem("signUpData")

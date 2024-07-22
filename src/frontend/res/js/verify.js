@@ -1,9 +1,9 @@
 const code = getRandomInt(100000, 1000000)
 $(document).ready(async function(){
     createCtxMenu("html", "login-default", `
-        <button onclick="history.back()">Zurück</button>
+        <button onclick="back()">Zurück</button>
         <button onclick="location.reload()">Neuladen</button>
-    `)
+    `, () => {})
     
     if(!localStorage.getItem("signUpData")) openSite("/signup")
     const userData = JSON.parse(localStorage.getItem("signUpData"))
