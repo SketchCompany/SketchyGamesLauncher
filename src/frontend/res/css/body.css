@@ -812,3 +812,19 @@ footer{
     background-color: springgreen;
     transition: all 250ms;
 }
+.cbadge{
+    position: relative;
+}
+.cbadge span{
+    position: absolute; 
+    right: -10px; 
+    top: -5px; 
+    font-size: 12px; 
+    background-color: springgreen; 
+    padding: 1px; 
+    border-radius: 12px; 
+    min-width: 25px; 
+    text-align: center; 
+    color: white; 
+    text-shadow: var(--tx0); font-weight: bold;
+}

@@ -108,8 +108,8 @@ if(isValid()){
     <header>
         <span class="left">
             <span class="bi bi-list" onclick="toggleOffcanvas()"></span>
-            <span class="bi bi-bell" style="position: relative;" onclick="toggleNotificationsCenter()">
-                <span style="display: none; position: absolute; right: -10px; top: -5px; font-size: 12px; background-color: springgreen; padding: 1px; border-radius: 12px; min-width: 25px; text-align: center; color: white; text-shadow: var(--tx0); font-weight: bold;">
+            <span class="bi bi-bell cbadge" onclick="toggleNotificationsCenter()">
+                <span style="display: none;">
                     0
                 </span>
             </span>
@@ -646,6 +646,12 @@ async function setNotifications(){
         const element = notifications[i];
         createNotificationElement(element, i)
     }
+    $("header .left .cbadge span").html(notifications.length)
+    if(notifications.length > 0) $("header .left .cbadge span").css("display", "block")
+    else{
+        $("header .left .cbadge span").css("display", "none")
+        $("#notificationsCenter .wrapper .content").append($(document.createElement("p")).html("Keine Benachrichtigungen.").css("text-align", "center"))
+    } 
 }
 
 function createNotificationElement(notification, i){
@@ -655,6 +661,7 @@ function createNotificationElement(notification, i){
         element.remove()
         const res = await send("/api/notifications/remove", {i})
         console.log(res)
+        setNotifications()
     }))
     element.click(async function(){
         //
@@ -684,6 +691,7 @@ function createNotificationElement(notification, i){
         element.remove()
         const res = await send("/api/notifications/remove", {i})
         console.log(res)
+        setNotifications()
     })
     $("#notificationsCenter .wrapper .content").append(element)
 }
