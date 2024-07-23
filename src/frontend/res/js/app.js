@@ -194,10 +194,7 @@ if(isValid()){
             </span>
             <div class="wrapper">
                 <div class="content">
-                    <div class="element">
-                        <h3>Test Benachrichtigung</h3>
-                        <p>Loremasdj aosljd lkjahsdlkj aslökdj alöskjd ölakjsdölkajsdöl kjasödl kjasödlk jasdlökj aslökdj aölsdjk asdfasd asd.</p>
-                    </div>
+                    
                 </div>
             </div>
         </notificationsCenter>
@@ -444,14 +441,15 @@ async function notifyCb(title, message, type, cb){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
-    addToNotificationCenter(title, message, type, cb)
+    addToNotificationsCenter(title, message, type, cb)
 
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(title)).append($(document.createElement("p")).html(message)))
-    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(function(){
+    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(async function(){
         removeCtxMenu("notification")
         element.remove()
+        removeNotification(title, message, type)
     }))
     element.css("animation", "notificationSlideIn 1000ms")
     setTimeout(function(){
@@ -459,25 +457,28 @@ async function notifyCb(title, message, type, cb){
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
     }, duration)
-    element.click(function(){
+    element.click(async function(){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
         cb()
+        removeNotification(title, message, type)
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
         <button>Dismiss</button>
         <button>Close</button>
-    `, function(i, element2){
+    `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
             removeCtxMenu("notification")
             setTimeout(() => element.remove(), 750)
+            removeNotification(title, message, type)
         }
         else if(i == 1){
             removeCtxMenu("notification")
             element.remove()
+            removeNotification(title, message, type)
         }
     })
 }
@@ -486,18 +487,22 @@ async function notify(title, message, type){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
+    addToNotificationsCenter(title, message, type)
+
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(title)).append($(document.createElement("p")).html(message)))
-    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(function(){
+    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(async function(){
         removeCtxMenu("notification")
         element.remove()
+        removeNotification(title, message, type)
     }))
     element.css("animation", "notificationSlideIn 1000ms")
-    element.click(function(){
+    element.click(async function(){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
+        removeNotification(title, message, type)
     })
     setTimeout(function(){
         element.css("animation", "notificationSlideOut 1000ms")
@@ -508,15 +513,17 @@ async function notify(title, message, type){
     createCtxMenu(".notification", "notification", `
         <button>Dismiss</button>
         <button>Close</button>
-    `, function(i, element2){
+    `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
             removeCtxMenu("notification")
             setTimeout(() => element.remove(), 750)
+            removeNotification(title, message, type)
         }
         else if(i == 1){
             removeCtxMenu("notification")
             element.remove()
+            removeNotification(title, message, type)
         }
     })
 }
@@ -526,13 +533,16 @@ async function notifyCb(title, message, type, duration, cb){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
+    addToNotificationsCenter(title, message, type, cb)
+
     let finalDuration = (1000 * 7) + 1000
     if(duration) finalDuration = duration
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(title)).append($(document.createElement("p")).html(message)))
-    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(function(){
+    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(async function(){
         removeCtxMenu("notification")
         element.remove()
+        removeNotification(title, message, type)
     }))
     element.css("animation", "notificationSlideIn 1000ms")
     setTimeout(function(){
@@ -540,25 +550,28 @@ async function notifyCb(title, message, type, duration, cb){
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
     }, finalDuration)
-    element.click(function(){
+    element.click(async function(){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
         cb()
+        removeNotification(title, message, type)
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
         <button>Dismiss</button>
         <button>Close</button>
-    `, function(i, element2){
+    `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
             removeCtxMenu("notification")
             setTimeout(() => element.remove(), 750)
+            removeNotification(title, message, type)
         }
         else if(i == 1){
             removeCtxMenu("notification")
             element.remove()
+            removeNotification(title, message, type)
         }
     })
 }
@@ -568,13 +581,16 @@ async function notify(title, message, type, duration){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
+    addToNotificationsCenter(title, message, type)
+
     let finalDuration = (1000 * 7) + 1000
     if(duration) finalDuration = duration
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(title)).append($(document.createElement("p")).html(message)))
-    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(function(){
+    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(async function(){
         removeCtxMenu("notification")
         element.remove()
+        removeNotification(title, message, type)
     }))
     element.css("animation", "notificationSlideIn 1000ms")
     setTimeout(function(){
@@ -582,24 +598,27 @@ async function notify(title, message, type, duration){
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
     }, finalDuration)
-    element.click(function(){
+    element.click(async function(){
         element.css("animation", "notificationSlideOut 1000ms")
         removeCtxMenu("notification")
         setTimeout(() => element.remove(), 750)
+        removeNotification(title, message, type)
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
         <button>Dismiss</button>
         <button>Close</button>
-    `, function(i, element2){
+    `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
             removeCtxMenu("notification")
             setTimeout(() => element.remove(), 750)
+            removeNotification(title, message, type)
         }
         else if(i == 1){
             removeCtxMenu("notification")
             element.remove()
+            removeNotification(title, message, type)
         }
     })
 }
@@ -610,11 +629,69 @@ async function notifyComputer(title, message){
     if(!res.desktopNotifications) return
 
     const res2 = await send("/api/notify", {title, message})
-    console.log("notifyComputer:", res2)
 }
 
-function addToNotificationsCenter(title, message, type, cb){
+async function addToNotificationsCenter(title, message, type, cb){
+    const addRes = await send("/api/notifications/add", {title, message, type, cb})
+    console.log("addRes", addRes)
+    setNotifications()
+}
 
+setNotifications()
+async function setNotifications(){
+    const notifications = await get("/api/notifications")
+    console.log("notifications", notifications)
+    $("#notificationsCenter .wrapper .content").get(0).replaceChildren()
+    for (let i = 0; i < notifications.length; i++) {
+        const element = notifications[i];
+        createNotificationElement(element, i)
+    }
+}
+
+function createNotificationElement(notification, i){
+    const element = $(document.createElement("div")).addClass("element").addClass(notification.type)
+    element.append($(document.createElement("div")).append($(document.createElement("h3")).html(notification.title)).append($(document.createElement("p")).html(notification.message)))
+    element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(async function(){
+        element.remove()
+        const res = await send("/api/notifications/remove", {i})
+        console.log(res)
+    }))
+    element.click(async function(){
+        //
+        //
+        //
+        //
+        //
+        //
+        // ************************* !!! HIER WEITERMACHEN !!! *******************************************************************************************************************************************************************************
+        //
+        //
+        //
+        //
+        //
+        //
+
+        console.log("cb", notification.cb)
+        if(notification.cb) notification.cb()
+
+        //
+        //
+        //
+        //
+        //
+        //
+
+        element.remove()
+        const res = await send("/api/notifications/remove", {i})
+        console.log(res)
+    })
+    $("#notificationsCenter .wrapper .content").append(element)
+}
+
+async function removeNotification(title, message, type){
+    const res = await send("/api/notifications/remove", {title, message, type})
+    console.log(res)
+    setNotifications()
 }
 
 // search for "caccordion" HTML elements and make them clickable if they not already are
@@ -656,7 +733,6 @@ function setAccordions(){
     }
 }
 
-console.log(document.referrer)
 // get back to last page if it was not the "loading" page
 function back(){
     if(!/\S/.test(document.referrer) || document.referrer == location.href ) return

@@ -14,6 +14,46 @@ const electron = require("electron")
 
 router.use(bodyParser.json())
 
+const notifications = []
+router.get("/notifications", async (req, res) => {
+    res.json({
+        status: 1,
+        data: notifications
+    })
+})
+router.post("/notifications/add", async (req, res) => {
+    notifications.push(req.body)
+    res.json({
+        status: 1,
+        data: notifications
+    })
+})
+router.post("/notifications/remove", async (req, res) => {
+    if(req.body.i != undefined){
+        notifications.splice(req.body.i, 1)
+        res.json({
+            status: 1,
+            data: notifications
+        })
+    }
+    else{
+        for (let i = 0; i < notifications.length; i++) {
+            const element = notifications[i];
+            if(JSON.stringify(element) == JSON.stringify(req.body)){
+                notifications.splice(i, 1)
+                res.json({
+                    status: 1,
+                    data: notifications
+                })
+                return
+            }
+        }
+        res.json({
+            status: 1,
+            data: "could not find element with " + JSON.stringify(req.body)
+        })
+    }
+})
 router.get("/lastplayed", async (req, res) => {
     try{
         const installs = JSON.parse(await func.read(config.installsFile))

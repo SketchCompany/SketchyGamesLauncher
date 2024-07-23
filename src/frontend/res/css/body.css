@@ -401,7 +401,7 @@ notificationsCenter .bi-x-lg:hover{
     color: var(--hover);
 }
 notificationsCenter .wrapper{
-    height: fit-content;
+    height: 90%;
     overflow-y: auto;
     padding: 20px 5px;
     direction: rtl;
@@ -413,7 +413,7 @@ notificationsCenter .content{
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    gap: 1px;
+    gap: 10px;
     width: 100%;
     direction: ltr;
 }
@@ -427,9 +427,9 @@ notificationsCenter .content .element{
     padding: 20px;
     display: flex;
     justify-content: space-between;
-    flex-direction: column;
     gap: 10px;
     box-shadow: 2px 4px 4px var(--bx0);
+    animation: fadein 500ms;
 }
 notificationsCenter .content .element h3{
     font-size: 30px;
@@ -449,7 +449,7 @@ notificationsCenter .content .element i:hover{
 }
 notificationsCenter .content .element:hover{
     border: 1px solid var(--darkgray);
-    transform: scale(1.025);
+    transform: scale(1.02);
     cursor: pointer;
 }
 offcanvas{
@@ -740,20 +740,20 @@ footer{
     cursor: pointer;
 }
 .success, .success:hover{
-    color: springgreen;
-    border-color: springgreen;
+    color: springgreen !important;
+    border-color: springgreen !important;
 }
 .error, .error:hover{
-    color: red;
-    border-color: red;
+    color: red !important;
+    border-color: red !important;
 }
 .warning, .warning:hover{
-    color: orange;
-    border-color: orange;
+    color: orange !important;
+    border-color: orange !important;
 }
 .note, .note:hover{
-    color: aqua;
-    border-color: aqua;
+    color: aqua !important;
+    border-color: aqua !important;
 }
 @keyframes notificationSlideIn {
     from{
