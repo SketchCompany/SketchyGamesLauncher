@@ -166,7 +166,7 @@ async function login(){
     else{
         notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 2000, function(){
             openSite("/")
-        })
+        }, true)
         setTimeout(() => openSite("/"), 2000)
     }
 }

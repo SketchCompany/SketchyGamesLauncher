@@ -75,15 +75,15 @@ $(document).ready(async function(){
         $(".softwares").children().each(setClick)
         createCtxMenu(".game", "game", `
             <button>Start</button>
-            <button>Store Site</button>
-            <button>Open Folder</button>
-            <button>Delete</button>
+            <button>Store Seite</button>
+            <button>Ordner Öffnen</button>
+            <button>Deinstallieren</button>
         `, libraryElementCtxMenu)
         createCtxMenu(".software", "software", `
             <button>Start</button>
-            <button>Store Site</button>
-            <button>Open Folder</button>
-            <button>Delete</button>
+            <button>Store Seite</button>
+            <button>Ordner Öffnen</button>
+            <button>Deinstallieren</button>
         `, libraryElementCtxMenu)
     }
     else{

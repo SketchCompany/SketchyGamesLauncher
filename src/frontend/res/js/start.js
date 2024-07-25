@@ -16,7 +16,7 @@ $(document).ready(async function(){
             <button>Start</button>
             <button>Store Seite</button>
             <button>In Library Ansehen</button>
-            <button>Entfernen</button>
+            <button>Deinstallieren</button>
         `, lastPlayedCtxMenu)
     }
     else console.warn("could not find last played game")

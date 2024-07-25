@@ -660,7 +660,7 @@ router.get("/download/cancel", async (req, res) => {
 router.get("/download/state", (req, res) => {
     try{
         let paused = false
-        if(currentDownloadResponse.isPaused()) paused = true
+        if(currentDownloadResponse.isPaused() && currentDownloadResponse) paused = true
         else paused = false
         res.json({
             state: 1,

@@ -1,6 +1,6 @@
 const { app, BrowserWindow } = require('electron')
-const launcher = require("./launcher")
 const config = require("./launcherConfig")
+const launcher = require("./launcher")
 const func = require("./functions")
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

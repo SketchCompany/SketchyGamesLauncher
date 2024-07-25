@@ -388,17 +388,21 @@ notificationsCenter .top{
     margin-bottom: 25px;
     font-size: 20px;
 }
-notificationsCenter .top .bi-list{
+notificationsCenter .top .bi-bell{
     margin-right: 21px;
     margin-left: 20px;
 }
-notificationsCenter .bi-x-lg{
+notificationsCenter .top .bi-x-lg{
     transition: all 100ms;
     -webkit-app-region: no-drag;
 }
-notificationsCenter .bi-x-lg:hover{
+notificationsCenter .top .bi-x-lg:hover{
     cursor: pointer;
     color: var(--hover);
+}
+notificationsCenter .navigation{
+    display: flex;
+    justify-content: end;
 }
 notificationsCenter .wrapper{
     height: 90%;
@@ -429,7 +433,7 @@ notificationsCenter .content .element{
     justify-content: space-between;
     gap: 10px;
     box-shadow: 2px 4px 4px var(--bx0);
-    animation: fadein 500ms;
+    animation: fadein 250ms;
 }
 notificationsCenter .content .element h3{
     font-size: 30px;
@@ -595,21 +599,7 @@ offcanvas p{
 .lastPlayed .lastPlayedElement h3, .lastPlayed .lastPlayedElement p{
     margin: 0;
 }
-.nccard{
-    width: 100%;
-    min-height: 250px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 30px 35px;
-    background-color: var(--b0);
-    border-radius: 12px;
-    border: 1px solid var(--b0);
-    transition: all 150ms;
-    box-shadow: 2px 4px 4px var(--bx0);
-    animation: fadein 1s;
-}
-.ccard{
+.ccard, .nccard{
     width: 100%;
     min-height: 250px;
     display: flex;

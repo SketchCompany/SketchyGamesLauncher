@@ -8,24 +8,20 @@ app.use(bodyParser.json())
 app.use("/api", api.router)
 
 // configuration
-const {
-    PORT,
-    base,
-    resources
-} = require("./launcherConfig")
+const config = require("./launcherConfig")
 
 // apis
 app.get("/res", (req, res) => {
-    res.sendFile(resources + req.query.f)
+    res.sendFile(config.resources + req.query.f)
 })
 
 app.get("/store/:product", (req, res) => {
-    res.sendFile(base + "store/product.html")
+    res.sendFile(config.base + "store/product.html")
 })
 
 app.get("*", (req, res) => {
     try{
-        if(fs.existsSync(base + req.path + "/index.html")) res.sendFile(base + req.path + "/index.html")
+        if(fs.existsSync(config.base + req.path + "/index.html")) res.sendFile(config.base + req.path + "/index.html")
         else res.redirect("/error?m=The page you were looking for could not be found.")
     }
     catch(err){
@@ -35,11 +31,11 @@ app.get("*", (req, res) => {
 })
 
 // start listening of the server
-app.listen(PORT, (err) => {
+app.listen(config.PORT, (err) => {
     if(err){
         console.error(err)
     }
     else{
-        console.log("Server listening on port " + PORT + ". Available at http://localhost:" + PORT)
+        console.log("Server listening on port " + config.PORT + ". Available at http://localhost:" + config.PORT)
     }
 })

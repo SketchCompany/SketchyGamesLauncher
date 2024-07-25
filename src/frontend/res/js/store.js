@@ -27,11 +27,11 @@ $(document).ready(async function(){
     }
     startLoop()
     createCtxMenu(".popular", "popular-element", `
-        <button>View</button>
+        <button>Ansehen</button>
         <button>Download</button>
     `, elementClicked)
     createCtxMenu(".categorieElement", "categorie-element", `
-        <button>View</button>
+        <button>Ansehen</button>
         <button>Download</button>
     `, elementClicked)
 })

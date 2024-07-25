@@ -185,13 +185,14 @@ if(isValid()){
         <notificationsCenter id="notificationsCenter" style="display: none;">
             <span class="top">
                 <span>
-                    <span class="bi bi-list"></span>
+                    <span class="bi bi-bell"></span>
                     <span>Benachrichtigungen</span>
                 </span>
                 <span>
                     <span onclick="toggleNotificationsCenter()" class="bi bi-x-lg"></span>
                 </span>
             </span>
+            <div class="navigation"><button onclick="deleteAllNotifications()">Alle löschen</button></div>
             <div class="wrapper">
                 <div class="content">
                     
@@ -437,11 +438,11 @@ function send(url, data, raw, log){
 }
 
 // create an notification in the bottom right and call a callback when it was clicked
-async function notifyCb(title, message, type, cb){
+async function notifyCb(title, message, type, cb, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
-    addToNotificationsCenter(title, message, type, cb)
+    if(!hideFromCenter) addToNotificationsCenter(title, message, type, cb)
 
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
@@ -466,8 +467,8 @@ async function notifyCb(title, message, type, cb){
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Dismiss</button>
-        <button>Close</button>
+        <button>Ablehnen</button>
+        <button>Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -483,11 +484,11 @@ async function notifyCb(title, message, type, cb){
     })
 }
 // create an notification in the bottom right
-async function notify(title, message, type){
+async function notify(title, message, type, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
-    addToNotificationsCenter(title, message, type)
+    if(!hideFromCenter) addToNotificationsCenter(title, message, type)
 
     let duration = (1000 * 7) + 1000
     const element = $(document.createElement("div")).addClass("notification").addClass(type)
@@ -511,8 +512,8 @@ async function notify(title, message, type){
     }, duration)
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Dismiss</button>
-        <button>Close</button>
+        <button>Ablehnen</button>
+        <button>Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -529,11 +530,11 @@ async function notify(title, message, type){
 }
 
 // create an notification in the bottom right with a specified duration and call a callback when it was clicked
-async function notifyCb(title, message, type, duration, cb){
+async function notifyCb(title, message, type, duration, cb, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
-    addToNotificationsCenter(title, message, type, cb)
+    if(!hideFromCenter) addToNotificationsCenter(title, message, type, cb)
 
     let finalDuration = (1000 * 7) + 1000
     if(duration) finalDuration = duration
@@ -559,8 +560,8 @@ async function notifyCb(title, message, type, duration, cb){
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Dismiss</button>
-        <button>Close</button>
+        <button>Ablehnen</button>
+        <button>Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -577,11 +578,11 @@ async function notifyCb(title, message, type, duration, cb){
 }
 
 // create an notification in the bottom right with a specified duration
-async function notify(title, message, type, duration){
+async function notify(title, message, type, duration, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
 
-    addToNotificationsCenter(title, message, type)
+    if(!hideFromCenter) addToNotificationsCenter(title, message, type)
 
     let finalDuration = (1000 * 7) + 1000
     if(duration) finalDuration = duration
@@ -606,8 +607,8 @@ async function notify(title, message, type, duration){
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Dismiss</button>
-        <button>Close</button>
+        <button>Ablehnen</button>
+        <button>Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -632,13 +633,14 @@ async function notifyComputer(title, message){
 }
 
 async function addToNotificationsCenter(title, message, type, cb){
-    const addRes = await send("/api/notifications/add", {title, message, type, cb})
-    console.log("addRes", addRes)
+    if(cb) await send("/api/notifications/add", {title, message, type, cb: cb.toString()})
+    else await send("/api/notifications/add", {title, message, type})
     setNotifications()
 }
 
 setNotifications()
 async function setNotifications(){
+    if(notValid()) return
     const notifications = await get("/api/notifications")
     console.log("notifications", notifications)
     $("#notificationsCenter .wrapper .content").get(0).replaceChildren()
@@ -646,7 +648,10 @@ async function setNotifications(){
         const element = notifications[i];
         createNotificationElement(element, i)
     }
-    $("header .left .cbadge span").html(notifications.length)
+
+    if(notifications.length > 9) $("header .left .cbadge span").html("9+")
+    else $("header .left .cbadge span").html(notifications.length)
+
     if(notifications.length > 0) $("header .left .cbadge span").css("display", "block")
     else{
         $("header .left .cbadge span").css("display", "none")
@@ -659,46 +664,32 @@ function createNotificationElement(notification, i){
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(notification.title)).append($(document.createElement("p")).html(notification.message)))
     element.append($(document.createElement("i")).addClass(["bi", "bi-x-lg"]).click(async function(){
         element.remove()
-        const res = await send("/api/notifications/remove", {i})
-        console.log(res)
+        await send("/api/notifications/remove", {i})
         setNotifications()
     }))
     element.click(async function(){
-        //
-        //
-        //
-        //
-        //
-        //
-        // ************************* !!! HIER WEITERMACHEN !!! *******************************************************************************************************************************************************************************
-        //
-        //
-        //
-        //
-        //
-        //
-
-        console.log("cb", notification.cb)
-        if(notification.cb) notification.cb()
-
-        //
-        //
-        //
-        //
-        //
-        //
-
+        if(notification.cb){
+            eval(notification.cb.replace("function()", "function tempFunction()")) // declare a tempFunction for the callback to be called and call it afterwards
+            tempFunction()
+        } 
         element.remove()
-        const res = await send("/api/notifications/remove", {i})
-        console.log(res)
+        await send("/api/notifications/remove", {i})
         setNotifications()
     })
     $("#notificationsCenter .wrapper .content").append(element)
 }
 
 async function removeNotification(title, message, type){
-    const res = await send("/api/notifications/remove", {title, message, type})
-    console.log(res)
+    await send("/api/notifications/remove", {title, message, type})
+    setNotifications()
+}
+
+async function deleteAllNotifications(){
+    const notifications = await get("/api/notifications")
+    for (let i = 0; i < notifications.length; i++) {
+        const element = notifications[i];
+        removeNotification(element.title, element.message, element.type)
+    }
     setNotifications()
 }
 
@@ -745,4 +736,25 @@ function setAccordions(){
 function back(){
     if(!/\S/.test(document.referrer) || document.referrer == location.href ) return
     else history.back()
+}
+
+if(isValid()) checkForUpdates()
+async function checkForUpdates(){
+    const updates = (await get("/api/updates")).updates
+
+    if(updates.length > 0){
+        if(updates.length = 1) notifyCb("Update Verfügbar", "Es ist ein Update für " + updates[0].name + " verfügbar. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
+            const res = await send("/api/download", updates[0])
+            console.log(res)
+            setTimeout(() => openSite("/downloads"), 100)
+        })
+        else notifyCb("Updates Verfügbar", "Es können mehrere Spiele und Softwares aktualisiert werden. Klick um die Aktualisierung zu starten.", "note", 10000, async function(){
+            for (let i = 0; i < updates.length; i++) {
+                const element = updates[i];
+                const res = await send("/api/download", element)
+                console.log(res)
+            }
+            setTimeout(() => openSite("/downloads"), 100)
+        })
+    }
 }
