@@ -27,6 +27,7 @@ function setup(element){
     if(element.isTeaser){
         $("#downloadBtn").attr("disabled", "").html("Unreleased")
     }
+    else $("#downloadBtn").removeAttr("disabled")
 
     if(new URL(location.href).searchParams.get("download") && !element.isTeaser){
         download()
@@ -111,12 +112,68 @@ $(".btnRight").click(function(){
     }
 })
 async function download(){
-    console.log("download started", product.downloadUrl)
-    const patchNotes = getPatchNotes(product.patchNotes, 5)
-    product.patchNotes = patchNotes
-    const res = await send("/api/download", product)
-    console.log(res)
-    setTimeout(() => openSite("/downloads"), 100)
+    const settings = await get("/api/settings")
+
+    const installationPathHover = $(document.createElement("style")).attr("id", "installationPathHover").html(`
+        #installationPath:hover{
+            cursor: pointer;
+        }
+    `)
+    $("head").append(installationPathHover)
+
+    const dialog = createDialog("Download", "Lege deine Download Optionen fest und klicke auf \"Download Starten\" um den download zu starten.", `
+        <div class="crow">
+            <p>Downloaden:</p>
+            <p>${product.name}</p>
+        </div>
+        <div class="crow">
+            <p>Installations Pfad:</p>
+            <input id="installationPath" style="width: 50%" type="text" placeholder="C:\\Windows\\Program Files\\..." value="${settings.installationPath}">
+        </div>
+        <div class="crow">
+            <p>Desktop Verknüpfung:</p>
+            <input id="shortcut" type="checkbox" checked>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+            <button id="startDownload" class="marked">Download Starten</button> 
+            <button id="cancelDownload">Abbrechen</button>
+        </div>
+    `, 550, 525)
+
+    $("#installationPath").focus(function(){
+        $("#installationPath").blur()
+    })
+
+    $("#installationPath").click(async function(){
+        $("#installationPath").blur()
+        const res = await get("/api/settings/open")
+        console.log(res)
+        if(res.length == 0) return
+        $("#installationPath").val(res[0])
+        $("#submit").focus()
+    })
+
+    $("#startDownload").click(async function(){
+        console.log("download started", product.downloadUrl)
+        const patchNotes = getPatchNotes(product.patchNotes, 5)
+        product.patchNotes = patchNotes
+        product.createShortcut = isChecked("#shortcut")
+        product.installationPath = $("#installationPath").val() + "/"
+        removeDialog(dialog)
+        const res = await send("/api/download", product)
+        console.log(res)
+        setTimeout(() => openSite("/downloads"), 100)
+    })
+    
+    $("#cancelDownload").click(function(){
+        removeDialog(dialog)
+        $("#installationPathHover").remove()
+    })
+}
+
+function isChecked(selector){
+    if($(selector).get(0).checked) return true
+    else return false
 }
 
 function getPatchNotes(notes, depth){

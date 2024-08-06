@@ -105,7 +105,7 @@ $(document).ready(async function(){
 function createGameLibraryElement(product){
     const titleElement = $(document.createElement("h3")).html(product.name)
     const versionElement = $(document.createElement("p")).html(product.version + " " + product.versionLevel)
-    const imgElement = $(document.createElement("img")).attr("src", "api/library/img/" + product.name).attr("alt", "")
+    const imgElement = $(document.createElement("img")).attr("src", "/api/library/img/" + product.name + "?installationPath=" + product.installationPath).attr("alt", "")
     // const accordion1 = $(document.createElement("div")).addClass("caccordion").html("Description")
     // const accordion2 = $(document.createElement("div")).addClass("caccordion").html("Patch Notes")
     // const accordionPanel1 = $(document.createElement("div")).addClass("cpanel").html(description)

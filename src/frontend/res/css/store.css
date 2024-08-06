@@ -35,7 +35,7 @@
 .popular .content p{
     max-width: 750px;
 }
-.navigation{
+.hero .navigation{
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -44,7 +44,7 @@
     padding: 0 0 0 25px;
     width: 350px;
 }
-.navigation a{
+.hero .navigation a{
     padding: 35px 10px;
     border-radius: 12px;
     border: 1px solid var(--b0);
@@ -53,7 +53,7 @@
     text-align: center;
     font-size: 20px;
 }
-.navigation a:hover{
+.hero .navigation a:hover{
     border-color: var(--darkgray);
     background-color: var(--b1);
     transform: scale(1.04);
@@ -87,7 +87,7 @@
     .hero{
         flex-direction: column;
     }
-    .navigation{
+    .hero .navigation{
         border: 1px solid transparent;
         width: 100%;
         padding: 0 50px;
@@ -96,9 +96,9 @@
         justify-content: center;
         align-items: center;
     }
-    .navigation a{
+    .hero .navigation a{
         padding: 15px;
-        width: 49%;
+        width: 49.5%;
     }
 }
 .space{

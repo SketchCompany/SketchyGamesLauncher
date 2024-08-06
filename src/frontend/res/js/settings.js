@@ -1,6 +1,9 @@
+let originalSettings
+
 $(document).ready(async function(){
     const settings = await get("/api/settings")
     console.log(settings)
+    originalSettings = settings
 
     // set settings
     $("#version").html(settings.version)
@@ -28,6 +31,19 @@ $(document).ready(async function(){
         const res = await send("/api/settings", newSettings)
         console.log(res)
         notify("Gespeichert", "Alle Änderungen wurden erfolgreich gespeichert!", "success", 5000)
+    })
+
+    $("#installationPath").focus(function(){
+        $("#installationPath").blur()
+    })    
+
+    $("#installationPath").click(async function(){
+        $("#installationPath").blur()
+        const res = await get("/api/settings/open")
+        console.log(res)
+        if(res.length == 0) return
+        $("#installationPath").val(res[0]) + "/"
+        $("#submit").focus()
     })
 })
 

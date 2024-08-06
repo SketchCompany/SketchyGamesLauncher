@@ -5,7 +5,7 @@ const bodyParser = require("body-parser")
 const api = require("./api")
 
 app.use(bodyParser.json())
-app.use("/api", api.router)
+app.use("/api", api)
 
 // configuration
 const config = require("./launcherConfig")

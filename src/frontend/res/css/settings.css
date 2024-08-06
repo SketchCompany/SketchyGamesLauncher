@@ -22,3 +22,6 @@
 input, select{
     width: 500px;
 }
+#installationPath:hover{
+    cursor: pointer;
+}

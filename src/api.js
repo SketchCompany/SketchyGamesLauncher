@@ -5,14 +5,101 @@ const func = require("./functions")
 const https = require("https")
 const fs = require("fs")
 const unzipper = require("unzipper")
-const nodemailer = require("nodemailer")
-const smtpTransport = require("nodemailer-smtp-transport")
+// const nodemailer = require("nodemailer")
+// const smtpTransport = require("nodemailer-smtp-transport")
 const path = require("path")
 const config = require("./launcherConfig")
-const cheerio = require("cheerio")
-const electron = require("electron")
 
 router.use(bodyParser.json())
+
+router.post("/settings/move", async (req, res) => {
+    try{
+        const installs = JSON.parse(await func.read(config.installsFile))
+
+        if(installs.games.length > 0){
+            for (let i = 0; i < installs.games.length; i++) {
+                const element = installs.games[i];
+                // check if the game was installed in the old installationPath and not anywhere else like a special location
+                console.log(req.path, "oldInstallationPath", req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"), "installationPath", element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"))
+                if(req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\") == element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\")){
+                    console.log(req.path, "found game with the same installation path as the old one, so it has to be moved to the newInstallation path")
+                    await func.move(path.dirname(element.start), req.body.newInstallationPath + "/" + element.name)
+                    console.log(req.path, "successfully moved", element.name, "to", req.body.newInstallationPath + "/" + element.name)
+                    element.start = req.body.newInstallationPath + "/" + element.name + "/" + element.name + config.appExt
+                    element.installationPath = req.body.newInstallationPath
+                }
+            }
+        }
+        else{
+            console.log(req.path, "there are no games installed to move")
+        }
+
+        if(installs.softwares.length > 0){
+            for (let i = 0; i < installs.softwares.length; i++) {
+                const element = installs.softwares[i];
+                // check if the software was installed in the old installationPath and not anywhere else like a special location
+                console.log(req.path, "oldInstallationPath", req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"), "installationPath", element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"))
+                if(req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\") == element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\")){
+                    console.log(req.path, "found software with the same installation path as the old one, so it has to be moved to the newInstallation path")
+                    await func.move(path.dirname(element.start), req.body.newInstallationPath + "/" + element.name)
+                    console.log(req.path, "successfully moved", element.name, "to", req.body.newInstallationPath + "/" + element.name)
+                    element.start = req.body.newInstallationPath + "/" + element.name + "/" + element.name + config.appExt
+                    element.installationPath = req.body.newInstallationPath
+                }
+            }
+        }
+        else{
+            console.log(req.path, "there are no softwares installed to move")
+        }
+
+        // nochmal überlegen wann die datein verschoben werden sollen, am besten nach dem speichern der einstellungen
+
+        await func.write(config.installsFile, JSON.stringify(installs))
+
+        res.json({
+            status: 0,
+            data: "successfully moved products to new directory"
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+router.get("/settings/open", async (req, res) => {
+    try{
+        const result = await func.showDialog()
+        console.log(req.path, "result", result)
+        res.json({
+            status: 0,
+            data: result
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+router.get("/updates/clear", async (req, res) => {
+    await func.write(config.updatesFile, JSON.stringify({updates: []}))
+    res.json({
+        status: 1,
+        data: "cleaned updates file"
+    })
+})
+router.get("/updates", async (req, res) => {
+    const updates = JSON.parse(await func.read(config.updatesFile))
+    res.json({
+        status: 1,
+        data: updates
+    })
+})
 
 const notifications = []
 router.get("/notifications", async (req, res) => {
@@ -23,6 +110,13 @@ router.get("/notifications", async (req, res) => {
 })
 router.post("/notifications/add", async (req, res) => {
     notifications.push(req.body)
+    res.json({
+        status: 1,
+        data: notifications
+    })
+})
+router.get("/notifications/removeAll", async (req, res) => {
+    notifications.splice(0, notifications.length)
     res.json({
         status: 1,
         data: notifications
@@ -41,16 +135,12 @@ router.post("/notifications/remove", async (req, res) => {
             const element = notifications[i];
             if(JSON.stringify(element) == JSON.stringify(req.body)){
                 notifications.splice(i, 1)
-                res.json({
-                    status: 1,
-                    data: notifications
-                })
-                return
+                break
             }
         }
         res.json({
             status: 1,
-            data: "could not find element with " + JSON.stringify(req.body)
+            data: notifications
         })
     }
 })
@@ -123,7 +213,7 @@ router.get("/account/logout", async (req, res) => {
     }})
 router.post("/account/signup", async (req, res) => {
     try{
-        const status = await func.checkInternetConnectivity()
+        const status = await func.checkInternetConnection()
         if(status == 2){
             const response = await func.send("https://api.sketch-company.de/u/signup", req.body)
             if(!response.exists){
@@ -165,7 +255,7 @@ router.post("/account/signup", async (req, res) => {
 })
 router.post("/account/login", async (req, res) => {
     try{
-        const status = await func.checkInternetConnectivity()
+        const status = await func.checkInternetConnection()
         if(status == 2){
             const response = await func.send("https://api.sketch-company.de/u/login", req.body)
             if(response.correct){
@@ -229,7 +319,7 @@ router.get("/account", async (req, res) => {
     try{
         if(func.exists(config.userFile)){
             const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-            if(await func.checkInternetConnectivity() == 2){
+            if(await func.checkInternetConnection() == 2){
                 const response = await func.send("https://api.sketch-company.de/u/find", {id: userData.id})
                 await func.write(config.userFile, func.encrypt(JSON.stringify(response)))
                 res.json({
@@ -242,7 +332,7 @@ router.get("/account", async (req, res) => {
                     status: 1,
                     data: userData
                 })
-            }        
+            }
         }
         else{
             res.json({
@@ -275,9 +365,25 @@ router.post("/notify", async (req, res) => {
         })
     }
 })
-router.post("/connection", async (req, res) => {
+router.post("/messageBox", async (req, res) => {
     try{
-        const status = await func.checkInternetConnectivity()
+        const response = await func.showMessageBox(req.body.title, req.body.message, req.body.buttons, req.body.type)
+        res.json({
+            status: 1,
+            data: response
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+router.get("/connection", async (req, res) => {
+    try{
+        const status = await func.checkInternetConnection()
         res.json({
             status: 1,
             data: status
@@ -520,10 +626,10 @@ router.post("/download", (req, res) => {
         downloadQueue.push(req.body)
         console.log(req.path, "pushed to downloadQueue", downloadQueue)
         if(!isDownloading) download()
-        res.json({
+        setTimeout(res.json({
             status: 1,
             data: downloadQueue
-        })
+        }), 100)
     }
     catch(err){
         res.json({
@@ -534,13 +640,28 @@ router.post("/download", (req, res) => {
 })
 let currentDownloadResponse
 let currentDownloadWriteStream
-function download(){
+async function download(){
     try{
+        let status = await func.checkInternetConnection()
+        if(status == 1){
+            console.log("download: failed, because of no connection to the api.sketch-company.de server")
+            await func.showErrorBox("Download failed", "The download failed, because there was no connection to the api.sketch-company.de server.")
+            await func.redirect("/store")
+            return
+        }
+        else if(status == 0){
+            console.log("download: failed, because there is no internet connection")
+            await func.showErrorBox("Download failed", "The download failed, because there was no connection to the internet.")
+            func.redirect("/store")
+            return
+        }
+        else console.log("download: connection established")
+
         if(downloadQueue.length > 0 && !isDownloading){
+            isDownloading = true
             const currentDownload = downloadQueue[0]
             console.log("download:", "started download for", currentDownload.name)
             https.get(currentDownload.downloadUrl, {sessionTimeout: 0, timeout: 0}, (response) => {
-                isDownloading = true
                 currentDownloadResponse = response
                 const downloadPath = config.downloads + currentDownload.name + config.packageExt
                 const writeStream = fs.createWriteStream(downloadPath)
@@ -557,28 +678,38 @@ function download(){
                     currentDownloadResponse = null
                     currentDownloadWriteStream = null
                     console.log("download:", "completed for", currentDownload.name)
-                    const latestInfo = await unpackage(currentDownload, downloadPath, config.installs + currentDownload.name + "/")
+                    let createShortcut
+                    if(currentDownload.createShortcut != undefined){
+                        if(currentDownload.createShortcut) createShortcut = true
+                        else createShortcut = false
+                        delete currentDownload["createShortcut"]
+                    }
+                    else{
+                        console.log("download: createShortcut field not found, creating shortcut")
+                        createShortcut = true
+                    }
+                    const latestInfo = await unpackage(currentDownload, downloadPath, currentDownload.installationPath /* config.installs */ + currentDownload.name + "/")
                     progress = 100
-                    if(!currentDownload.isLauncher){
-                        await downloadImage(currentDownload)
-                        func.createShortcut(latestInfo.name, latestInfo.start, latestInfo.start)
-                    } 
+                    await downloadImage(currentDownload)
+                    if(createShortcut) func.createShortcut(latestInfo.name, latestInfo.start, latestInfo.start)
+                    else console.log("createShortcut: shortcut was not created")
+                    await addToAccount(latestInfo)
                     downloadQueue.splice(0, 1)
                     console.log("download:", "removed from downloadQueue", downloadQueue)
                     progress = 0
                     isDownloading = false
-                    if(currentDownload.isLauncher){
-                        console.log("download: isLauncher", currentDownload.isLauncher)
-                        const oldPath = path.dirname(latestInfo.start)
-                        const newPath =  path.dirname(__dirname) + "/" + path.basename(path.dirname(latestInfo.start)) + " " + currentDownload.version
-                        console.log("download: moving", oldPath, "to", newPath)
-                        await func.move(oldPath, newPath)
-                        const restart = child_process.spawn(newPath + "/Sketchy Games Launcher.exe", {detached: true, cwd: newPath})
-                        restart.on("spawn", function(){
-                            electron.BrowserWindow.getAllWindows()[0].close()
-                            process.exit()
-                        })
-                    }
+                    // if(currentDownload.isLauncher){
+                    //     console.log("download: isLauncher", currentDownload.isLauncher)
+                    //     const oldPath = path.dirname(latestInfo.start)
+                    //     const newPath =  path.dirname(__dirname) + "/" + path.basename(path.dirname(latestInfo.start)) + " " + currentDownload.version
+                    //     console.log("download: moving", oldPath, "to", newPath)
+                    //     await func.move(oldPath, newPath)
+                    //     const restart = child_process.spawn(newPath + "/Sketchy Games Launcher.exe", {detached: true, cwd: newPath})
+                    //     restart.on("spawn", function(){
+                    //         electron.BrowserWindow.getAllWindows()[0].close()
+                    //         process.exit()
+                    //     })
+                    // }
                     if(downloadQueue.length > 0 && !isDownloading){
                         download()
                     }
@@ -618,7 +749,7 @@ async function downloadImage(product){
     console.log("downloadImage: started for", product.resourcesUrl + "1.png")
     return new Promise(cb => {
         https.get(product.resourcesUrl + "1.png", (response) => {
-            const writeStream = fs.createWriteStream(config.installs + product.name + "/" + config.imgFile)
+            const writeStream = fs.createWriteStream(product.installationPath + product.name + "/" + config.imgFile)
             response.pipe(writeStream)
             writeStream.on("finish", function(){
                 writeStream.close()
@@ -626,6 +757,49 @@ async function downloadImage(product){
                 cb()
             })
         })
+    })
+}
+function addToAccount(product){
+    return new Promise(async cb => {
+        try{
+            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+            const onlineUserData = await func.send("https://api.sketch-company.de/u/find", {id: userData.id})
+
+            if(!onlineUserData.games){ // no games array
+                onlineUserData.games = "[]"
+            }
+
+            const games = JSON.parse(onlineUserData.games)
+            const now = new Date()
+            const newGame = {
+                product,
+                name: product.name,
+                file: product.name + ".zip",
+                img: product.name + ".png",
+                purchased: now.toLocaleString(),
+                lastDownload: now.toLocaleString(),
+            }
+            for (let i = 0; i < games.length; i++) {
+                const element = games[i];
+                if(element.name === product.name){
+                    console.log("addToAccount: game already purchased", product.name)
+                    console.log("addToAccount: updating game data")
+                    newGame.purchased = element.purchased
+                    console.log(element.purchased)
+                    games.splice(i, 1)
+                }
+            }
+            games.push(newGame)
+            onlineUserData.games = JSON.stringify(games).toString()
+            
+            const updateResponse = await func.send("https://api.sketch-company.de/u/update", onlineUserData)
+            console.log("addToAccount: successfully added game to account")
+            cb()
+        }
+        catch(err){
+            console.error("addToAccount:", err)
+            cb(err)
+        }
     })
 }
 router.get("/download/cancel", async (req, res) => {
@@ -659,13 +833,15 @@ router.get("/download/cancel", async (req, res) => {
 })
 router.get("/download/state", (req, res) => {
     try{
-        let paused = false
-        if(currentDownloadResponse.isPaused() && currentDownloadResponse) paused = true
-        else paused = false
-        res.json({
+        if(currentDownloadResponse && currentDownloadResponse.isPaused()) res.json({
             state: 1,
-            data: paused
+            data: true
         })
+        else res.json({
+            state: 1,
+            data: false
+        })
+        
     }
     catch(err){
         res.json({
@@ -817,7 +993,7 @@ router.get("/installs", async (req, res) => {
 })
 router.get("/library/img/:name", async (req, res) => {
     try{
-        res.sendFile(config.installs + req.params.name + "/" + config.imgFile)
+        res.sendFile(req.query.installationPath + req.params.name + "/" + config.imgFile)
     }
     catch(err){
         res.json({
@@ -826,9 +1002,4 @@ router.get("/library/img/:name", async (req, res) => {
         })
     }
 })
-module.exports = {
-    router, 
-    download, 
-    isDownloading, 
-    downloadQueue
-}
+module.exports = router

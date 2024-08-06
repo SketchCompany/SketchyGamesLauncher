@@ -7,12 +7,20 @@ const blocked = [
 ]
 
 // check if the current site is on the blocked list
+/**
+ * check if the current site is on the ````blocked```` list
+ * @returns {boolean} ```true``` if the current site is on the ```blocked``` list otherwise ```false```
+ */
 function notValid(){
     if(blocked.includes(location.pathname)) return true
     else return false
 }
 
 // check if the current site is not on the blocked list
+/**
+ * check if the current site is not on the ```blocked``` list
+ * @returns {boolean} ```false``` if the current site is on the ```blocked``` list otherwise ```true```
+ */
 function isValid(){
     if(blocked.includes(location.pathname)) return false
     else return true
@@ -29,6 +37,14 @@ else{
 
 // handle context menus
 let clicked
+/**
+ * 
+ * @param {string} name the selector for the context menu, so its open when the element with the same name (selector) got right clicked
+ * @param {string} id the id or name of the contextmenu, which is used for removing the contextmenu
+ * @param {string} elements the elements in the contextmenu as ``` `` ``` string
+ * @param {function} event the callback, which is called when one of the buttons is clicked and provides two paramters: ```i``` (the index of the button of the contextmenu) and ```element``` (the element that was right clicked)
+ * @param {Array<string>} blocked the list of blocked elements that cannot trigger the contextmenu
+ */
 function createCtxMenu(name, id, elements, event, blocked){
     $("body").prepend(`
         <div id="` + id + `-ctx-menu" class="context-menu" style="display: none;"></div>
@@ -74,6 +90,12 @@ function createCtxMenu(name, id, elements, event, blocked){
 }
 
 // update a context menu by its name and id
+/**
+ * update a context menu by its name and id and optional provide a list of elements that are blocked
+ * @param {string} name the selector for the context menu, so its open when the element with the same name (selector) got right clicked
+ * @param {string} id the id or name of the contextmenu, which is used for removing the contextmenu
+ * @param {Array<string>} blocked the list of blocked elements that cannot trigger the contextmenu
+ */
 function updateCtxMenu(name, id, blocked){
     $(name).on("contextmenu", function(e){
         e.preventDefault()
@@ -96,7 +118,11 @@ function updateCtxMenu(name, id, blocked){
     })
 }
 
-// remove a created context menu by it's id
+// remove a created context menu by its id
+/**
+ * remove a created context menu by its id
+ * @param {string} id 
+ */
 function removeCtxMenu(id){
     $("#" + id + "-ctx-menu").remove()
 }
@@ -120,6 +146,8 @@ if(isValid()){
     // create the default breadcrumb bar 
     $("padding").prepend(`
         <div class="breadcrumb">
+            <span class="bi bi-arrow-left" onclick="back()"></span>
+            <span class="bi bi-arrow-right" onclick="history.forward()"></span>
             <ul>
                 <li><a href="/">Start</a></li>
             </ul>
@@ -305,7 +333,10 @@ for(let i = 0; i < expandables.length; i++){
     })
 }
 
-// togle offcanvas on or off
+// toggle the offcanvas on or off
+/**
+ * toggle the offcanvas on or off
+ */
 function toggleOffcanvas(){
     if(notValid()) return
     if($("#offcanvas").css("display") == "block"){
@@ -318,7 +349,10 @@ function toggleOffcanvas(){
     }
 }
 
-// togle notificationsCenter on or off
+// toggle notificationsCenter on or off
+/**
+ * toggle notificationsCenter on or off
+ */
 function toggleNotificationsCenter(){
     if(notValid()) return
     if($("#notificationsCenter").css("display") == "block"){
@@ -352,12 +386,18 @@ function waitForElement(selector) {
     });
 }
 
-// disable scroll if another element is opened on top like the offcanvas
+// disable scrolling if another element is opened on top like the offcanvas or dialog
+/**
+ * disable scrolling if another element is opened on top like the offcanvas or dialog
+ */
 function disableScroll(){
     document.body.classList.add("disabledInput")
 }
 
-// enable scroll if another element is close on top like the offcanvas
+// enable scrolling if another element is opened on top like the offcanvas or dialog
+/**
+ * enable scrolling if another element is opened on top like the offcanvas or dialog
+ */
 function enableScroll(){
     if(document.body.classList.contains("disabledInput")){
         document.body.classList.remove("disabledInput")
@@ -365,15 +405,24 @@ function enableScroll(){
 }
 
 // open another site
+/**
+ * open another site
+ * @param {string} href the link to the site top open
+ * @param {string} target the ```target``` where the site should be opened at
+ */
 function openSite(href, target){
-    const a = document.createElement("a")
-    a.href = href
-    if(target) a.target = target
-    a.click()
-    a.remove()
+    if(target) open(href, target)
+    else open(href, "_self")
 }
 
 // fetch information from the backend with the GET method and return the data of the response
+/**
+ * fetch information from the backend with the GET method and return the data of the response
+ * @param {string} url the url to fetch the data from
+ * @param {boolean} raw used to get the complete response
+ * @param {boolean} log used to disable the log
+ * @returns {Promise<JSON> | Promise<string>}
+ */
 function get(url){
     return new Promise(async cb => {
         const response = await fetch(url)
@@ -406,6 +455,13 @@ function get(url, raw, log){
 }
 
 // fetch information from or to the backend with the POST method and return the data of the response
+/**
+ * fetch information from or to the backend with the POST method and return the data of the response
+ * @param {string} url the url to fetch the data from
+ * @param {boolean} raw used to get the complete response
+ * @param {boolean} log used to disable the log
+ * @returns {Promise<JSON> | Promise<string>}
+ */
 function send(url, data){
     return new Promise(async cb => {
         const response = await fetch(url, {method: "post", body: JSON.stringify(data), headers: {"Content-Type": "application/json"}})
@@ -438,6 +494,15 @@ function send(url, data, raw, log){
 }
 
 // create an notification in the bottom right and call a callback when it was clicked
+/**
+ * creates a notification in the bottom right with a ```title```, ```message``` and ```type```. You also need to define a callback that is called when the notification is clicked
+ * @param {string} title the headline of the notification
+ * @param {string} message the description of the notification
+ * @param {string} type the type of the notification as ```CSS```
+ * @param {function} cb the callback of the notification, that is triggerd when the notification is clicked
+ * @param {boolean} hideFromCenter to specify wether the notification should be added to the notification center on the top left at the bell icon
+ * @returns 
+ */
 async function notifyCb(title, message, type, cb, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
@@ -484,6 +549,14 @@ async function notifyCb(title, message, type, cb, hideFromCenter){
     })
 }
 // create an notification in the bottom right
+/**
+ * creates a notification in the bottom right with a ```title```, ```message``` and ```type```
+ * @param {string} title the headline of the notification
+ * @param {string} message the description of the notification
+ * @param {string} type the type of the notification as ```CSS```
+ * @param {boolean} hideFromCenter to specify wether the notification should be added to the notification center on the top left at the bell icon
+ * @returns 
+ */
 async function notify(title, message, type, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
@@ -528,7 +601,16 @@ async function notify(title, message, type, hideFromCenter){
         }
     })
 }
-
+/**
+ * creates a notification in the bottom right with a ```title```, ```message```, ```type``` and ```duration```. You also need to define a callback that is called when the notification is clicked
+ * @param {string} title the headline of the notification
+ * @param {string} message the description of the notification
+ * @param {string} type the type of the notification as ```CSS```
+ * @param {function} cb the callback of the notification, that is triggerd when the notification is clicked
+*  @param {number} duration the duration of the notification before its removed
+ * @param {boolean} hideFromCenter to specify wether the notification should be added to the notification center on the top left at the bell icon
+ * @returns 
+ */
 // create an notification in the bottom right with a specified duration and call a callback when it was clicked
 async function notifyCb(title, message, type, duration, cb, hideFromCenter){
     const res = await get("/api/settings")
@@ -578,6 +660,15 @@ async function notifyCb(title, message, type, duration, cb, hideFromCenter){
 }
 
 // create an notification in the bottom right with a specified duration
+/**
+ * creates a notification in the bottom right with a ```title```, ```message``` and ```type```
+ * @param {string} title the headline of the notification
+ * @param {string} message the description of the notification
+ * @param {string} type the type of the notification as ```CSS```
+*  @param {number} duration the duration of the notification before its removed
+ * @param {boolean} hideFromCenter to specify wether the notification should be added to the notification center on the top left at the bell icon
+ * @returns 
+ */
 async function notify(title, message, type, duration, hideFromCenter){
     const res = await get("/api/settings")
     if(!res.notifications) return
@@ -624,7 +715,13 @@ async function notify(title, message, type, duration, hideFromCenter){
     })
 }
 
-// send a notification on the computer, like in windows the toast notification in the bottom right
+// send a notification on the computer, like in windows the toast notification on the bottom right
+/**
+ * send a notification on the computer, like in windows the toast notification on the bottom right
+ * @param {string} title the headline of the notification
+ * @param {string} message the message of the notification
+ * @returns 
+ */
 async function notifyComputer(title, message){
     const res = await get("/api/settings")
     if(!res.desktopNotifications) return
@@ -632,6 +729,13 @@ async function notifyComputer(title, message){
     const res2 = await send("/api/notify", {title, message})
 }
 
+/**
+ * add a notification to the notifications center on the top left at the bell icon
+ * @param {string} title the headline of the notification
+ * @param {string} message the description of the notification
+ * @param {string} type the type of the notification as ```CSS``` class
+ * @param {function} cb the callback of the notification that is called when the notification is clicked
+ */
 async function addToNotificationsCenter(title, message, type, cb){
     if(cb) await send("/api/notifications/add", {title, message, type, cb: cb.toString()})
     else await send("/api/notifications/add", {title, message, type})
@@ -639,6 +743,10 @@ async function addToNotificationsCenter(title, message, type, cb){
 }
 
 setNotifications()
+/**
+ * set the notifications from the backend in the notifications center on the top left at the bell icon
+ * @returns 
+ */
 async function setNotifications(){
     if(notValid()) return
     const notifications = await get("/api/notifications")
@@ -659,6 +767,11 @@ async function setNotifications(){
     } 
 }
 
+/**
+ * create a notification element in for the notifications center on the top left at the bell icon
+ * @param {JSON} notification the notification object with the ```title```, ```message```, ```type``` and a optional ```cb``` (callback)
+ * @param {number} i the index of the notification element to remove it from the notifications center 
+ */
 function createNotificationElement(notification, i){
     const element = $(document.createElement("div")).addClass("element").addClass(notification.type)
     element.append($(document.createElement("div")).append($(document.createElement("h3")).html(notification.title)).append($(document.createElement("p")).html(notification.message)))
@@ -676,24 +789,32 @@ function createNotificationElement(notification, i){
         await send("/api/notifications/remove", {i})
         setNotifications()
     })
-    $("#notificationsCenter .wrapper .content").append(element)
+    $("#notificationsCenter .wrapper .content").prepend(element)
 }
 
+/**
+ * remove a notifcation from the notifications center on the top left at the bell icon
+ * @param {string} title the title of the notification to remove
+ * @param {string} message the description of the notification to remove
+ * @param {string} type the type as ```CSS``` class of the notification to remove
+ */
 async function removeNotification(title, message, type){
     await send("/api/notifications/remove", {title, message, type})
     setNotifications()
 }
 
+/**
+ * delete all the notification elements in the notifications center on the top left at the bell icon
+ */
 async function deleteAllNotifications(){
-    const notifications = await get("/api/notifications")
-    for (let i = 0; i < notifications.length; i++) {
-        const element = notifications[i];
-        removeNotification(element.title, element.message, element.type)
-    }
+    await get("/api/notifications/removeAll") 
     setNotifications()
 }
 
 // search for "caccordion" HTML elements and make them clickable if they not already are
+/**
+ * search for ".caccordion" HTML elements and make them clickable if they not already are
+ */
 setAccordions()
 function setAccordions(){
     const accordions = $(".caccordion").map(function(){return this}).get()
@@ -733,28 +854,75 @@ function setAccordions(){
 }
 
 // get back to last page if it was not the "loading" page
+/**
+ * get back to last page if it was not the "loading" page
+ */
 function back(){
     if(!/\S/.test(document.referrer) || document.referrer == location.href ) return
     else history.back()
 }
 
+// check for updates if the current site is valid
 if(isValid()) checkForUpdates()
+/**
+ * check for updates if the current site is valid
+ */
 async function checkForUpdates(){
+    if(sessionStorage.getItem("showedUpdatesNotification")) return // only show "updates available" notification once
+
     const updates = (await get("/api/updates")).updates
 
     if(updates.length > 0){
-        if(updates.length = 1) notifyCb("Update Verfügbar", "Es ist ein Update für " + updates[0].name + " verfügbar. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
+        sessionStorage.setItem("showedUpdatesNotification", true)
+        if(updates.length == 1) notifyCb("Update Verfügbar", "Es ist ein Update für " + updates[0].name + " verfügbar. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
+            const updates = (await get("/api/updates")).updates
             const res = await send("/api/download", updates[0])
             console.log(res)
+            const res2 = await get("/api/updates/clear")
+            console.log(res2)
             setTimeout(() => openSite("/downloads"), 100)
         })
-        else notifyCb("Updates Verfügbar", "Es können mehrere Spiele und Softwares aktualisiert werden. Klick um die Aktualisierung zu starten.", "note", 10000, async function(){
+        else notifyCb("Updates Verfügbar", "Es können mehrere Spiele oder Softwares aktualisiert werden. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
+            const updates = (await get("/api/updates")).updates
             for (let i = 0; i < updates.length; i++) {
                 const element = updates[i];
                 const res = await send("/api/download", element)
                 console.log(res)
             }
+            const res2 = await get("/api/updates/clear")
+            console.log(res2)
             setTimeout(() => openSite("/downloads"), 100)
         })
     }
+    else console.log("checkForUpdates: no updates found")
+}
+/**
+ * creates an dialog with an custom ```title```, ```message``` and ```elements```. You can also set the width and height
+ * @param {string} title the headline of the dialog
+ * @param {string} message the description of the dialog
+ * @param {string} elements the custom elements to add in a string with the ``` `` ``` characters
+ * @param {number} width the width of the dialog window in px
+ * @param {number} height the height of the dialog window in px
+ * @returns {string} the selector as id of the created dialog
+ */
+function createDialog(title, message, elements, width, height){
+    const id = title + "-dialog"
+    const headline = $(document.createElement("uh1")).html(title)
+    const description = $(document.createElement("p")).html(message)
+    const content = $(document.createElement("div")).addClass("content").append([headline, description, elements])
+    if(width) content.css("width", width + "px")
+    if(height) content.css("height", height + "px")
+    const background = $(document.createElement("div")).addClass("background")
+    const dialog = $(document.createElement("div")).attr("id", id).addClass("dialog").append([background, content])
+    $("body").prepend(dialog)
+    disableScroll()
+    return "#" + id
+}
+/**
+ * removes a dialog with a specific ```id```
+ * @param {string} id the id of the dialog to remove
+ */
+function removeDialog(id){
+    enableScroll()
+    $(id).remove()
 }

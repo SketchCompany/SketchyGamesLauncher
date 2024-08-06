@@ -3,8 +3,40 @@ const path = require("path")
 const crypto = require("crypto")
 const electron = require('electron')
 const createDesktopShortcut = require('create-desktop-shortcuts');
+// const dialog = require('node-file-dialog')
 require("dotenv").config()
 
+/**
+ * used to check a JSON object for integrity by comparing it with the JSON ```objectToCompare```
+ * @param {JSON} objectToCheck the JSON object to compare the keys from with the ```objectToCompare```
+ * @param {JSON} objectToCompare the JSON object with the only keys in the ```objectToCheck```
+ * @returns true or false wether the JSON objects are equal or not
+ */
+function checkForIntegrity(objectToCheck, objectToCompare){
+    const keys = Object.keys(objectToCheck)
+    const neededKeys = Object.keys(objectToCompare)
+    console.log("checkForIntegrity: given keys", keys, "needed keys", neededKeys)
+    if(arraysEquaul(keys, neededKeys)) return true
+    else return false
+}
+function arraysEquaul(a, b){
+    if (a === b) return true
+    if (a == null || b == null) return false
+    if (a.length !== b.length) return false
+
+    // If you don't care about the order of the elements inside
+    // the array, you should sort both arrays here.
+    // Please note that calling sort on an array will modify that array.
+    // you might want to clone your array first.
+
+    const aSorted = Array.from(a)
+    const bSorted = Array.from(b)
+
+    for (let i = 0; i < aSorted.length; ++i) {
+        if (aSorted[i] !== bSorted[i]) return false
+    }
+    return true
+}
 /**
  * used to create a shortcut on the desktop
  * @param {string} name for the shortcut to show on the desktop
@@ -42,6 +74,8 @@ async function sendNotification(title, message){
                 subtitle: title,
                 body: message,
                 icon: config.resources + "img/icon-scaled.png",
+            }).addListener("click", function(e) {
+                open()
             }).show()
         }
     }
@@ -52,8 +86,22 @@ async function sendNotification(title, message){
             subtitle: title,
             body: message + " Error: " + err.toString(),
             icon: config.resources + "img/icon.png",
+        }).addListener("click", function(e) {
+            open()
         }).show()
     }    
+}
+/**
+ * used to load an ```url``` into the current window. The ```url``` has to start with a ```/``` slash
+ * @param {string} url the url to redirect (load) to. The ```url``` has to start with a ```/``` slash
+ * @returns {Promise}
+ */
+function redirect(url){
+    return new Promise(async cb => {
+        const config = require("./launcherConfig")
+        await electron.BrowserWindow.getAllWindows()[0].loadURL("http://localhost:" + config.PORT + url)
+        cb()
+    })
 }
 /**
  * used to move the window to the ```top``` and ```focus``` it
@@ -75,6 +123,55 @@ function close(){
 function minimize(){
     sendNotification("Minimized Window", "The launcher window got minimized.")
     electron.BrowserWindow.getAllWindows()[0].minimize()
+}
+/**
+ * used to open a dialog window with a specific ```type``` to define what can be selected
+ * @param {string} type defines what type of dialog should be opened
+ * @returns {Promise} returns the selected objects, or an error if nothing was selected
+ */
+function showDialog(){
+    return new Promise(async cb => {
+        const selected = await electron.dialog.showOpenDialog({properties: ["openDirectory", "createDirectory"]})
+        if(selected.canceled) cb(selected.filePaths)
+        else cb([])
+
+        // let finalType
+        // if(!type) finalType = "directory"
+        // else finalType = type
+
+        // dialog({type: finalType}).then((value) => {
+        //     cb(value)
+        // }).catch((reason) => {
+        //     console.log("showDialog: could not get value from dialog for the reason:", reason)
+        //     cb([])
+        // })
+    })
+}
+/**
+ * shows a small message box window
+ * @param {string} title the title of the message box window
+ * @param {string} message the message in the message box window
+ * @param {Array<string>} buttons the buttons for the message box window to be clicked by the user as strings in an array
+ * @param {string} type the type of the window, which the following options: ```none```, ```info```, ```error```, ```question``` or ```warning```
+ * @returns {Promise<number>} the index of the clicked button in the message box window
+ */
+function showMessageBox(title, message, buttons, type){
+    return new Promise(async cb => {
+        const selected = await electron.dialog.showMessageBox({title, message, buttons, type, defaultId: 0})
+        cb(selected.response) // the index of the clicked button
+    })
+}
+/**
+ * shows a small window as error with a custom ```title``` and ```message```
+ * @param {string} title the title of the error box window
+ * @param {string} message the message or error of the error box window
+ * @returns 
+ */
+function showErrorBox(title, message){
+    return new Promise(async cb => {
+        electron.dialog.showErrorBox(title, message)
+        cb()
+    })
 }
 /**
  * checks if the file or directory exists at the goven ```path```
@@ -104,7 +201,7 @@ function copy(path, dest){
 /**
  * removes a file or directory at the given ```path```
  * @param {string} path ```path``` to file or directory to remove
- * @returns {null} returns nothing
+ * @returns {Promise} returns nothing
  */
 function remove(path){
     return new Promise(cb => {
@@ -121,7 +218,7 @@ function remove(path){
  * move a directory or file to the given ```path```
  * @param {string} path the directory or file to move to the ```dest```
  * @param {string} dest the new directory or file to move to.
- * @returns
+ * @returns {Promise}
  */
 function move(path, dest){
     return new Promise(cb => {
@@ -137,7 +234,7 @@ function move(path, dest){
 /**
  * reads a directory at the given ```path```
  * @param {string} path the directory to read the files from
- * @returns {Array<string>} returns every file in the given directory
+ * @returns {Promise<Array<string>>} returns every file in the given directory
  */
 function readDir(path){
     return new Promise(cb => {
@@ -153,7 +250,7 @@ function readDir(path){
 /**
  * reads a file at the given ```path```
  * @param {string} path the file to read
- * @returns {string} returns the content of the file in string format
+ * @returns {Promise<string>} returns the content of the file in string format
  */
 function read(path){
     return new Promise(cb => {
@@ -170,7 +267,7 @@ function read(path){
  * writes ```data``` into a file at the given ```path```
  * @param {string} path the path where the file should be created
  * @param {string} data the data in string format to write in the file
- * @returns 
+ * @returns {Promise}
  */
 function write(path, data){
     return new Promise(cb => {
@@ -186,7 +283,7 @@ function write(path, data){
 /**
  * creates a directory at the given ```path```
  * @param {string} path the path to create the directory
- * @returns {null} returns nothing
+ * @returns {Promise}
  */
 function mkDir(path){
     return new Promise(cb => {
@@ -202,7 +299,7 @@ function mkDir(path){
 /**
  * fetches a specific ```url``` with the ```GET``` method and returns the data of the response
  * @param {string} url the url to be fetched
- * @returns the data of the response from the fetched url
+ * @returns {Promise} the data of the response from the fetched url
  */
 function get(url){
     return new Promise(async cb => {
@@ -216,7 +313,7 @@ function get(url){
  * fetches a specific ```url``` with the ```POST``` method with the preferred ```data``` as ```JSON``` and returns the data of the response
  * @param {string} url the url to be fetched
  * @param {JSON} data the data that needs to be send to the url
- * @returns the data of the response from the fetched url
+ * @returns {Promise} the data of the response from the fetched url
  */
 function send(url, data){
     return new Promise(async cb => {
@@ -232,7 +329,7 @@ const key = crypto.createHash('sha256').update(process.env.ENCRYPTION_KEY).diges
 /**
  * used to encrypt ```data``` and return the result
  * @param {string | number | boolean | JSON} data the data that should be encrypted
- * @returns the encrypted data
+ * @returns {string} the encrypted data
  */
 function encrypt(data){
     let iv = crypto.randomBytes(16)
@@ -244,7 +341,7 @@ function encrypt(data){
 /**
  * used to decrypt ```data``` and return the result
  * @param {string} data the data that should be decrypted
- * @returns the decrypted data
+ * @returns {string} the decrypted data
  */
 function decrypt(data){
     let dataParts = data.split(":")
@@ -255,36 +352,30 @@ function decrypt(data){
     decrypted = Buffer.concat([decrypted, decipher.final()])
     return decrypted.toString()
 }
-function checkInternetConnectivity(){
+/**
+ * check the connection between the client and the server api.sketch-company.de and the internet
+ * @returns {Promise<number>} the status of the internet connection and the server connection to api.sketch-company.de
+ */
+function checkInternetConnection(){
     return new Promise(cb => {
-        require('dns').lookup('google.com', function(err) {
-            if(err){
-                console.error("checkInternetConnectivity: lookup google.com", err)
-                require('dns').lookup('sketch-company.de', function(err) {
-                    if(err){
-                        console.error("checkInternetConnectivity: lookup sketch-company.de", err)
-                        cb(0)
-                    }
-                    else{
-                        console.log("checkInternetConnectivity: lookup sketch-company.de connected")
-                        cb(2)
-                    }
-                })
-            }
-            else{
-                console.log("checkInternetConnectivity: lookup google.com connected")
-                require('dns').lookup('sketch-company.de', function(err) {
-                    if(err){
-                        console.error("checkInternetConnectivity: lookup sketch-company.de", err)
-                        cb(1)
-                    }
-                    else{
-                        console.log("checkInternetConnectivity: lookup sketch-company.de connected")
-                        cb(2)
-                    }
-                })
-            }
-        })
+        try{
+            fetch("https://api.sketch-company.de/status", {signal: AbortSignal.timeout(1500)}).then(async (response) => {
+                let json = await response.json()
+                if(json.status == 1 && json.data == "connected"){
+                    console.log("checkInternetConnection: connected")
+                    cb(2) // connected to internet and sever
+                } 
+                else cb(1) // connected to internet but not server
+    
+            }).catch((err) => {
+                console.log("checkInternetConnection: error on request:", err)
+                cb(0) // not connected to internet and server
+            })
+        }
+        catch(err){
+            console.log("checkInternetConnection: error when starting request:", err)
+            cb(0) // not connected to internet and server
+        }
     })
 }
 module.exports = {
@@ -300,9 +391,14 @@ module.exports = {
     send,
     encrypt,
     decrypt,
-    checkInternetConnectivity,
+    checkInternetConnection,
     minimize,
     close,
     sendNotification,
-    createShortcut
+    createShortcut,
+    showDialog,
+    showMessageBox,
+    showErrorBox,
+    checkForIntegrity,
+    redirect
 }

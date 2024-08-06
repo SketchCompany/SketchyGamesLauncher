@@ -28,31 +28,11 @@ padding{
     background-color: rgba(0, 0, 0, 0.75);
 }
 .signupField{
-    display: flex;
-    align-items: center;
-    width: 600px;
-    flex-direction: column;
-    gap: 25px;
-    height: 650px;
+    width: 550px;
+    height: 625px;
     -webkit-app-region: no-drag;
-}
-.signupField .crow{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-.signupField uh1, .signupField p{
-    text-align: center;
-    margin-bottom: 0;
-}
-.signupField button{
-    width: 100%;
 }
 .signupField a{
     font-size: 14px;
     text-align: center;
-}
-.signupField .crow p{
-    margin: 0;
 }

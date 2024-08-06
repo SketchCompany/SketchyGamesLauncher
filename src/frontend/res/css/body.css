@@ -235,7 +235,7 @@ span.marked{
     color: rgb(0,150,255);
 }
 .dialog{
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     height: 100%;
@@ -253,15 +253,38 @@ span.marked{
     border-radius: 12px;
     padding: 25px;
     box-shadow: 0 6px 6px var(--bx0);
-    width: 500px;
+    min-width: 500px;
     -webkit-app-region: no-drag;
     animation: fadein 1s;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 25px;
+}
+.dialog .content .crow{ 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+.dialog .content .crow p{
+    margin: 0;
+}
+.dialog .content uh1{
+    font-size: 55px;
+}
+.dialog .content uh1, .dialog .content p{
+    text-align: center;
+    margin-bottom: 0;
+}
+.dialog .content button{
+    width: 100%;
 }
 .dialog .background{
     z-index: 501;
     height: 100%;
     width: 100%;
-    position: absolute;
+    position: fixed;
     backdrop-filter: blur(5px);
     background-color: rgba(0,0,0,0.5);
 }
@@ -635,12 +658,13 @@ footer{
     display: flex; 
     align-items: center; 
     font-size: 12px;
-    gap: 15px;
+    gap: 7px;
     margin: 0;
 }
 .breadcrumb ul{
     list-style: none;
     margin: 0;
+    margin-left: 5px;
     padding: 0;
 }
 .breadcrumb ul li{
@@ -653,6 +677,13 @@ footer{
 }
 .breadcrumb p{
     margin: 0;
+}
+.breadcrumb .bi{
+    font-size: 12px;
+}
+.breadcrumb .bi:hover{
+    color: var(--hover);
+    cursor: pointer;
 }
 .flex{
     display: flex; 

@@ -20,7 +20,7 @@ const resources = base + "res/"
 /**
  * ```installs``` is the path, where the downloads get unpacked and installed to.
  */
-const installs = defaultDir + "/installs/"
+let installs = defaultDir + "/installs/"
 /**
  * ```downloads``` is the path, where the downloads are downloaded first, before they get unpacked and install to the ```installs``` directory.
  */
@@ -61,6 +61,16 @@ const userFile = data + "user" + ext
  * ```settingsFile``` is the path, where the settings of the launcher are tracked.
  */
 const settingsFile = data + "settings" + ext
+/**
+ * ```settingsIntegrity``` is the default JSON object for the settings
+ */
+const settingsIntegrity = {
+    installationPath: installs,
+    notifications: true,
+    desktopNotifications: true,
+    loginOnStartup: true,
+    actionAfterGameStarted: 1,
+}
 
 async function setup(){
     return new Promise(async cb => {
@@ -84,13 +94,10 @@ async function setup(){
             email: "",
             password: ""
         })))
-        if(!func.exists(settingsFile)) await func.write(settingsFile, func.encrypt(JSON.stringify({
-            installationPath: installs,
-            notifications: true,
-            desktopNotifications: true,
-            loginOnStartup: true,
-            actionAfterGameStarted: 1
-        })))
+        if(!func.exists(settingsFile)) await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity)))
+        else{
+            await loadSettings()
+        }
         if(!func.exists(updatesFile)) await func.write(updatesFile, JSON.stringify({
             updates: []
         }, null, 3))
@@ -105,8 +112,9 @@ async function setup(){
         }
 
         // check for updates
-        const status = await func.checkInternetConnectivity()
+        const status = await func.checkInternetConnection()
         if(status == 2){
+            console.log("setup: checking for updates")
             await checkForUpdates()
         }
         else if(status == 1) console.log("setup: no connection to sketch-company.de servers")
@@ -116,45 +124,85 @@ async function setup(){
         cb()
     })
 }
-async function checkForUpdates(){
+function checkForUpdates(){
     return new Promise(async cb => {
         const func = require("./functions")
+        const updates = []
+
+        // read installed games
         const installs = JSON.parse(await func.read(installsFile))
-        const updates = JSON.parse(await func.read(updatesFile))
+
+        // get latest information from the store api
         const storeProducts = await func.get("https://api.sketch-company.de/store")
+
+        // check installed games for updates
         if(installs.games.length > 0){
             for (let i = 0; i < installs.games.length; i++) {
                 const element = installs.games[i];
-                const onlineElement = storeProducts.games[i]
-                if(element.name == onlineElement.name && onlineElement.version != onlineElement.version){
-                    console.log("checkForUpdates: found update for", element.name)
-                    console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
-                    updates.push(req.body)
-                    console.log("checkForUpdates: pushed to updatesFile", updates.updates)
+                console.log("checkForUpdates: checking", element.name)
+                for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
+                    const onlineElement = storeProducts.games[i2];
+                    if(element.name == onlineElement.name && element.version != onlineElement.version){
+                        console.log("checkForUpdates: found update for", element.name)
+                        console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
+                        onlineElement.installationPath = element.installationPath
+                        onlineElement.categorie = "games"
+                        updates.push(onlineElement)
+                        //console.log("checkForUpdates: pushed to updatesFile", updates)
+                    }
                 }
             }
-            console.log("checkForUpdates: no updates found for games")
         }
-        else console.log("checkForUpdates: no updates found for games")
+        else console.log("checkForUpdates: no games installed to check")
+
+        // check installed softwares for updates
         if(installs.softwares.length > 0){
             for (let i = 0; i < installs.softwares.length; i++) {
                 const element = installs.softwares[i];
-                const onlineElement = storeProducts.softwares[i]
-                if(element.name == onlineElement.name && onlineElement.version != onlineElement.version){
-                    console.log("checkForUpdates: found update for", element.name)
-                    console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
-                    updates.updates.push(req.body)
-                    console.log("checkForUpdates: pushed to updatesFile", updates.updates)
+                console.log("checkForUpdates: checking", element.name)
+                for (let i2 = 0; i2 < storeProducts.softwares.length; i2++) {
+                    const onlineElement = storeProducts.softwares[i2];
+                    if(element.name == onlineElement.name && element.version != onlineElement.version){
+                        console.log("checkForUpdates: found update for", element.name)
+                        console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
+                        onlineElement.installationPath = element.installationPath
+                        onlineElement.categorie = "softwares"
+                        updates.push(onlineElement)
+                        //console.log("checkForUpdates: pushed to updatesFile", updates)
+                    }
                 }
             }
-            console.log("checkForUpdates: no updates found for softwares")
         }
-        else console.log("checkForUpdates: no updates found for softwares")
-        if(updates.updates.length > 0){
-            await func.write(updatesFile, JSON.stringify(updates))
+        else console.log("checkForUpdates: no softwares installed to check")
+
+        if(updates.length > 0){
+            await func.write(updatesFile, JSON.stringify({updates}, null, 3))
             console.log("checkForUpdates: wrote updates to updatesFile")
         }
+        else console.log("checkForUpdates: no updates found")
+
         cb()
+    })
+}
+function loadSettings(){
+    return new Promise(async cb => {
+        try{
+            const func = require("./functions")
+            const settings = JSON.parse(func.decrypt(await func.read(settingsFile)))
+            if(func.checkForIntegrity(settings, settingsIntegrity)){
+                console.log("loadSettings: correct")
+                installs = settings.installationPath
+            }
+            else{
+                console.log("loadSettings: incorrect")
+                await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity))) // replace settings file with default settings
+            }
+            cb()
+        }
+        catch(err){
+            console.error("loadSettings:", err)
+            cb(err)
+        }
     })
 }
 

@@ -1,4 +1,20 @@
 $(document).ready(async function(){
+    const connectionStatus = await get("/api/connection")
+    
+    if(connectionStatus != 2){
+        $(".hero").remove()
+        $(".categories").remove()
+    }
+    if(connectionStatus == 1){
+        const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zu den Servern.").css("text-align", "center")
+        $("padding").append(noConnectionLabel)
+    }
+    else if(connectionStatus == 0){
+        const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zum Internet.").css("text-align", "center")
+        $("padding").append(noConnectionLabel)
+    }
+
+
     const res = await get("https://api.sketch-company.de/store")
     for (let i = 0; i < res.populars.length; i++) {
         const element = res.populars[i];
