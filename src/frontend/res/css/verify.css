@@ -33,7 +33,7 @@ padding{
     -webkit-app-region: no-drag;
 }
 .verifyField .crow{
-    justify-content: center;
+    justify-content: center !important;
 }
 .verifyField a{
     font-size: 14px;

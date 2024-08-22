@@ -241,7 +241,7 @@ router.post("/account/signup", async (req, res) => {
         else if(status == 0){
             res.json({
                 status: 0,
-                data: {exists: false, data: "Um einen Accoun zu erstellen brauchst du eine Internet Verbindung."}
+                data: {exists: false, data: "Um einen Account zu erstellen brauchst du eine Internet Verbindung."}
             })
         }
     }
