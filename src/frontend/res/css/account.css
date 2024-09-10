@@ -6,7 +6,7 @@
 .accountSettings .block{
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 16px;
     width: 50%;
     animation: fadeinbottom 1s;
 }
@@ -17,7 +17,11 @@
     align-items: center;
 }
 .accountSettings .block #logout{
-    animation: fadeinbottom 1s;
+    animation: fadeinbottom 750ms;
+    width: 100%;
+}
+.accountSettings .block #saveAccount{
+    animation: moveInFromLeft 750ms;
     width: 100%;
 }
 .accountSettings .block .crow p{

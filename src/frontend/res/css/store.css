@@ -26,7 +26,7 @@
     flex-direction: column;
     padding: 20px 20px 35px 50px;
     /* background-color: rgba(0,0,0, 0.8); */
-    background-image: linear-gradient(1deg, rgba(0,0,0, 0.8) 50%, transparent);
+    background-image: linear-gradient(2deg, rgba(0,0,0, 0.85) 40%, transparent);
     width: 100%;
     max-height: 200px;
     overflow-y: hidden;
@@ -102,8 +102,15 @@
     }
 }
 .space{
-    padding: 75px;
+    padding: 60px;
 }
+.searchbar{
+    margin-top: 25px;
+}
+.searchbar #search{
+    width: 100%;
+}
+
 .categorie{
     display: flex;
     flex-direction: column;
@@ -113,7 +120,7 @@
     border-radius: 6px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
     border: 1px solid transparent;
     padding: 20px;
     transition: all 100ms;
@@ -132,6 +139,12 @@
 }
 .categorieElement p, .categorieElement h3{
     margin: 0;
+}
+.categorieElement h3{
+    margin-top: 10px;
+}
+.categorieElement p{
+    color: var(--hover);
 }
 .categorieHolder::-webkit-scrollbar, .categorieHolder::-webkit-scrollbar-track, .categorieHolder::-webkit-scrollbar-thumb{
     height: 10px;

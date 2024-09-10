@@ -31,19 +31,29 @@
                 <uh2>Nutzerdaten</uh2>
                 <div class="crow">
                     <p>Benutzername:</p>
-                    <input id="username" type="text" placeholder="Lädt...">
+                    <span id="usernameInvalid" class="input-validator">
+                        <p style="opacity: 0;">Ungültiger Benutzername</p>
+                        <input id="username" type="text" placeholder="Lädt...">
+                    </span>
                 </div>
                 <div class="crow">
                     <p>Email:</p>
-                    <input id="email" type="text" placeholder="Lädt...">
+                    <span id="emailInvalid" class="input-validator">
+                        <p style="opacity: 0;">Ungültige Email</p>
+                        <input id="email" type="text" placeholder="Lädt...">
+                    </span>
                 </div>
                 <div class="crow">
                     <p>Passwort:</p>
-                    <span class="input-viewable">
-                        <input id="password" type="password" placeholder="Lädt...">
-                        <button><i class="bi bi-eye"></i></button>
+                    <span id="passwordInvalid" class="input-validator">
+                        <p style="opacity: 0;">Ungültiges Passwort</p>
+                        <span class="input-viewable">
+                            <input id="password" type="password" placeholder="Lädt...">
+                            <button><i class="bi bi-eye"></i></button>
+                        </span>
                     </span>
                 </div>
+                <button id="saveAccount" class="marked" style="display: none;">Änderungen Speichern</button>
                 <button id="logout" class="marked">Abmelden</button>
             </div>
             <div class="block">

@@ -196,6 +196,47 @@ router.get("/settings", async (req, res) => {
         })
     }
 })
+router.post("/account/update", async (req, res) => {
+    try{
+        const status = await func.checkInternetConnection()
+        if(status == 2){
+            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+            console.log("req.body", req.body)
+            const newUserData = {user: req.body.user, email: req.body.email, password: req.body.password, id: userData.id}
+
+            const updateRes = await func.send("https://api.sketch-company.de/u/update", newUserData)
+            console.log(req.path, updateRes)
+
+            userData.user = newUserData.user
+            userData.email = newUserData.email
+            userData.password = newUserData.password
+
+            await func.write(config.userFile, func.encrypt(JSON.stringify(userData)))
+
+            res.json({
+                status: 1,
+                data: "Änderungen gespeichert."
+            })
+        }
+        else if(status == 1){
+            res.json({
+                status: 0,
+                data: "Keine Verbindung zum Server."
+            })
+        }
+        else res.json({
+            status: 0,
+            data: "Keine Internetverbindung."
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
 router.get("/account/logout", async (req, res) => {
     try{
         await func.remove(config.userFile)
@@ -779,13 +820,13 @@ function addToAccount(product){
                 purchased: now.toLocaleString(),
                 lastDownload: now.toLocaleString(),
             }
-            for (let i = 0; i < games.length; i++) {
+            for(let i = 0; i < games.length; i++){
                 const element = games[i];
                 if(element.name === product.name){
                     console.log("addToAccount: game already purchased", product.name)
                     console.log("addToAccount: updating game data")
                     newGame.purchased = element.purchased
-                    console.log(element.purchased)
+                    console.log("addToAccount: element.purchased", element.purchased)
                     games.splice(i, 1)
                 }
             }

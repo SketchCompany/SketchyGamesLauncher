@@ -1,3 +1,4 @@
+let store
 $(document).ready(async function(){
     const connectionStatus = await get("/api/connection")
     
@@ -8,17 +9,20 @@ $(document).ready(async function(){
     if(connectionStatus == 1){
         const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zu den Servern.").css("text-align", "center")
         $("padding").append(noConnectionLabel)
+        return
     }
     else if(connectionStatus == 0){
         const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zum Internet.").css("text-align", "center")
         $("padding").append(noConnectionLabel)
+        return
     }
 
 
     const res = await get("https://api.sketch-company.de/store")
+    store = res
     for (let i = 0; i < res.populars.length; i++) {
         const element = res.populars[i];
-        const newElement = createPopularElement(element.name, element.teaser, element.img)
+        const newElement = createPopularElement(element)
         if(i != 0){
             newElement.css("display", "none")
         }
@@ -27,19 +31,19 @@ $(document).ready(async function(){
     }
     for (let i = 0; i < res.suggestions.suggestions.length; i++) {
         const element = res.suggestions.suggestions[i];
-        createCategorieElement(".suggestions", element.name, element.description, element.img)
+        createCategorieElement(".suggestions", element)
     }
     for (let i = 0; i < res.suggestions.bestofweek.length; i++) {
         const element = res.suggestions.bestofweek[i];
-        createCategorieElement(".bestofweek", element.name, element.description, element.img)
+        createCategorieElement(".bestofweek", element)
     }
     for (let i = 0; i < res.suggestions.games.length; i++) {
         const element = res.suggestions.games[i];
-        createCategorieElement(".games", element.name, element.description, element.img)
+        createCategorieElement(".games", element)
     }
     for (let i = 0; i < res.suggestions.softwares.length; i++) {
         const element = res.suggestions.softwares[i];
-        createCategorieElement(".softwares", element.name, element.description, element.img)
+        createCategorieElement(".softwares", element)
     }
     startLoop()
     createCtxMenu(".popular", "popular-element", `
@@ -50,13 +54,39 @@ $(document).ready(async function(){
         <button>Ansehen</button>
         <button>Download</button>
     `, elementClicked)
+
+    $("#searchBtn").click(search)
+    $("#search").keyup(search)
+
+    function search(e){
+        const search = $("#search").val().toLowerCase()
+        $(".searchResults").get(0).replaceChildren()
+        if(!/\S/.test(search)) return
+        for (let i = 0; i < res.games.length; i++) {
+            const element = res.games[i];
+            if(element.name.toLowerCase().includes(search)){
+                createSearchResultElement(".searchResults", element)
+            }
+        }
+        for (let i = 0; i < res.softwares.length; i++) {
+            const element = res.softwares[i];
+            if(element.name.toLowerCase().includes(search)){
+                createSearchResultElement(".searchResults", element)
+            }
+        }
+        if($(".searchResults").get(0).children.length == 0){
+            $(".searchResults").append($(document.createElement("p")).html("Nichts gefunden.").css("text-align", "center"))
+        }
+    }
 })
+
 const time = 10 * 1000
 let lastChange = Date.now()
 function startLoop(){
     setInterval(() => {
         if((Date.now() - lastChange) <= time) return
         lastChange = Date.now()
+
         const populars = $(".popular").map(function(){return this}).get()
         for (let i = 0; i < populars.length; i++) {
             const element = $(populars[i]);
@@ -74,12 +104,17 @@ function startLoop(){
         }
     }, 1000)
 }
-function createPopularElement(name, teaser, img){
-    const cover = $(document.createElement("img")).attr("src", img).attr("alt", "")
-    const description = $(document.createElement("p")).html(teaser)
-    const headline = $(document.createElement("h1")).html(name)
+function createPopularElement(product){
+    const cover = $(document.createElement("img")).attr("src", product.img).attr("alt", "")
+    const description = $(document.createElement("p")).html(product.teaser)
+    const headline = $(document.createElement("h1")).html(product.name)
     const contentDiv = $(document.createElement("div")).addClass("content").append(headline).append(description)
-    const div = $(document.createElement("div")).addClass("popular").append(cover).append(contentDiv).click(() => openSite("/store/" + name)).attr("name", name)
+    const div = $(document.createElement("div")).addClass("popular").append(cover).append(contentDiv).click(() => {
+        if(!product.isTeaser) openSite("/store/" + product.name)
+    }).attr("name", product.name)
+    if(product.isTeaser){
+        div.attr("isTeaser", "true")
+    }
     return div
 }
 $("#popularsBtnLeft").click(function(){
@@ -116,14 +151,28 @@ $("#popularsBtnRight").click(function(){
         }
     }
 })
-function createCategorieElement(type, name, description, img){
-    const imgElement = $(document.createElement("img")).attr("src", img).attr("alt", "")
-    const h3 = $(document.createElement("h3")).html(name)
-    const p = $(document.createElement("p")).html(description)
-    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).append(p).click(() => openSite("/store/" + name)).attr("name", name)
+function createSearchResultElement(type, product){
+    const imgElement = $(document.createElement("img")).attr("src", product.resourcesUrl + "1.png").attr("alt", "")
+    const h3 = $(document.createElement("h3")).html(product.name)
+    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).click(() => openSite("/store/" + product.name)).attr("name", product.name)
+    if(product.isTeaser){
+        div.attr("isTeaser", "true")
+    }
+    $(type).append(div)
+}
+function createCategorieElement(type, product){
+    const imgElement = $(document.createElement("img")).attr("src", product.img).attr("alt", "")
+    const h3 = $(document.createElement("h3")).html(product.name)
+    const p = $(document.createElement("p")).html(product.description)
+    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).append(p).click(() => openSite("/store/" + product.name)).attr("name", product.name)
+    if(product.isTeaser){
+        div.attr("isTeaser", "true")
+    }
     $(type).append(div)
 }
 function elementClicked(i, element){
+    if($(element).attr("isTeaser")) return
+
     const name = $(element).attr("name")
     if(i == 0){
         openSite("/store/" + name)

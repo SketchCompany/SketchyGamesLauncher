@@ -354,7 +354,8 @@ function decrypt(data){
 }
 /**
  * check the connection between the client and the server api.sketch-company.de and the internet
- * @returns {Promise<number>} the status of the internet connection and the server connection to api.sketch-company.de
+ * @returns {Promise<number>} the status of the internet connection and the server connection to api.sketch-company.de. 
+ * Returns 2 if connected to internet and server, 1 if connected to internet but not the server and 0 if none so no internet or server connection is given
  */
 function checkInternetConnection(){
     return new Promise(cb => {

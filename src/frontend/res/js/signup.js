@@ -326,7 +326,7 @@ async function signup(){
     }
     const res = await send("https://api.sketch-company.de/u/check", {user, email})
     if(res){
-        notify("Sorry", "Ein Nutzer mit diesen Daten existier bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
+        notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
     }
     else{
         localStorage.setItem("signUpData", JSON.stringify({user, email, password}))

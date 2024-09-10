@@ -15,7 +15,7 @@
   "main": "src/index.js",
   "icon": "app.ico",
   "scripts": {
-    "test": "nodemon --trace-warnings ./src/launcher.js",
+    "test": "electron-forge start",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
