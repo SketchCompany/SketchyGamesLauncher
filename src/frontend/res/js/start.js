@@ -5,7 +5,7 @@ $(document).ready(async function(){
         const uh2 = $(document.createElement("uh2")).html("Zuletzt Gespielt")
         const h3 = $(document.createElement("h3")).html(res.name)
         const p = $(document.createElement("p")).html(res.versionLevel + " " + res.version)
-        const img = $(document.createElement("img")).attr("src", res.resourcesUrl + "1.png").attr("alt", "")
+        const img = $(document.createElement("img")).attr("src", "/api/library/img/" + res.name + "?installationPath=" + res.installationPath).attr("alt", "")
         const paddingDiv = $(document.createElement("div")).addClass("lastPlayedElement").append(h3).append(p).append(img)
         const div = $(document.createElement("div")).attr("name", res.name).attr("filepath", res.start).attr("id", "lastplayed").addClass("ccard").append(uh2).append(paddingDiv).click(async function(){
             const res2 = await send("/api/games/start", {filepath: res.start, name: res.name})

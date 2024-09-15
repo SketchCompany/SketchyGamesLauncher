@@ -591,17 +591,27 @@ router.post("/games/delete", async (req, res) => {
 })
 router.post("/email", async (req, res) => {
     try{
-        //req.body.from = "Sketchy Games Launcher"
-        if(!req.body.user && !req.body.email && func.exists(config.userFile)){
-            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-            if(!req.body.user) req.body.user = userData.user
-            if(!req.body.email) req.body.email = userData.email
+        const status = await func.checkInternetConnection()
+        if(status == 2){
+            //req.body.from = "Sketchy Games Launcher"
+            if(!req.body.user && !req.body.email && func.exists(config.userFile)){
+                const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+                if(!req.body.user) req.body.user = userData.user
+                if(!req.body.email) req.body.email = userData.email
+            }
+            const response = await func.send("https://api.sketch-company.de/email", req.body)
+            res.json({
+                status: 1,
+                data: response
+            })
         }
-        const response = await func.send("https://api.sketch-company.de/email", req.body)
-        res.json({
-            status: 1,
-            data: response
-        })
+        else{
+            res.json({
+                status: 0,
+                data: "Keine Verbindung zu den Server oder zum Internet."
+            })
+        }
+        
         // const toEmail = req.body.email
         // const subject = req.body.subject
         // const user = req.body.user
@@ -660,6 +670,12 @@ router.post("/email", async (req, res) => {
     }
 })
 let progress = 0
+let downloadTime = {
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+}
+let downloadSpeed = 0
 let isDownloading = false
 const downloadQueue = []  
 router.post("/download", (req, res) => {
@@ -700,6 +716,13 @@ async function download(){
 
         if(downloadQueue.length > 0 && !isDownloading){
             isDownloading = true
+            progress = 0
+            downloadSpeed = 0
+            downloadTime = {
+                hours: 0,
+                minutes: 0,
+                seconds: 0,
+            }
             const currentDownload = downloadQueue[0]
             console.log("download:", "started download for", currentDownload.name)
             https.get(currentDownload.downloadUrl, {sessionTimeout: 0, timeout: 0}, (response) => {
@@ -707,12 +730,44 @@ async function download(){
                 const downloadPath = config.downloads + currentDownload.name + config.packageExt
                 const writeStream = fs.createWriteStream(downloadPath)
                 currentDownloadWriteStream = writeStream
+                
                 response.pipe(writeStream)
-                writeStream.on("drain", () => {
-                    progress = (Math.round(writeStream.bytesWritten / (parseInt(response.headers['content-length'], 10)) * 100)) -1
+
+                const totalBytes = parseInt(response.headers["content-length"], 10)
+                let downloadedBytes = 0
+                const startTime = Date.now()
+
+                response.on("data", (chunk) => {
+                    downloadedBytes += chunk.length
+
+                    const elapsedTime = (Date.now() - startTime) / 1000 // in seconds
+                    const speed = (downloadedBytes / elapsedTime) / (1024 * 1024) // in MB/s
+                    const percentage =  Math.round((downloadedBytes / totalBytes) * 100)
+
+                    const remainingBytes = totalBytes - downloadedBytes
+                    const estimatedTimeLeft = Math.round(remainingBytes / (speed * 1024 * 1024))
+
+                    let hours =  Math.floor(estimatedTimeLeft / 3600).toString()
+                    let minutes = Math.floor(estimatedTimeLeft % 3600 / 60).toString()
+                    let seconds = Math.floor(estimatedTimeLeft % 3600 % 60).toString()
+
+                    if(parseInt(hours) < 10) hours = "0" + hours
+                    if(parseInt(minutes) < 10) minutes = "0" + minutes
+                    if(parseInt(seconds) < 10) seconds = "0" + seconds
+
+                    downloadTime = {
+                        hours,
+                        minutes,
+                        seconds,
+                    }
+                    progress = percentage - 1
+                    downloadSpeed = speed.toFixed(2)
                     if(progress == -1) progress = 0
-                    console.log("download:", "progress", currentDownload.name, progress.toString() + "%")
+                    console.log("download:", currentDownload.name, "progress",  progress + "%")
+                    console.log("download:", currentDownload.name, "speed", downloadSpeed + " MB/s")
+                    console.log("download:", currentDownload.name, "time left", downloadTime.hours + ":" + downloadTime.minutes + ":" + downloadTime.seconds)
                 })
+
                 writeStream.on("finish", async() => {
                     writeStream.close()
                     if(!currentDownloadResponse || !currentDownloadWriteStream) return
@@ -730,27 +785,21 @@ async function download(){
                         createShortcut = true
                     }
                     const latestInfo = await unpackage(currentDownload, downloadPath, currentDownload.installationPath /* config.installs */ + currentDownload.name + "/")
-                    progress = 100
                     await downloadImage(currentDownload)
                     if(createShortcut) func.createShortcut(latestInfo.name, latestInfo.start, latestInfo.start)
                     else console.log("createShortcut: shortcut was not created")
+                    progress = 100
                     await addToAccount(latestInfo)
                     downloadQueue.splice(0, 1)
                     console.log("download:", "removed from downloadQueue", downloadQueue)
-                    progress = 0
+                    downloadTime = {
+                        hours: 0,
+                        minutes: 0,
+                        seconds: 0
+                    }
+                    downloadSpeed = 0
                     isDownloading = false
-                    // if(currentDownload.isLauncher){
-                    //     console.log("download: isLauncher", currentDownload.isLauncher)
-                    //     const oldPath = path.dirname(latestInfo.start)
-                    //     const newPath =  path.dirname(__dirname) + "/" + path.basename(path.dirname(latestInfo.start)) + " " + currentDownload.version
-                    //     console.log("download: moving", oldPath, "to", newPath)
-                    //     await func.move(oldPath, newPath)
-                    //     const restart = child_process.spawn(newPath + "/Sketchy Games Launcher.exe", {detached: true, cwd: newPath})
-                    //     restart.on("spawn", function(){
-                    //         electron.BrowserWindow.getAllWindows()[0].close()
-                    //         process.exit()
-                    //     })
-                    // }
+
                     if(downloadQueue.length > 0 && !isDownloading){
                         download()
                     }
@@ -803,39 +852,45 @@ async function downloadImage(product){
 function addToAccount(product){
     return new Promise(async cb => {
         try{
-            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-            const onlineUserData = await func.send("https://api.sketch-company.de/u/find", {id: userData.id})
+            const status = await func.checkInternetConnection()
+            if(status == 2){
+                const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+                const onlineUserData = await func.send("https://api.sketch-company.de/u/find", {id: userData.id})
 
-            if(!onlineUserData.games){ // no games array
-                onlineUserData.games = "[]"
-            }
-
-            const games = JSON.parse(onlineUserData.games)
-            const now = new Date()
-            const newGame = {
-                product,
-                name: product.name,
-                file: product.name + ".zip",
-                img: product.name + ".png",
-                purchased: now.toLocaleString(),
-                lastDownload: now.toLocaleString(),
-            }
-            for(let i = 0; i < games.length; i++){
-                const element = games[i];
-                if(element.name === product.name){
-                    console.log("addToAccount: game already purchased", product.name)
-                    console.log("addToAccount: updating game data")
-                    newGame.purchased = element.purchased
-                    console.log("addToAccount: element.purchased", element.purchased)
-                    games.splice(i, 1)
+                if(!onlineUserData.games){ // no games array
+                    onlineUserData.games = "[]"
                 }
+
+                const games = JSON.parse(onlineUserData.games)
+                const now = new Date()
+                const newGame = {
+                    product,
+                    name: product.name,
+                    file: product.name + ".zip",
+                    img: product.name + ".png",
+                    purchased: now.toLocaleString(),
+                    lastDownload: now.toLocaleString(),
+                }
+                for(let i = 0; i < games.length; i++){
+                    const element = games[i];
+                    if(element.name === product.name){
+                        console.log("addToAccount: game already purchased", product.name)
+                        console.log("addToAccount: updating game data")
+                        newGame.purchased = element.purchased
+                        console.log("addToAccount: element.purchased", element.purchased)
+                        games.splice(i, 1)
+                    }
+                }
+                games.push(newGame)
+                onlineUserData.games = JSON.stringify(games).toString()
+                
+                const updateResponse = await func.send("https://api.sketch-company.de/u/update", onlineUserData)
+                console.log("addToAccount: successfully added game to account")
+                cb()
             }
-            games.push(newGame)
-            onlineUserData.games = JSON.stringify(games).toString()
-            
-            const updateResponse = await func.send("https://api.sketch-company.de/u/update", onlineUserData)
-            console.log("addToAccount: successfully added game to account")
-            cb()
+            else{
+                cb()
+            }
         }
         catch(err){
             console.error("addToAccount:", err)
@@ -851,6 +906,12 @@ router.get("/download/cancel", async (req, res) => {
         currentDownloadResponse = null
         currentDownloadWriteStream = null
         progress = 0
+        downloadTime = {
+            hours: 0,
+            minutes: 0,
+            seconds: 0
+        }
+        downloadSpeed = 0
         isDownloading = false
         const name = downloadQueue.splice(0, 1)[0].name
         console.log("download:", "removed from downloadQueue", downloadQueue)
@@ -861,7 +922,9 @@ router.get("/download/cancel", async (req, res) => {
         res.json({
             state: 1,
             data: {
-                progress
+                percentage: progress,
+                time: downloadTime,
+                speed: downloadSpeed
             }
         })
     }
@@ -899,7 +962,9 @@ router.get("/download/progress", (req, res) => {
             res.json({
                 state: 1,
                 data: {
-                    progress: 100
+                    percentage: 100,
+                    time: downloadTime,
+                    speed: downloadSpeed
                 }
             })
         }
@@ -908,10 +973,33 @@ router.get("/download/progress", (req, res) => {
             res.json({
                 state: 1,
                 data: {
-                    progress
+                    percentage: progress,
+                    time: downloadTime,
+                    speed: downloadSpeed
                 }
             })
         }
+    }
+    catch(err){
+        res.json({
+            state: 0,
+            data: err.toString()
+        })
+    }
+})
+router.get("/download/progress/reset", (req, res) => {
+    try{
+        progress = 0
+        downloadSpeed = 0
+        downloadTime = {
+            hours: 0,
+            minutes: 0,
+            seconds: 0
+        }
+        res.json({
+            status: 1,
+            data: "reset download progress"
+        })
     }
     catch(err){
         res.json({

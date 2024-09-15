@@ -129,59 +129,67 @@ function checkForUpdates(){
         const func = require("./functions")
         const updates = []
 
-        // read installed games
-        const installs = JSON.parse(await func.read(installsFile))
+        const status = await func.checkInternetConnection()
 
-        // get latest information from the store api
-        const storeProducts = await func.get("https://api.sketch-company.de/store")
+        if(status == 2){
+            // read installed games
+            const installs = JSON.parse(await func.read(installsFile))
 
-        // check installed games for updates
-        if(installs.games.length > 0){
-            for (let i = 0; i < installs.games.length; i++) {
-                const element = installs.games[i];
-                console.log("checkForUpdates: checking", element.name)
-                for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
-                    const onlineElement = storeProducts.games[i2];
-                    if(element.name == onlineElement.name && element.version != onlineElement.version){
-                        console.log("checkForUpdates: found update for", element.name)
-                        console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
-                        onlineElement.installationPath = element.installationPath
-                        onlineElement.categorie = "games"
-                        updates.push(onlineElement)
-                        //console.log("checkForUpdates: pushed to updatesFile", updates)
+            // get latest information from the store api
+            const storeProducts = await func.get("https://api.sketch-company.de/store")
+
+            // check installed games for updates
+            if(installs.games.length > 0){
+                for (let i = 0; i < installs.games.length; i++) {
+                    const element = installs.games[i];
+                    console.log("checkForUpdates: checking", element.name)
+                    for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
+                        const onlineElement = storeProducts.games[i2];
+                        if(element.name == onlineElement.name && element.version != onlineElement.version){
+                            console.log("checkForUpdates: found update for", element.name)
+                            console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
+                            onlineElement.installationPath = element.installationPath
+                            onlineElement.categorie = "games"
+                            updates.push(onlineElement)
+                            //console.log("checkForUpdates: pushed to updatesFile", updates)
+                        }
                     }
                 }
             }
-        }
-        else console.log("checkForUpdates: no games installed to check")
+            else console.log("checkForUpdates: no games installed to check")
 
-        // check installed softwares for updates
-        if(installs.softwares.length > 0){
-            for (let i = 0; i < installs.softwares.length; i++) {
-                const element = installs.softwares[i];
-                console.log("checkForUpdates: checking", element.name)
-                for (let i2 = 0; i2 < storeProducts.softwares.length; i2++) {
-                    const onlineElement = storeProducts.softwares[i2];
-                    if(element.name == onlineElement.name && element.version != onlineElement.version){
-                        console.log("checkForUpdates: found update for", element.name)
-                        console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
-                        onlineElement.installationPath = element.installationPath
-                        onlineElement.categorie = "softwares"
-                        updates.push(onlineElement)
-                        //console.log("checkForUpdates: pushed to updatesFile", updates)
+            // check installed softwares for updates
+            if(installs.softwares.length > 0){
+                for (let i = 0; i < installs.softwares.length; i++) {
+                    const element = installs.softwares[i];
+                    console.log("checkForUpdates: checking", element.name)
+                    for (let i2 = 0; i2 < storeProducts.softwares.length; i2++) {
+                        const onlineElement = storeProducts.softwares[i2];
+                        if(element.name == onlineElement.name && element.version != onlineElement.version){
+                            console.log("checkForUpdates: found update for", element.name)
+                            console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
+                            onlineElement.installationPath = element.installationPath
+                            onlineElement.categorie = "softwares"
+                            updates.push(onlineElement)
+                            //console.log("checkForUpdates: pushed to updatesFile", updates)
+                        }
                     }
                 }
             }
-        }
-        else console.log("checkForUpdates: no softwares installed to check")
+            else console.log("checkForUpdates: no softwares installed to check")
 
-        if(updates.length > 0){
-            await func.write(updatesFile, JSON.stringify({updates}, null, 3))
-            console.log("checkForUpdates: wrote updates to updatesFile")
-        }
-        else console.log("checkForUpdates: no updates found")
+            if(updates.length > 0){
+                await func.write(updatesFile, JSON.stringify({updates}, null, 3))
+                console.log("checkForUpdates: wrote updates to updatesFile")
+            }
+            else console.log("checkForUpdates: no updates found")
 
-        cb()
+            cb()
+        }
+        else{
+            console.log("checkForUpdates: no connection to server or internet")
+            cb()
+        }
     })
 }
 function loadSettings(){

@@ -46,13 +46,23 @@ async function createCurrentDownload(current){
                 <div class="cprogress"></div>
             </div>
         </div>
+        <div class="crow">
+            <p class="time"></p>
+            <p class="speed"></p>
+        </div>
     `)
+
     progressInterval = setInterval(async () => {
-        const progress = (await get("/api/download/progress")).progress
-        console.log("progress", progress)
-        $("#progress").html(progress + "%")
-        $(".cprogress").css("width", progress + "%")
-        if(progress >= 100){
+        const progress = (await get("/api/download/progress"))
+        console.log("progress", progress.percentage)
+        $("#progress").html(progress.percentage + "%")
+        $(".cprogress").css("width", progress.percentage + "%")
+        $(".time").html("Zeit verbleibend: " + progress.time.hours + ":" + progress.time.minutes + ":" + progress.time.seconds)
+        if(progress.time.hours == "00"){
+            $(".time").html("Zeit verbleibend: " + progress.time.minutes + ":" + progress.time.seconds)
+        }
+        $(".speed").html(progress.speed + " MB/s")
+        if(progress.percentage >= 100){
             finishDownload()
         }
     }, progressUpdateRate)
@@ -93,7 +103,7 @@ function createDownloadQueueElement(download, index){
         </div>
     `)
     const upBtn = $(document.createElement("button")).append($(document.createElement("i")).addClass(["bi", "bi-arrow-up"])).click(async function(){
-        queue.splice(index-1, 0, queue.splice(index, 1)[0])
+        queue.splice(index - 1, 0, queue.splice(index, 1)[0])
         console.log("moved up", queue[index], queue)
         const res = await send("/api/downloads/move", {index: index, to: index-1})
         $(".queue").get(0).replaceChildren()
@@ -103,7 +113,7 @@ function createDownloadQueueElement(download, index){
         }
     })
     const downBtn = $(document.createElement("button")).append($(document.createElement("i")).addClass(["bi", "bi-arrow-down"])).click(async function(){
-        queue.splice(index+1, 0, queue.splice(index, 1)[0])
+        queue.splice(index + 1, 0, queue.splice(index, 1)[0])
         console.log("moved down", queue[index], queue)
         const res = await send("/api/downloads/move", {index: index, to: index+1})
         $(".queue").get(0).replaceChildren()
@@ -117,7 +127,7 @@ function createDownloadQueueElement(download, index){
         downloadQueueElement.remove()
         const res = await send("/api/downloads/unqueue", {index})
     })
-    const div = $(document.createElement("div")).append(upBtn).append(" ").append(downBtn).append(" ").append(cancelBtn).append(" ")
+    const div = $(document.createElement("div")).append([upBtn, " ", downBtn, " ", cancelBtn, " "])
     downloadQueueElement.children().first().append(div)
     $(".queue").append(downloadQueueElement)
 }
@@ -125,6 +135,8 @@ function finishDownload(){
     clearInterval(progressInterval)
     setTimeout(async function(){
         $(".currentDownload").get(0).replaceChildren()
+        const resetRes = await get("/api/download/progress/reset")
+        console.log("finish: resetRes", resetRes)
         if(queue.length > 0){
             paused = false
             createCurrentDownload(queue[0])
@@ -140,6 +152,7 @@ function finishDownload(){
                 const element = queue[i];
                 createDownloadQueueElement(element, i)
             }
+            console.log("finish: next download")
         }
         else{
             console.log("all downloads finished")

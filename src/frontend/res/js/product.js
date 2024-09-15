@@ -1,23 +1,39 @@
 let product = {}
 
 $(document).ready(async function(){
-    let productName = decodeURI(location.pathname.substring(location.pathname.lastIndexOf("/"))).replace("/", "")
-    const res = await get("https://api.sketch-company.de/store")
-    for (let i = 0; i < res.games.length; i++) {
-        const element = res.games[i];
-        if(element.name == productName){
-            element.categorie = "games"
-            setup(element)
-            return
+    const status = await get("/api/connection")
+    if(status == 2){
+        let productName = decodeURI(location.pathname.substring(location.pathname.lastIndexOf("/"))).replace("/", "")
+        const res = await get("https://api.sketch-company.de/store")
+        console.log(res)
+        for (let i = 0; i < res.games.length; i++) {
+            const element = res.games[i];
+            if(element.name == productName){
+                element.categorie = "games"
+                setup(element)
+                return
+            }
+        }
+        for (let i = 0; i < res.softwares.length; i++) {
+            const element = res.softwares[i];
+            if(element.name == productName){
+                element.categorie = "softwares"
+                setup(element)
+                return
+            }
         }
     }
-    for (let i = 0; i < res.softwares.length; i++) {
-        const element = res.softwares[i];
-        if(element.name == productName){
-            element.categorie = "softwares"
-            setup(element)
-            return
-        }
+    else if(status == 1){
+        notify("Keine Verbindung", "Wir konnten keine Verbindung zu den Servern aufbauen.", "error")
+        $(".imagesHolder").remove()
+        $(".content").remove()
+        $(".product").append($(document.createElement("p")).html("Keine Verbindung zu den Servern.").css("text-align", "center"))
+    }
+    else{
+        notify("Keine Verbindung", "Wir konnten keine Internet Verbindung aufbauen.", "error")
+        $(".imagesHolder").remove()
+        $(".content").remove()
+        $(".product").append($(document.createElement("p")).html("Keine Internet Verbindung.").css("text-align", "center"))
     }
 })
 

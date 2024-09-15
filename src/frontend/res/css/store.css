@@ -83,7 +83,7 @@
     color: var(--gray);
     border: 1px solid var(--darkgray);
 }
-@media (max-width: 1500px){
+@media (max-width: 1450px){
     .hero{
         flex-direction: column;
     }
@@ -99,6 +99,29 @@
     .hero .navigation a{
         padding: 15px;
         width: 49.5%;
+    }
+    .popular img{
+        height: 600px;
+    }
+}
+@media (min-width: 1450px) {
+    .popular img{
+        height: 550px;
+    }
+}
+@media (min-width: 1600px) {
+    .popular img{
+        height: 600px;
+    }
+}
+@media (min-width: 1700px) {
+    .popular img{
+        height: 650px;
+    }
+}
+@media (min-width: 1750px) {
+    .popular img{
+        height: 750px;
     }
 }
 .space{
@@ -142,9 +165,18 @@
 }
 .categorieElement h3{
     margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 .categorieElement p{
     color: var(--hover);
+}
+.categorieElement .tags{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
 }
 .categorieHolder::-webkit-scrollbar, .categorieHolder::-webkit-scrollbar-track, .categorieHolder::-webkit-scrollbar-thumb{
     height: 10px;

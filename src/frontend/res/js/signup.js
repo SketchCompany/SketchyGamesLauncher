@@ -324,21 +324,31 @@ async function signup(){
         console.error("invalid sign up")
         return
     }
-    const res = await send("https://api.sketch-company.de/u/check", {user, email})
-    if(res){
-        notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
+    const status = await get("/api/connection")
+    if(status == 2){
+        const res = await send("https://api.sketch-company.de/u/check", {user, email})
+        console.log(res)
+        if(res){
+            notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
+        }
+        else{
+            localStorage.setItem("signUpData", JSON.stringify({user, email, password}))
+            setTimeout(() => openSite("/verify"), 1000)
+        }
+        // const res = await send("/api/account/signup", {user, email, password})
+        // console.log(res)
+        // if(res.exists){
+        //     notify("Fehlgeschalgen", res.data, "error")
+        // }
+        // else{
+        //     notify("Erfolgreich", "Du hast dich erfolgreich regestriert.", "success")
+        //     setTimeout(() => openSite("/"), 5000)
+        // }
+    }
+    else if(status == 1){
+        notify("Keine Verbindung", "Keine Verbindung zum Server.", "error")
     }
     else{
-        localStorage.setItem("signUpData", JSON.stringify({user, email, password}))
-        setTimeout(() => openSite("/verify"), 1000)
+        notify("Keine Verbindung", "Keine Internet Verbindung.", "error")
     }
-    // const res = await send("/api/account/signup", {user, email, password})
-    // console.log(res)
-    // if(res.exists){
-    //     notify("Fehlgeschalgen", res.data, "error")
-    // }
-    // else{
-    //     notify("Erfolgreich", "Du hast dich erfolgreich regestriert.", "success")
-    //     setTimeout(() => openSite("/"), 5000)
-    // }
 }

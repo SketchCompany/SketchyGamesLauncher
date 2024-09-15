@@ -365,7 +365,7 @@ function toggleNotificationsCenter(){
     }
 }
 
-// wait for an element to load before using it (no usages)
+// wait for an element to load before using it
 function waitForElement(selector) {
     return new Promise(resolve => {
         if (document.querySelector(selector)) {
@@ -926,3 +926,26 @@ function removeDialog(id){
     enableScroll()
     $(id).remove()
 }
+
+waitForElement(".tag").then(function(el){
+    const tags = $(".tag").map(function(){return this}).get()
+    for (let i = 0; i < tags.length; i++) {
+        const element = tags[i];
+        if($(element).attr("listener")) continue
+        $(element).click(function(e){
+            e.stopPropagation()
+            $(element).attr("listener", "true")
+            const searchbar = $(".searchbar")
+            const search = $("#search")
+            if(searchbar.length > 0 && search.length > 0){
+                search.val("tag:" + $(element).html())
+                if($("#searchBtn").length > 0){
+                    $("#searchBtn").click()
+                    if($(".searchResults").length > 0){
+                        $(".searchResults").children().first().get(0).scrollIntoView({ behavior: "auto", block: "center"})
+                    }
+                }
+            }
+        })
+    }
+})

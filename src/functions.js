@@ -360,7 +360,7 @@ function decrypt(data){
 function checkInternetConnection(){
     return new Promise(cb => {
         try{
-            fetch("https://api.sketch-company.de/status", {signal: AbortSignal.timeout(1500)}).then(async (response) => {
+            fetch("https://api.sketch-company.de/status", {signal: AbortSignal.timeout(2000)}).then(async (response) => {
                 let json = await response.json()
                 if(json.status == 1 && json.data == "connected"){
                     console.log("checkInternetConnection: connected")

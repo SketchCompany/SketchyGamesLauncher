@@ -5,6 +5,7 @@ $(document).ready(async function(){
     if(connectionStatus != 2){
         $(".hero").remove()
         $(".categories").remove()
+        $(".searchbar").remove()
     }
     if(connectionStatus == 1){
         const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zu den Servern.").css("text-align", "center")
@@ -19,6 +20,7 @@ $(document).ready(async function(){
 
 
     const res = await get("https://api.sketch-company.de/store")
+    console.log(res)
     store = res
     for (let i = 0; i < res.populars.length; i++) {
         const element = res.populars[i];
@@ -59,24 +61,52 @@ $(document).ready(async function(){
     $("#search").keyup(search)
 
     function search(e){
-        const search = $("#search").val().toLowerCase()
+        let search = $("#search").val().toLowerCase()
         $(".searchResults").get(0).replaceChildren()
         if(!/\S/.test(search)) return
-        for (let i = 0; i < res.games.length; i++) {
-            const element = res.games[i];
-            if(element.name.toLowerCase().includes(search)){
-                createSearchResultElement(".searchResults", element)
+        if(search.startsWith("tag:")){
+            search = search.replace("tag:", "")
+            for (let i = 0; i < res.games.length; i++) {
+                const element = res.games[i].tags;
+                for (let i2 = 0; i2 < element.length; i2++) {
+                    const element2 = element[i2];
+                    if(element2.toLowerCase().includes(search)){
+                        createSearchResultElement(".searchResults", res.games[i])
+                        break
+                    }
+                }
+            }
+            for (let i = 0; i < res.softwares.length; i++) {
+                const element = res.softwares[i].tags;
+                for (let i2 = 0; i2 < element.length; i2++) {
+                    const element2 = element[i2];
+                    if(element2.toLowerCase().includes(search)){
+                        createSearchResultElement(".searchResults", res.softwares[i])
+                        break
+                    }
+                }
+            }
+            if($(".searchResults").get(0).children.length == 0){
+                $(".searchResults").append($(document.createElement("p")).html("Nichts gefunden.").css("text-align", "center"))
             }
         }
-        for (let i = 0; i < res.softwares.length; i++) {
-            const element = res.softwares[i];
-            if(element.name.toLowerCase().includes(search)){
-                createSearchResultElement(".searchResults", element)
+        else{
+            for (let i = 0; i < res.games.length; i++) {
+                const element = res.games[i];
+                if(element.name.toLowerCase().includes(search)){
+                    createSearchResultElement(".searchResults", element)
+                }
             }
-        }
-        if($(".searchResults").get(0).children.length == 0){
-            $(".searchResults").append($(document.createElement("p")).html("Nichts gefunden.").css("text-align", "center"))
-        }
+            for (let i = 0; i < res.softwares.length; i++) {
+                const element = res.softwares[i];
+                if(element.name.toLowerCase().includes(search)){
+                    createSearchResultElement(".searchResults", element)
+                }
+            }
+            if($(".searchResults").get(0).children.length == 0){
+                $(".searchResults").append($(document.createElement("p")).html("Nichts gefunden.").css("text-align", "center"))
+            }
+        } 
     }
 })
 
@@ -154,7 +184,19 @@ $("#popularsBtnRight").click(function(){
 function createSearchResultElement(type, product){
     const imgElement = $(document.createElement("img")).attr("src", product.resourcesUrl + "1.png").attr("alt", "")
     const h3 = $(document.createElement("h3")).html(product.name)
-    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).click(() => openSite("/store/" + product.name)).attr("name", product.name)
+    const tags = $(document.createElement("div")).addClass("tags")
+    for (let index = 0; index < product.tags.length; index++) {
+        const element = product.tags[index];
+        const tag = $(document.createElement("span")).addClass("tag").html(element)
+        tags.append(tag)
+    }
+    if(product.isNew){
+        h3.append($(document.createElement("span")).addClass(["badgetag", "new"]).html("NEW"))
+    }
+    if(product.isTeaser){
+        h3.append($(document.createElement("span")).addClass(["badgetag", "soon"]).html("SOON"))
+    }
+    const div = $(document.createElement("div")).addClass("categorieElement").css("animation", "none").append([imgElement, h3, tags]).click(() => openSite("/store/" + product.name)).attr("name", product.name)
     if(product.isTeaser){
         div.attr("isTeaser", "true")
     }
@@ -164,7 +206,20 @@ function createCategorieElement(type, product){
     const imgElement = $(document.createElement("img")).attr("src", product.img).attr("alt", "")
     const h3 = $(document.createElement("h3")).html(product.name)
     const p = $(document.createElement("p")).html(product.description)
-    const div = $(document.createElement("div")).addClass("categorieElement").append(imgElement).append(h3).append(p).click(() => openSite("/store/" + product.name)).attr("name", product.name)
+    const tags = $(document.createElement("div")).addClass("tags")
+    for (let index = 0; index < product.tags.length; index++) {
+        const element = product.tags[index];
+        const tag = $(document.createElement("span")).addClass("tag").html(element)
+        tags.append(tag)
+    }
+    if(product.isNew){
+        h3.append($(document.createElement("span")).addClass(["badgetag", "new"]).html("NEW"))
+    }
+    if(product.isTeaser){
+        console.log(product.isTeaser, product.name)
+        h3.append($(document.createElement("span")).addClass(["badgetag", "soon"]).html("SOON"))
+    }
+    const div = $(document.createElement("div")).addClass("categorieElement").append([imgElement, h3, p, tags]).click(() => openSite("/store/" + product.name)).attr("name", product.name)
     if(product.isTeaser){
         div.attr("isTeaser", "true")
     }

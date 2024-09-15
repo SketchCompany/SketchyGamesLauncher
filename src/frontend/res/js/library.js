@@ -183,7 +183,9 @@ function setClick(i, element){
         }
     })
 }
-$(".searchbar").keyup(function(){
+$(".searchbar").keyup(search)
+$("#searchBtn").click(search)
+function search(){
     const search = $(".searchbar").val().toLowerCase()
     if(!/\S/.test(search)){
         $(".searchResults").css("display", "none")
@@ -208,9 +210,9 @@ $(".searchbar").keyup(function(){
     $(".softwares").children().each(addToSearchResults)
     function addToSearchResults(i, element){
         if(element.getAttribute("name").toLowerCase().includes(search)){
-            const clone = $(element).clone(true, true)
+            const clone = $(element).clone(true, true).css("animation", "none")
             $(".searchResults").append(clone)
         }
     }
     $(".searchResults").children().each(setClick)
-})
+}

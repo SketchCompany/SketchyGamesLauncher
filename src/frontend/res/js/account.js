@@ -4,9 +4,9 @@ $(document).ready(async function(){
     console.log(res)
     if(res.status == 1){
         user = res.data
-        $("#username").val(res.data.user)
-        $("#email").val(res.data.email)
-        $("#password").val(res.data.password)
+        $("#username").val(res.data.user).attr("placeholder", "Dein Benutzername")
+        $("#email").val(res.data.email).attr("placeholder", "Deine Email")
+        $("#password").val(res.data.password).attr("placeholder", "Dein Passwort")
         res.data.games = JSON.parse(res.data.games)
         for (let i = 0; i < res.data.games.length; i++) {
             const element = res.data.games[i];
