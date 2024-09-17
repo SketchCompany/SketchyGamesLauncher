@@ -74,6 +74,7 @@ const settingsIntegrity = {
     desktopNotifications: true,
     loginOnStartup: true,
     actionAfterGameStarted: 1,
+    console: false,
 }
 
 async function setup(){

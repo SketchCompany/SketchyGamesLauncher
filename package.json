@@ -1,11 +1,11 @@
 {
   "name": "sketchy-games-launcher",
   "productName": "Sketchy Games Launcher",
+  "version": "0.0.2",
   "bugs": {
     "url": "https://github.com/SketchCompany/SketchyGamesLauncher/issues",
     "email": "sketch-company@web.de"
   },
-  "version": "0.0.1",
   "homepage": "https://github.com/SketchCompany/SketchyGamesLauncher",
   "repository": {
     "url": "https://github.com/SketchCompany/SketchyGamesLauncher",

@@ -18,6 +18,9 @@ $(document).ready(async function(){
         $("#loginOnStartup").attr("checked", "")
     }
     $($("#actionAfterGameStarted").children().get(settings.actionAfterGameStarted)).attr("selected", "")
+    if(settings.console){
+        $("#console").attr("checked", "")
+    }
 
     $("#submit").click(async function(){
         const newSettings = {
@@ -26,6 +29,7 @@ $(document).ready(async function(){
             desktopNotifications: isChecked("#desktopNotifications"),
             loginOnStartup: isChecked("#loginOnStartup"),
             actionAfterGameStarted: getSelected("#actionAfterGameStarted"),
+            console: isChecked("#console")
         }
         console.log("newSettings", newSettings)
         const res = await send("/api/settings", newSettings)

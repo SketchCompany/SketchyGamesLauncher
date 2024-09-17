@@ -35,9 +35,6 @@ const createWindow = async () => {
             symbolColor: "springgreen",
             height: 25,
         },
-        webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-        },
     })
 
     // set cookie and make sure only electron can access the express app
@@ -58,7 +55,7 @@ const createWindow = async () => {
     else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")
 
     // Open the DevTools.
-    !app.isPackaged ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")
+    !app.isPackaged || settings.console ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")
 }
 
 // This method will be called when Electron has finished
