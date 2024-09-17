@@ -24,7 +24,7 @@ const resources = base + "res/"
 /**
  * ```installs``` is the path, where the downloads get unpacked and installed to.
  */
-let installs = defaultDir + "/installs/"
+let installs = path.parse(app.getPath("appData")).dir + "/Roaming/Sketchy Games Launcher/installs/"
 /**
  * ```downloads``` is the path, where the downloads are downloaded first, before they get unpacked and install to the ```installs``` directory.
  */

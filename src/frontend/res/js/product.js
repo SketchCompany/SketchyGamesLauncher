@@ -61,8 +61,8 @@ function setup(element){
     $("#version").html(element.versionLevel + " " + element.version)
     const tags = $(".tags")
     for (let index = 0; index < element.tags.length; index++) {
-        const element = element.tags[index];
-        const tag = $(document.createElement("span")).addClass("tag").html(element)
+        const element2 = element.tags[index];
+        const tag = $(document.createElement("span")).addClass("tag").html(element2)
         tags.append(tag)
     }
     $("#description").html(element.description)
