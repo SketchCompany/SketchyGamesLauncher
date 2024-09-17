@@ -1,49 +1,64 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const config = require("./launcherConfig")
 const launcher = require("./launcher")
 const func = require("./functions")
+const log = require("electron-log/main")
+const path = require("path")
+
+log.transports.file.resolvePathFn = (variables) => {
+    return path.join(path.parse(app.getPath("exe")).dir, variables.fileName)
+}
+Object.assign(console, log.functions)
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
-  app.quit()
+    app.quit()
 }
 
 const createWindow = async () => {
-  // check for updates
-  require("update-electron-app").updateElectronApp()
+    // check for updates
+    require("update-electron-app").updateElectronApp()
 
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
-    minHeight: 720,
-    minWidth: 1280,
-    maxWidth: 1980,
-    autoHideMenuBar: true,
-    icon: config.resources + "img/icon.png",
-    title: "Sketchy Games Launcher",
-    titleBarStyle: "hidden",
-    titleBarOverlay: {
-      color: "rgb(30,30,30)",
-      symbolColor: "springgreen",
-      height: 25,
-    },
-  })
+    // Create the browser window.
+    const mainWindow = new BrowserWindow({
+        width: 1280,
+        height: 720,
+        minHeight: 720,
+        minWidth: 1280,
+        maxWidth: 1920,
+        autoHideMenuBar: true,
+        icon: config.resources + "img/icon.png",
+        title: "Sketchy Games Launcher",
+        titleBarStyle: "hidden",
+        titleBarOverlay: {
+            color: "rgb(30,30,30)",
+            symbolColor: "springgreen",
+            height: 25,
+        },
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js"),
+        },
+    })
 
-  mainWindow.loadURL("http://localhost:" + config.PORT + "/loading")
+    // set cookie and make sure only electron can access the express app
+    mainWindow.webContents.setUserAgent(mainWindow.webContents.getUserAgent() + config.requestToken)
 
-  // setup paths and files for usage
-  await config.setup()
-  
-  // and load the index.html of the app.
-  const settings = JSON.parse(func.decrypt(await func.read(config.settingsFile)))
-  if(!settings.loginOnStartup){
-    mainWindow.loadURL("http://localhost:" + config.PORT)
-  }
-  else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")
+    // first load the loading page
+    mainWindow.loadURL("http://localhost:" + config.PORT + "/loading")
 
-  // Open the DevTools.
-  !app.isPackaged ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")
+    // setup paths and files for usage
+    await config.setup()
+    
+    // and load the index.html of the app.
+    const settings = JSON.parse(func.decrypt(await func.read(config.settingsFile)))
+    const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+    if(!settings.loginOnStartup && userData.username && userData.email && userData.password){
+        mainWindow.loadURL("http://localhost:" + config.PORT)
+    }
+    else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")
+
+    // Open the DevTools.
+    !app.isPackaged ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")
 }
 
 // This method will be called when Electron has finished

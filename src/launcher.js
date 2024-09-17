@@ -3,12 +3,17 @@ const path = require("path")
 const app = require("express")()
 const bodyParser = require("body-parser")
 const api = require("./api")
+const config = require("./launcherConfig")
 
 app.use(bodyParser.json())
+app.use((req, res, next) => {
+    if(req.get("User-Agent").endsWith(config.requestToken)){
+        return next()
+    }
+    res.status(400).send("<h1>400 Bad Request</h1>Sketchy Games Launcher can only be accessed in the app.<br>Please open the Sketchy Games Launcher app.")
+    res.end()
+})
 app.use("/api", api)
-
-// configuration
-const config = require("./launcherConfig")
 
 // apis
 app.get("/res", (req, res) => {

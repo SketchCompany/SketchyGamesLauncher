@@ -216,7 +216,6 @@ function createCategorieElement(type, product){
         h3.append($(document.createElement("span")).addClass(["badgetag", "new"]).html("NEW"))
     }
     if(product.isTeaser){
-        console.log(product.isTeaser, product.name)
         h3.append($(document.createElement("span")).addClass(["badgetag", "soon"]).html("SOON"))
     }
     const div = $(document.createElement("div")).addClass("categorieElement").append([imgElement, h3, p, tags]).click(() => openSite("/store/" + product.name)).attr("name", product.name)

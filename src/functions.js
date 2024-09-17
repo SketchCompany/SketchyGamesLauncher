@@ -3,8 +3,9 @@ const path = require("path")
 const crypto = require("crypto")
 const electron = require('electron')
 const createDesktopShortcut = require('create-desktop-shortcuts');
+const dotenv = require("dotenv").config()
+console.log(dotenv)
 // const dialog = require('node-file-dialog')
-require("dotenv").config()
 
 /**
  * used to check a JSON object for integrity by comparing it with the JSON ```objectToCompare```
@@ -325,7 +326,7 @@ function send(url, data){
     })
 }
 const algorithm = "aes-256-ctr"
-const key = crypto.createHash('sha256').update(process.env.ENCRYPTION_KEY).digest("hex")
+const key = crypto.createHash('sha256').update("SketchyGamesLauncherEncryptionKey").digest("hex")
 /**
  * used to encrypt ```data``` and return the result
  * @param {string | number | boolean | JSON} data the data that should be encrypted
@@ -354,13 +355,15 @@ function decrypt(data){
 }
 /**
  * check the connection between the client and the server api.sketch-company.de and the internet
+ * @param {number | null} timeout the time after the check will be canceled
  * @returns {Promise<number>} the status of the internet connection and the server connection to api.sketch-company.de. 
  * Returns 2 if connected to internet and server, 1 if connected to internet but not the server and 0 if none so no internet or server connection is given
  */
-function checkInternetConnection(){
+function checkInternetConnection(timeout){
     return new Promise(cb => {
         try{
-            fetch("https://api.sketch-company.de/status", {signal: AbortSignal.timeout(2000)}).then(async (response) => {
+            if(!timeout) timeout = 2500
+            fetch("https://api.sketch-company.de/status", {signal: AbortSignal.timeout(timeout)}).then(async (response) => {
                 let json = await response.json()
                 if(json.status == 1 && json.data == "connected"){
                     console.log("checkInternetConnection: connected")

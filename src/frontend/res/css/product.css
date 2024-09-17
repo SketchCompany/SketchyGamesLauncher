@@ -35,6 +35,12 @@
     font-size: 20px;
     height: 50px;
 }
+.product .tags{
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
 .product .imagesHolder button{
     width: 50px;
     padding: 5px;

@@ -1,7 +1,8 @@
 # Sketchy Games Launcher
-installs/
-downloads/
-data/
+src/installs/
+src/downloads/
+src/data/
+src/functions.js
 
 # Logs
 logs

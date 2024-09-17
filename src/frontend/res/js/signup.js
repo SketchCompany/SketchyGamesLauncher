@@ -5,13 +5,13 @@ $(document).ready(function(){
         <button onclick="location.reload()">Neuladen</button>
     `, () => {})
     
-    if(localStorage.getItem("signUpData")){
-        const oldData = localStorage.getItem("signUpData")
+    if(sessionStorage.getItem("signUpData")){
+        const oldData = sessionStorage.getItem("signUpData")
         $("#username").val(oldData.user)
         $("#email").val(oldData.email)
         $("#password").val(oldData.password)
         $("#passwordConfirm").val(oldData.password)
-        localStorage.removeItem("signUpData")
+        sessionStorage.removeItem("signUpData")
     }
 })
 $("#username").keyup(function(e){
@@ -332,7 +332,7 @@ async function signup(){
             notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
         }
         else{
-            localStorage.setItem("signUpData", JSON.stringify({user, email, password}))
+            sessionStorage.setItem("signUpData", JSON.stringify({user, email, password}))
             setTimeout(() => openSite("/verify"), 1000)
         }
         // const res = await send("/api/account/signup", {user, email, password})

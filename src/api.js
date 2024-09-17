@@ -54,7 +54,7 @@ router.post("/settings/move", async (req, res) => {
 
         // nochmal überlegen wann die datein verschoben werden sollen, am besten nach dem speichern der einstellungen
 
-        await func.write(config.installsFile, JSON.stringify(installs))
+        await func.write(config.installsFile, JSON.stringify(installs, null, 3))
 
         res.json({
             status: 0,
