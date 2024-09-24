@@ -871,15 +871,16 @@ async function checkForUpdates(){
     if(sessionStorage.getItem("showedUpdatesNotification")) return // only show "updates available" notification once
 
     const updates = (await get("/api/updates")).updates
-
+    sessionStorage.setItem("updates", JSON.stringify(updates))
     if(updates.length > 0){
         sessionStorage.setItem("showedUpdatesNotification", true)
-        if(updates.length == 1) notifyCb("Update Verfügbar", "Es ist ein Update für " + updates[0].name + " verfügbar. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
+        if(updates.length == 1) notifyCb("Update Verfügbar", "Es ist ein Update für <b>" + updates[0].name + "</b> verfügbar. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
             const updates = (await get("/api/updates")).updates
             const res = await send("/api/download", updates[0])
             console.log(res)
             const res2 = await get("/api/updates/clear")
             console.log(res2)
+            sessionStorage.setItem("updates", JSON.stringify([]))
             setTimeout(() => openSite("/downloads"), 100)
         })
         else notifyCb("Updates Verfügbar", "Es können mehrere Spiele oder Softwares aktualisiert werden. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
@@ -891,6 +892,7 @@ async function checkForUpdates(){
             }
             const res2 = await get("/api/updates/clear")
             console.log(res2)
+            sessionStorage.setItem("updates", JSON.stringify([]))
             setTimeout(() => openSite("/downloads"), 100)
         })
     }
@@ -945,6 +947,9 @@ waitForElement(".tag").then(function(el){
                         $(".searchResults").children().first().get(0).scrollIntoView({ behavior: "auto", block: "center"})
                     }
                 }
+            }
+            else{
+                openSite("/store?search=tag:" + $(element).html())
             }
         })
     }

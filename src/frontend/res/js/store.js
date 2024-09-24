@@ -18,7 +18,6 @@ $(document).ready(async function(){
         return
     }
 
-
     const res = await get("https://api.sketch-company.de/store")
     console.log(res)
     store = res
@@ -107,6 +106,17 @@ $(document).ready(async function(){
                 $(".searchResults").append($(document.createElement("p")).html("Nichts gefunden.").css("text-align", "center"))
             }
         } 
+    }
+
+    const params = new URL(location.href).searchParams
+    if(params.get("search")){
+        $("#search").val(params.get("search"))
+        if($("#searchBtn").length > 0){
+            $("#searchBtn").click()
+            if($(".searchResults").length > 0){
+                $(".searchResults").children().first().get(0).scrollIntoView({ behavior: "auto", block: "center"})
+            }
+        }
     }
 })
 

@@ -9,8 +9,26 @@ const unzipper = require("unzipper")
 // const smtpTransport = require("nodemailer-smtp-transport")
 const path = require("path")
 const config = require("./launcherConfig")
+const dotenv = require("dotenv").config()
 
 router.use(bodyParser.json())
+
+router.get("/close-for-update", (req, res) => {
+    try{
+        setTimeout(() => func.close(), 100)
+        res.json({
+            status: 1,
+            data: "closed"
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
 
 router.post("/settings/move", async (req, res) => {
     try{
@@ -20,13 +38,16 @@ router.post("/settings/move", async (req, res) => {
             for (let i = 0; i < installs.games.length; i++) {
                 const element = installs.games[i];
                 // check if the game was installed in the old installationPath and not anywhere else like a special location
+                if(!element.installationPath.endsWith("\\") && !element.installationPath.endsWith("/")) element.installationPath += "\\"
+                if(!req.body.oldInstallationPath.endsWith("\\") && !req.body.oldInstallationPath.endsWith("/")) req.body.oldInstallationPath += "\\"
                 console.log(req.path, "oldInstallationPath", req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"), "installationPath", element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"))
                 if(req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\") == element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\")){
-                    console.log(req.path, "found game with the same installation path as the old one, so it has to be moved to the newInstallation path")
+                    console.log(req.path, "found game with the same installation path as the old one, so it has to be moved to the newInstallation path", element)
                     await func.move(path.dirname(element.start), req.body.newInstallationPath + "/" + element.name)
                     console.log(req.path, "successfully moved", element.name, "to", req.body.newInstallationPath + "/" + element.name)
                     element.start = req.body.newInstallationPath + "/" + element.name + "/" + element.name + config.appExt
                     element.installationPath = req.body.newInstallationPath
+                    if(!element.installationPath.endsWith("/") && !element.installationPath.endsWith("\\")) element.installationPath += "\\"
                 }
             }
         }
@@ -38,13 +59,16 @@ router.post("/settings/move", async (req, res) => {
             for (let i = 0; i < installs.softwares.length; i++) {
                 const element = installs.softwares[i];
                 // check if the software was installed in the old installationPath and not anywhere else like a special location
+                if(!element.installationPath.endsWith("\\") && !element.installationPath.endsWith("/")) element.installationPath += "\\"
+                if(!req.body.oldInstallationPath.endsWith("\\") && !req.body.oldInstallationPath.endsWith("/")) req.body.oldInstallationPath += "\\"
                 console.log(req.path, "oldInstallationPath", req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"), "installationPath", element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"))
                 if(req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\") == element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\")){
-                    console.log(req.path, "found software with the same installation path as the old one, so it has to be moved to the newInstallation path")
+                    console.log(req.path, "found software with the same installation path as the old one, so it has to be moved to the newInstallation path", element)
                     await func.move(path.dirname(element.start), req.body.newInstallationPath + "/" + element.name)
                     console.log(req.path, "successfully moved", element.name, "to", req.body.newInstallationPath + "/" + element.name)
                     element.start = req.body.newInstallationPath + "/" + element.name + "/" + element.name + config.appExt
                     element.installationPath = req.body.newInstallationPath
+                    if(!element.installationPath.endsWith("/") && !element.installationPath.endsWith("\\")) element.installationPath += "\\"
                 }
             }
         }
@@ -57,7 +81,7 @@ router.post("/settings/move", async (req, res) => {
         await func.write(config.installsFile, JSON.stringify(installs, null, 3))
 
         res.json({
-            status: 0,
+            status: 1,
             data: "successfully moved products to new directory"
         })
     }
@@ -87,11 +111,124 @@ router.get("/settings/open", async (req, res) => {
     }
 })
 router.get("/updates/clear", async (req, res) => {
-    await func.write(config.updatesFile, JSON.stringify({updates: []}))
-    res.json({
-        status: 1,
-        data: "cleaned updates file"
-    })
+    try{
+        if(req.query.name){
+            const updates = JSON.parse(await func.read(config.updatesFile)).updates
+            for (let i = 0; i < updates.length; i++) {
+                const element = updates[i];
+                if(element.name == req.query.name){
+                    updates.splice(i, 1)
+                    await func.write(config.updatesFile, JSON.stringify({updates}))
+                    console.log(req.path, "deleted " + req.query.name + " from updates file")
+                    break
+                }
+            }
+            res.json({
+                status: 1,
+                data: "deleted " + req.query.name + " from updates file"
+            })
+        }
+        else{
+            await func.write(config.updatesFile, JSON.stringify({updates: []}))
+            res.json({
+                status: 1,
+                data: "cleaned updates file"
+            })
+        }
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+router.get("/updates/pull", async (req, res) => {
+    try{
+
+        const status = await func.checkInternetConnection()
+
+        if(status == 2){
+            const updates = []
+            
+            // read installed games
+            const installs = JSON.parse(await func.read(config.installsFile))
+
+            // get latest information from the store api
+            const storeProducts = await func.get("https://api.sketch-company.de/store")
+
+            // check installed games for updates
+            if(installs.games.length > 0){
+                for (let i = 0; i < installs.games.length; i++) {
+                    const element = installs.games[i];
+                    console.log(req.path, "checkForUpdates: checking", element.name)
+                    for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
+                        const onlineElement = storeProducts.games[i2];
+                        if(element.name == onlineElement.name && element.version != onlineElement.version){
+                            console.log(req.path, "checkForUpdates: found update for", element.name)
+                            console.log(req.path, "checkForUpdates: from", element.version, "to", onlineElement.version)
+                            onlineElement.installationPath = element.installationPath
+                            onlineElement.categorie = "games"
+                            updates.push(onlineElement)
+                            //console.log(req.path, "checkForUpdates: pushed to updatesFile", updates)
+                        }
+                    }
+                }
+            }
+            else console.log(req.path, "checkForUpdates: no games installed to check")
+
+            // check installed softwares for updates
+            if(installs.softwares.length > 0){
+                for (let i = 0; i < installs.softwares.length; i++) {
+                    const element = installs.softwares[i];
+                    console.log(req.path, "checkForUpdates: checking", element.name)
+                    for (let i2 = 0; i2 < storeProducts.softwares.length; i2++) {
+                        const onlineElement = storeProducts.softwares[i2];
+                        if(element.name == onlineElement.name && element.version != onlineElement.version){
+                            console.log(req.path, "checkForUpdates: found update for", element.name)
+                            console.log(req.path, "checkForUpdates: from", element.version, "to", onlineElement.version)
+                            onlineElement.installationPath = element.installationPath
+                            onlineElement.categorie = "softwares"
+                            updates.push(onlineElement)
+                            //console.log(req.path, "checkForUpdates: pushed to updatesFile", updates)
+                        }
+                    }
+                }
+            }
+            else console.log(req.path, "checkForUpdates: no softwares installed to check")
+
+            if(updates.length > 0){
+                await func.write(config.updatesFile, JSON.stringify({updates}, null, 3))
+                console.log(req.path, "checkForUpdates: wrote updates to updatesFile")
+            }
+            else console.log(req.path, "checkForUpdates: no updates found")
+
+            res.json({
+                status: 1,
+                data: updates
+            })
+        }
+        else if(status == 1){
+            res.json({
+                status: 0,
+                data: "Keine Verbindung zu den Servern."
+            })
+        }
+        else{
+            res.json({
+                status: 0,
+                data: "Keine Internet Verbindung."
+            })
+        }        
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
 })
 router.get("/updates", async (req, res) => {
     const updates = JSON.parse(await func.read(config.updatesFile))
@@ -201,22 +338,33 @@ router.post("/account/update", async (req, res) => {
         const status = await func.checkInternetConnection()
         if(status == 2){
             const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-            console.log("req.body", req.body)
-            const newUserData = {user: req.body.user, email: req.body.email, password: req.body.password, id: userData.id}
 
-            const updateRes = await func.send("https://api.sketch-company.de/u/update", newUserData)
-            console.log(req.path, updateRes)
+            const userExists = await func.send("https://api.sketch-company.de/u/check")
 
-            userData.user = newUserData.user
-            userData.email = newUserData.email
-            userData.password = newUserData.password
+            if(!userExists){
+                const newUserData = {user: req.body.user, email: req.body.email, password: req.body.password, id: userData.id}
 
-            await func.write(config.userFile, func.encrypt(JSON.stringify(userData)))
+                const updateRes = await func.send("https://api.sketch-company.de/u/update", newUserData)
+                console.log(req.path, updateRes)
 
-            res.json({
-                status: 1,
-                data: "Änderungen gespeichert."
-            })
+                userData.user = newUserData.user
+                userData.email = newUserData.email
+                userData.password = newUserData.password
+
+                await func.write(config.userFile, func.encrypt(JSON.stringify(userData)))
+
+                res.json({
+                    status: 1,
+                    data: "Änderungen gespeichert."
+                })
+            }
+            else{
+                res.json({
+                    status: 0,
+                    data: "Ein Benutzer mit diesen Daten existiert bereits. Ändere sie und versuch es nochmal."
+                })
+            }
+            
         }
         else if(status == 1){
             res.json({

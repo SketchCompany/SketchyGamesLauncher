@@ -2,7 +2,6 @@
 src/installs/
 src/downloads/
 src/data/
-src/functions.js
 
 # Logs
 logs

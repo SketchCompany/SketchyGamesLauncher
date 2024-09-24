@@ -6,6 +6,7 @@ $(document).ready(async function(){
         let productName = decodeURI(location.pathname.substring(location.pathname.lastIndexOf("/"))).replace("/", "")
         const res = await get("https://api.sketch-company.de/store")
         console.log(res)
+        $(".imagesHolder .images").removeClass("placeholder-wave")
         for (let i = 0; i < res.games.length; i++) {
             const element = res.games[i];
             if(element.name == productName){
@@ -34,6 +35,15 @@ $(document).ready(async function(){
         $(".imagesHolder").remove()
         $(".content").remove()
         $(".product").append($(document.createElement("p")).html("Keine Internet Verbindung.").css("text-align", "center"))
+    }
+})
+
+window.addEventListener("scroll", (e) => {
+    if(window.scrollY > 870){
+        $("#downloadBtn").css("box-shadow", "0 6px 8px var(--bx0)")
+    }
+    else{
+        $("#downloadBtn").css("box-shadow", "none")
     }
 })
 

@@ -2,7 +2,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-    justify-content: center;
     margin-top: 50px;
 }
 .game, .software{
@@ -23,7 +22,10 @@
     max-height: 250px;
     overflow-y: auto;
 }
-.game *:not(div, .caccordion), .software *:not(div, .caccordion){
+/* .game *:not(div, .caccordion), .software *:not(div, .caccordion){
+    pointer-events: none;
+} */
+.game *, .software *{
     pointer-events: none;
 }
 .game p, .software p{
@@ -38,6 +40,18 @@
     cursor: pointer;
     transform: scale(1.015);
     overflow-y: auto;
+}
+.game div .updatable, .software div .updatable{
+    background-color: springgreen;
+    border-radius: 360px;
+    width: 35px;
+    height: 35px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 24px;
+}
+.game.updatable, .software.updatable{
+    border-color: springgreen;
 }
 .filter{
     display: flex;

@@ -34,6 +34,20 @@ $(document).ready(async function(){
         console.log("newSettings", newSettings)
         const res = await send("/api/settings", newSettings)
         console.log(res)
+        if(originalSettings.installationPath != newSettings.installationPath){
+            const dialog = createDialog("Verschieben", "Da das Installations Verzeichnis geändert wurde, nehmen wir an das du auch deine Spiele dort hin verschieben willst. Möchtest du deine installierten Spiele und Programme verschieben?", `
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+                    <button id="dialog-move-yes" class="marked">Ja - Verschieben</button>
+                    <button id="dialog-move-no">Nein - Nicht Verschieben</button>
+                </div>
+            `, 500, 400)
+            $("#dialog-move-yes").click(async function(){
+                const resMove = await send("/api/settings/move", {oldInstallationPath: originalSettings.installationPath, newInstallationPath: newSettings.installationPath})
+                console.log(resMove)
+                removeDialog(dialog)
+            })
+            $("#dialog-move-no").click(() => removeDialog(dialog))
+        }
         notify("Gespeichert", "Alle Änderungen wurden erfolgreich gespeichert!", "success", 5000)
     })
 

@@ -1,14 +1,25 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow } = require('electron')
 const config = require("./launcherConfig")
-const launcher = require("./launcher")
 const func = require("./functions")
-const log = require("electron-log/main")
 const path = require("path")
+const log = require("electron-log/main")
 
 log.transports.file.resolvePathFn = (variables) => {
     return path.join(path.parse(app.getPath("exe")).dir, variables.fileName)
 }
 Object.assign(console, log.functions)
+
+async function checkIfLauncherIsAlreadyOpen(){
+    try{
+        const response = await func.get("http://localhost:" + config.PORT + "/api/close-for-update")
+        console.log("checkIfLauncherIsAlreadyOpen:", response)
+    }
+    catch(err){
+        console.log("checkIfLauncherIsAlreadyOpen: could not request, launcher is already closed")
+    }
+}
+checkIfLauncherIsAlreadyOpen()
+const launcher = require("./launcher")
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -49,7 +60,7 @@ const createWindow = async () => {
     // and load the index.html of the app.
     const settings = JSON.parse(func.decrypt(await func.read(config.settingsFile)))
     const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-    if(!settings.loginOnStartup && userData.username && userData.email && userData.password){
+    if(!settings.loginOnStartup && userData.user && userData.email && userData.password){
         mainWindow.loadURL("http://localhost:" + config.PORT)
     }
     else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")

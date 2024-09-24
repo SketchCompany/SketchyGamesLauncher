@@ -1,7 +1,7 @@
 {
   "name": "sketchy-games-launcher",
   "productName": "Sketchy Games Launcher",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "bugs": {
     "url": "https://github.com/SketchCompany/SketchyGamesLauncher/issues",
     "email": "sketch-company@web.de"
@@ -63,6 +63,7 @@
     "node-file-dialog": "^1.0.3",
     "nodemailer": "^6.9.12",
     "nodemailer-smtp-transport": "^2.7.4",
+    "octokit": "^4.0.2",
     "path": "^0.12.7",
     "unzipper": "^0.12.1",
     "update-electron-app": "^3.0.0"

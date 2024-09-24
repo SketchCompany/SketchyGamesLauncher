@@ -20,21 +20,15 @@
     <!-- Resources -->
     <link rel="icon" href="/res?f=img/icon.png">
     <link rel="stylesheet" type="text/css" href="/res?f=css/body.css">
+    <link rel="stylesheet" type="text/css" href="/res?f=css/notes.css">
 
-    <title>Sketchy Games Launcher | Error</title>
+    <title>Sketchy Games Launcher | Patch Notes</title>
 </head>
 <body>
     <padding>
-        <h1 style="color: rgb(225, 0, 0); font-family: 'Sedgwick Ave Display', cursive;">Ooops! Sorry, something went wrong.</h1>
-        <p id="error">The page could not be found! Please return back to the last page.</p>
-        <button onclick="back()">Return</button>
+        <pre id="output"></pre>
     </padding>
-
     <script src="/res?f=js/app.js"></script>
-    <script>
-        $(async function() {
-            $("#error").html(new URL(location.href).searchParams.get("m"))
-        })
-    </script>
+    <script src="/res?f=js/notes.js"></script>
 </body>
 </html>

@@ -1,5 +1,7 @@
-const path = require("path")
 const {app} = require("electron")
+const https = require("https")
+const fs = require("fs")
+const path = require("path")
 
 /**
  * ```requestToken``` used to set as cookie on the client and make sure the website is only accessible through electron.
@@ -8,7 +10,11 @@ const requestToken = "SketchyGamesLauncher"
 /**
  * ```PORT``` sets the port for the server / backend of the application.
  */
-let PORT = 3000
+let PORT = 1520
+/**
+ * ```globalDir``` is the path, used to store any data globally on the computer and access from every version of the launcher.
+ */
+const globalDir = path.parse(app.getPath("appData")).dir + "/Roaming/Sketchy Games Launcher/"
 /**
  * ```defaultDir``` is the path, used to get other files or directorys out of the main directory.
  */
@@ -24,7 +30,7 @@ const resources = base + "res/"
 /**
  * ```installs``` is the path, where the downloads get unpacked and installed to.
  */
-let installs = path.parse(app.getPath("appData")).dir + "/Roaming/Sketchy Games Launcher/installs/"
+let installs = globalDir + "/installs/"
 /**
  * ```downloads``` is the path, where the downloads are downloaded first, before they get unpacked and install to the ```installs``` directory.
  */
@@ -32,7 +38,7 @@ const downloads = defaultDir + "/downloads/"
 /**
  * ```data``` is the path, where all the important data gets saved to.
  */
-const data = defaultDir + "/data/"
+const data = globalDir + "/data/"
 /**
  * ```ext``` is the file extension for files that keep important data.
  */
@@ -116,6 +122,53 @@ async function setup(){
             console.log("setup: cleaned downloads folder")
         }
 
+        // check if installs file is up to date and delete games or softwares if there is no .exe file and if needed download the cover image for each game and software
+        const installedProducts = JSON.parse(await func.read(installsFile))
+        if(installedProducts.games.length > 0){
+            for (let i = 0; i < installedProducts.games.length; i++) {
+                const element = installedProducts.games[i];
+                if(!func.exists(element.start)){
+                    console.log("setup: could not find .exe for", element.name, "deleting from installs file")
+                    if(func.exists(path.dirname(element.start))){
+                        await func.remove(path.dirname(element.start))
+                    }
+                    installedProducts.games.splice(i, 1)
+                }
+                else if(!func.exists(element.installationPath + "/" + element.name + "/image.png")){
+                    const status = await func.checkInternetConnection()
+                    if(status == 2){
+                        console.log("setup: could not find image.png for", element.name, "downloading new cover image from", element.resourcesUrl + "/1.png")
+                        console.log("setup:", element.installationPath + "/image.png")
+                        await downloadImage(element)
+                    }
+                    else console.log("setup: no internet or server connection to download the cover image for", element.name)
+
+                }
+            }
+        }
+        if(installedProducts.softwares.length > 0){
+            for (let i = 0; i < installedProducts.softwares.length; i++) {
+                const element = installedProducts.softwares[i];
+                if(!func.exists(element.start)){
+                    console.log("setup: could not find .exe for", element.name, "deleting from installs file")
+                    if(func.exists(path.dirname(element.start))){
+                        await func.remove(path.dirname(element.start))
+                    }
+                    installedProducts.softwares.splice(i, 1)
+                }
+                else if(!func.exists(element.installationPath + "/" + element.name + "/image.png")){
+                    const status = await func.checkInternetConnection()
+                    if(status == 2){
+                        console.log("setup: could not find image.png for", element.name, "downloading new cover image from", element.resourcesUrl + "/1.png")
+                        console.log("setup:", element.installationPath + "/image.png")
+                        await downloadImage(element)
+                    }
+                    else console.log("setup: no internet or server connection to download the cover image for", element.name)
+                }
+            }
+        }
+        await func.write(installsFile, JSON.stringify(installedProducts))
+
         // check for updates
         const status = await func.checkInternetConnection()
         if(status == 2){
@@ -127,6 +180,20 @@ async function setup(){
 
         console.log("setup: finished")
         cb()
+    })
+}
+async function downloadImage(product){
+    console.log("downloadImage: started for", product.resourcesUrl + "1.png")
+    return new Promise(cb => {
+        https.get(product.resourcesUrl + "1.png", (response) => {
+            const writeStream = fs.createWriteStream(product.installationPath + product.name + "/" + imgFile)
+            response.pipe(writeStream)
+            writeStream.on("finish", function(){
+                writeStream.close()
+                console.log("downloadImage: finished for", product.resourcesUrl + "1.png")
+                cb()
+            })
+        })
     })
 }
 function checkForUpdates(){
