@@ -9,7 +9,6 @@ const unzipper = require("unzipper")
 // const smtpTransport = require("nodemailer-smtp-transport")
 const path = require("path")
 const config = require("./launcherConfig")
-const dotenv = require("dotenv").config()
 
 router.use(bodyParser.json())
 
