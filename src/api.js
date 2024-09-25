@@ -12,6 +12,23 @@ const config = require("./launcherConfig")
 
 router.use(bodyParser.json())
 
+router.get("/patch-notes", async (req, res) => {
+    try{
+        const data = await func.getRepository()
+        res.json({
+            status: 1,
+            data
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+
 router.get("/close-for-update", (req, res) => {
     try{
         setTimeout(() => func.close(), 100)
@@ -211,13 +228,13 @@ router.get("/updates/pull", async (req, res) => {
         else if(status == 1){
             res.json({
                 status: 0,
-                data: "Keine Verbindung zu den Servern."
+                data: "Keine Verbindung zum Server."
             })
         }
         else{
             res.json({
                 status: 0,
-                data: "Keine Internet Verbindung."
+                data: "Keine Interneverbindung."
             })
         }        
     }

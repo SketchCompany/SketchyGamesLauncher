@@ -25,16 +25,16 @@ $(document).ready(async function(){
         }
     }
     else if(status == 1){
-        notify("Keine Verbindung", "Wir konnten keine Verbindung zu den Servern aufbauen.", "error")
+        notify("Keine Verbindung", "Wir konnten keine Verbindung zum Server aufbauen.", "error")
         $(".imagesHolder").remove()
         $(".content").remove()
-        $(".product").append($(document.createElement("p")).html("Keine Verbindung zu den Servern.").css("text-align", "center"))
+        $(".product").append($(document.createElement("p")).html("Keine Verbindung zum Server.").css("text-align", "center"))
     }
     else{
         notify("Keine Verbindung", "Wir konnten keine Internet Verbindung aufbauen.", "error")
         $(".imagesHolder").remove()
         $(".content").remove()
-        $(".product").append($(document.createElement("p")).html("Keine Internet Verbindung.").css("text-align", "center"))
+        $(".product").append($(document.createElement("p")).html("Keine Internetverbindung.").css("text-align", "center"))
     }
 })
 

@@ -1,7 +1,7 @@
 {
   "name": "sketchy-games-launcher",
   "productName": "Sketchy Games Launcher",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "bugs": {
     "url": "https://github.com/SketchCompany/SketchyGamesLauncher/issues",
     "email": "sketch-company@web.de"
@@ -51,6 +51,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@octokit/rest": "^21.0.2",
     "body-parser": "^1.20.2",
     "cheerio": "^1.0.0-rc.12",
     "create-desktop-shortcuts": "^1.11.0",
@@ -60,10 +61,10 @@
     "electron-squirrel-startup": "^1.0.0",
     "express": "^4.18.3",
     "fs": "^0.0.1-security",
+    "markdown": "^0.5.0",
     "node-file-dialog": "^1.0.3",
     "nodemailer": "^6.9.12",
     "nodemailer-smtp-transport": "^2.7.4",
-    "octokit": "^4.0.2",
     "path": "^0.12.7",
     "unzipper": "^0.12.1",
     "update-electron-app": "^3.0.0"

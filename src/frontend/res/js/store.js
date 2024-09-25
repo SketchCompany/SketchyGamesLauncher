@@ -8,7 +8,7 @@ $(document).ready(async function(){
         $(".searchbar").remove()
     }
     if(connectionStatus == 1){
-        const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zu den Servern.").css("text-align", "center")
+        const noConnectionLabel = $(document.createElement("p")).html("Keine Verbindung zum Server.").css("text-align", "center")
         $("padding").append(noConnectionLabel)
         return
     }

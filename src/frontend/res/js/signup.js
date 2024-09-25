@@ -349,6 +349,6 @@ async function signup(){
         notify("Keine Verbindung", "Keine Verbindung zum Server.", "error")
     }
     else{
-        notify("Keine Verbindung", "Keine Internet Verbindung.", "error")
+        notify("Keine Verbindung", "Keine Internetverbindung.", "error")
     }
 }
