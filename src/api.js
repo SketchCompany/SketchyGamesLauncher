@@ -31,7 +31,8 @@ router.get("/patch-notes", async (req, res) => {
 
 router.get("/close-for-update", (req, res) => {
     try{
-        setTimeout(() => func.close(), 100)
+        console.log(req.path, "launcher was closed by another application (launcher):", req)
+        setTimeout(() => func.close(), 10)
         res.json({
             status: 1,
             data: "closed"

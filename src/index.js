@@ -9,17 +9,22 @@ log.transports.file.resolvePathFn = (variables) => {
 }
 Object.assign(console, log.functions)
 
-async function checkIfLauncherIsAlreadyOpen(){
-    try{
-        const response = await func.get("http://localhost:" + config.PORT + "/api/close-for-update")
-        console.log("checkIfLauncherIsAlreadyOpen:", response)
-    }
-    catch(err){
-        console.log("checkIfLauncherIsAlreadyOpen: could not request, launcher is already closed")
-    }
+function checkIfLauncherIsAlreadyOpen(){
+    return new Promise(async cb => {
+        try{
+            const response = await fetch("http://localhost:" + config.PORT + "/api/close-for-update", {headers: {"User-Agent": config.requestToken}})
+            config.PORT = 1521
+            console.log("checkIfLauncherIsAlreadyOpen:", response)
+            cb(response)
+        }
+        catch(err){
+            console.log("checkIfLauncherIsAlreadyOpen: could not request, launcher is already closed")
+            config.PORT = 1520
+            cb(err)
+        }
+    })
+    
 }
-checkIfLauncherIsAlreadyOpen()
-const launcher = require("./launcher")
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -27,6 +32,9 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = async () => {
+    await checkIfLauncherIsAlreadyOpen()
+    const launcher = require("./launcher")
+
     // check for updates
     require("update-electron-app").updateElectronApp()
 
