@@ -928,7 +928,6 @@ function removeDialog(id){
     enableScroll()
     $(id).remove()
 }
-
 waitForElement(".tag").then(function(el){
     const tags = $(".tag").map(function(){return this}).get()
     for (let i = 0; i < tags.length; i++) {

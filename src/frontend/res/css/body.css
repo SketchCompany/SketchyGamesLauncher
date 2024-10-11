@@ -702,15 +702,6 @@ footer{
     color: var(--hover);
     cursor: pointer;
 }
-.flex{
-    display: flex; 
-    justify-content: space-between;
-    align-items: center;
-    gap: 25px;
-}
-.flex-col{
-    flex-direction: column;
-}
 .context-menu{
     background-color: var(--b2);
     padding: 5px;
