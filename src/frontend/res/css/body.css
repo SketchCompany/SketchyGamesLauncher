@@ -660,6 +660,17 @@ offcanvas p{
     cursor: pointer;
     transform: scale(1.015);
 }
+.ccard.notes{
+    overflow-y: auto;
+    max-height: 400px;
+}
+.ccard.notes::-webkit-scrollbar{
+    width: 8px;
+}
+.ccard.notes::-webkit-scrollbar-thumb{
+    width: 8px;
+    background-color: var(--b0);
+}
 footer{
     margin-top: 100px;
 }
@@ -701,6 +712,15 @@ footer{
 .breadcrumb .bi:hover{
     color: var(--hover);
     cursor: pointer;
+}
+.flex{
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+}
+.flex-col{
+    flex-direction: column;
 }
 .context-menu{
     background-color: var(--b2);

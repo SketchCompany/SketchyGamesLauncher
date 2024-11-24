@@ -834,13 +834,14 @@ router.post("/email", async (req, res) => {
         })
     }
 })
-let progress = 0
+let downloadProgress = 0
 let downloadTime = {
     hours: 0,
     minutes: 0,
     seconds: 0,
 }
 let downloadSpeed = 0
+let downloadSize = 0
 let isDownloading = false
 const downloadQueue = []  
 router.post("/download", (req, res) => {
@@ -881,8 +882,9 @@ async function download(){
 
         if(downloadQueue.length > 0 && !isDownloading){
             isDownloading = true
-            progress = 0
+            downloadProgress = 0
             downloadSpeed = 0
+            downloadSize = 0
             downloadTime = {
                 hours: 0,
                 minutes: 0,
@@ -899,6 +901,7 @@ async function download(){
                 response.pipe(writeStream)
 
                 const totalBytes = parseInt(response.headers["content-length"], 10)
+                downloadSize = totalBytes
                 let downloadedBytes = 0
                 const startTime = Date.now()
 
@@ -925,10 +928,10 @@ async function download(){
                         minutes,
                         seconds,
                     }
-                    progress = percentage - 1
+                    downloadProgress = percentage - 1
                     downloadSpeed = speed.toFixed(2)
-                    if(progress == -1) progress = 0
-                    console.log("download:", currentDownload.name, "progress",  progress + "%")
+                    if(downloadProgress == -1) downloadProgress = 0
+                    console.log("download:", currentDownload.name, "progress",  downloadProgress + "%")
                     console.log("download:", currentDownload.name, "speed", downloadSpeed + " MB/s")
                     console.log("download:", currentDownload.name, "time left", downloadTime.hours + ":" + downloadTime.minutes + ":" + downloadTime.seconds)
                 })
@@ -953,7 +956,7 @@ async function download(){
                     await downloadImage(currentDownload)
                     if(createShortcut) func.createShortcut(latestInfo.name, latestInfo.start, latestInfo.start)
                     else console.log("createShortcut: shortcut was not created")
-                    progress = 100
+                    downloadProgress = 100
                     await addToAccount(latestInfo)
                     downloadQueue.splice(0, 1)
                     console.log("download:", "removed from downloadQueue", downloadQueue)
@@ -963,6 +966,7 @@ async function download(){
                         seconds: 0
                     }
                     downloadSpeed = 0
+                    downloadSize = 0
                     isDownloading = false
 
                     if(downloadQueue.length > 0 && !isDownloading){
@@ -984,6 +988,7 @@ async function unpackage(product, path, destination){
     return new Promise(async cb => {
         const directory = await unzipper.Open.file(path)
         await directory.extract({ path: destination })
+        product.size = await getDirectorySize(destination)
         product.start = destination + product.name + config.appExt
         console.log("unpackage:", "finished unpacking", product.name)
         let installs = JSON.parse(await func.read(config.installsFile))
@@ -999,6 +1004,18 @@ async function unpackage(product, path, destination){
         await func.remove(path)
         cb(product)
     })
+}
+async function getDirectorySize(path){
+    let size = 0
+    const files = await func.readDir(path)
+    for (let i = 0; i < files.length; i++) {
+        const element = files[i];
+        const filePath = path + "/" + element
+        const stats = fs.statSync(filePath)
+        if(stats.isFile()) size += stats.size
+        else if(stats.isDirectory()) size += await getDirectorySize(filePath)
+    }
+    return size
 }
 async function downloadImage(product){
     console.log("downloadImage: started for", product.resourcesUrl + "1.png")
@@ -1070,13 +1087,14 @@ router.get("/download/cancel", async (req, res) => {
         currentDownloadWriteStream.destroy()
         currentDownloadResponse = null
         currentDownloadWriteStream = null
-        progress = 0
+        downloadProgress = 0
+        downloadSize = 0
+        downloadSpeed = 0
         downloadTime = {
             hours: 0,
             minutes: 0,
             seconds: 0
         }
-        downloadSpeed = 0
         isDownloading = false
         const name = downloadQueue.splice(0, 1)[0].name
         console.log("download:", "removed from downloadQueue", downloadQueue)
@@ -1087,7 +1105,7 @@ router.get("/download/cancel", async (req, res) => {
         res.json({
             state: 1,
             data: {
-                percentage: progress,
+                percentage: downloadProgress,
                 time: downloadTime,
                 speed: downloadSpeed
             }
@@ -1119,11 +1137,11 @@ router.get("/download/state", (req, res) => {
         })
     }
 })
-let lastProgress = 0
+let lastDownloadProgress = 0
 router.get("/download/progress", (req, res) => {
     try{
-        if(lastProgress == 99 && progress == 0){
-            lastProgress = progress
+        if(lastDownloadProgress == 99 && downloadProgress == 0){
+            lastDownloadProgress = downloadProgress
             res.json({
                 state: 1,
                 data: {
@@ -1134,11 +1152,11 @@ router.get("/download/progress", (req, res) => {
             })
         }
         else{
-            lastProgress = progress
+            lastDownloadProgress = downloadProgress
             res.json({
                 state: 1,
                 data: {
-                    percentage: progress,
+                    percentage: downloadProgress,
                     time: downloadTime,
                     speed: downloadSpeed
                 }
@@ -1154,8 +1172,9 @@ router.get("/download/progress", (req, res) => {
 })
 router.get("/download/progress/reset", (req, res) => {
     try{
-        progress = 0
+        downloadProgress = 0
         downloadSpeed = 0
+        downloadSize = 0
         downloadTime = {
             hours: 0,
             minutes: 0,
@@ -1180,7 +1199,7 @@ router.get("/downloads", (req, res) => {
                 state: 1,
                 data: {
                     downloadQueue,
-                    progress
+                    progress: downloadProgress
                 }
             })
         }

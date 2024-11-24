@@ -29,6 +29,10 @@ $(document).ready(async function(){
 })
 
 async function createCurrentDownload(current){
+    let totalSize = ((current.size / 1024) / 1024).toFixed(2)
+    if(totalSize >= 1000){
+        totalSize = (totalSize / 1024).toFixed(2)
+    }
     $(".currentDownload").append(`
         <div class="crow">
             <h4>${current.name}</h4>
@@ -37,9 +41,13 @@ async function createCurrentDownload(current){
         <div class="crow">
             <p>${current.version + " " + current.versionLevel}</p>
             <div class="options">
-                <button class="status"><i class="bi bi-pause"></i></button>
+                <button class="status" style="display: none"><i class="bi bi-pause"></i></button>
                 <button class="cancel"><i class="bi bi-x-lg"></i></button>
             </div>
+        </div>
+        <div class="crow size">
+            <p>${totalSize} MB</p>
+            <p></p>
         </div>
         <div class="crow">
             <div class="cprogressBar">
@@ -51,6 +59,10 @@ async function createCurrentDownload(current){
             <p class="speed"></p>
         </div>
     `)
+    
+    if(!totalSize || !current.size){
+        $(".currentDownload .size").remove()
+    }
 
     progressInterval = setInterval(async () => {
         const progress = (await get("/api/download/progress"))

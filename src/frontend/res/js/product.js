@@ -188,13 +188,25 @@ async function download(){
     $("#startDownload").click(async function(){
         console.log("download started", product.downloadUrl)
         const patchNotes = getPatchNotes(product.patchNotes, 5)
-        product.patchNotes = patchNotes
-        product.createShortcut = isChecked("#shortcut")
-        product.installationPath = $("#installationPath").val() + "/"
-        removeDialog(dialog)
-        const res = await send("/api/download", product)
-        console.log(res)
-        setTimeout(() => openSite("/downloads"), 100)
+        const status = await get("/api/connection")
+        if(status == 2){
+            fetch(product.downloadUrl).then(async (response) => {
+                product.size = parseInt(response.headers.get("Content-Length"), 10)
+                product.patchNotes = patchNotes
+                product.createShortcut = isChecked("#shortcut")
+                product.installationPath = $("#installationPath").val() + "/"
+                removeDialog(dialog)
+                const res = await send("/api/download", product)
+                console.log(res)
+                setTimeout(() => openSite("/downloads"), 100)
+            }).catch((err) => {
+                sessionStorage.setItem("size", err)
+                console.error(err)
+            })
+        }
+        else{
+            notify("Fehlgeschlagen", "Es konnte keine Verbindung zum Server aufgebaut werden und die Download Größe des Produkts berechnet werden.", "error", 11000)
+        }
     })
     
     $("#cancelDownload").click(function(){

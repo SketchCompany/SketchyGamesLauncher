@@ -110,6 +110,7 @@ function createGameLibraryElement(product){
     const title = $(document.createElement("h3")).html(product.name)
     const updateElement = $(document.createElement("span")).addClass(["bi", "bi-arrow-clockwise", "updatable"])
     const titleElement = $(document.createElement("div")).css("display", "flex").css("justify-content", "space-between").css("align-items", "center").append([title])
+    const smallContainer = $(document.createElement("span")).addClass("small")
     if(isUpdatable) titleElement.append(updateElement)
     let versionElement
     if(isUpdatable){ 
@@ -121,6 +122,15 @@ function createGameLibraryElement(product){
     else{
         versionElement = $(document.createElement("p")).html(product.version + " " + product.versionLevel)
     }
+    let totalSize = ((product.size / 1024) / 1024).toFixed(2)
+    if(totalSize >= 1000){
+        totalSize = (totalSize / 1024).toFixed(2)
+    }
+    console.log(product)
+    console.log(product.size)
+    if(!totalSize || isNaN(totalSize)) totalSize = 0
+    const sizeElement = $(document.createElement("p")).html(totalSize + " MB")
+    smallContainer.append([versionElement, sizeElement])
     const imgElement = $(document.createElement("img")).attr("src", "/api/library/img/" + product.name + "?installationPath=" + product.installationPath).attr("alt", "")
     // const accordion1 = $(document.createElement("div")).addClass("caccordion").html("Description")
     // const accordion2 = $(document.createElement("div")).addClass("caccordion").html("Patch Notes")
@@ -128,7 +138,7 @@ function createGameLibraryElement(product){
     // const accordionPanel2 = $(document.createElement("div")).addClass("cpanel").html(patchNotes)
     // const accordionContainer1 = $(document.createElement("div")).append(accordion1).append(accordionPanel1)
     // const accordionContainer2 = $(document.createElement("div")).append(accordion2).append(accordionPanel2)
-    const gameContainer = $(document.createElement("div")).addClass("game").append([titleElement, versionElement, imgElement]).attr("name", product.name).attr("filepath", product.start)
+    const gameContainer = $(document.createElement("div")).addClass("game").append([titleElement, smallContainer, imgElement]).attr("name", product.name).attr("filepath", product.start)
     if(isUpdatable) gameContainer.addClass("updatable")
     $(".games").append(gameContainer)
 }
@@ -139,6 +149,7 @@ function createSoftwareLibraryElement(product){
     const title = $(document.createElement("h3")).html(product.name)
     const updateElement = $(document.createElement("span")).addClass(["bi", "bi-arrow-clockwise", "updatable"])
     const titleElement = $(document.createElement("div")).css("display", "flex").css("justify-content", "space-between").css("align-items", "center").append([title])
+    const smallContainer = $(document.createElement("span")).addClass("small")
     if(isUpdatable) titleElement.append(updateElement)
     let versionElement
     if(isUpdatable){ 
@@ -150,14 +161,20 @@ function createSoftwareLibraryElement(product){
     else{
         versionElement = $(document.createElement("p")).html(product.version + " " + product.versionLevel)
     }
-
+    let totalSize = ((product.size / 1024) / 1024).toFixed(2)
+    if(totalSize >= 1000){
+        totalSize = (totalSize / 1024).toFixed(2)
+    }
+    if(!totalSize || isNaN(totalSize)) totalSize = 0
+    const sizeElement = $(document.createElement("p")).html(totalSize + " MB")
+    smallContainer.append([versionElement, sizeElement])
     // const accordion1 = $(document.createElement("div")).addClass("caccordion").html("Description")
     // const accordion2 = $(document.createElement("div")).addClass("caccordion").html("Patch Notes")
     // const accordionPanel1 = $(document.createElement("div")).addClass("cpanel").html(description)
     // const accordionPanel2 = $(document.createElement("div")).addClass("cpanel").html(patchNotes)
     // const accordionContainer1 = $(document.createElement("div")).append(accordion1).append(accordionPanel1)
     // const accordionContainer2 = $(document.createElement("div")).append(accordion2).append(accordionPanel2)
-    const gameContainer = $(document.createElement("div")).addClass("software").append([titleElement, versionElement]).attr("name", product.name).attr("filepath", product.start)
+    const gameContainer = $(document.createElement("div")).addClass("software").append([titleElement, smallContainer]).attr("name", product.name).attr("filepath", product.start)
     if(isUpdatable) gameContainer.addClass("updatable")
     $(".softwares").append(gameContainer)
 }
@@ -235,6 +252,18 @@ function setClick(i, element){
         const isUpdatable = isInArray(updatesArray, {name})
         const newProduct = getFromArray(updatesArray, {name})
         if(isUpdatable){
+            const status = await get("/api/connection")
+            if(status == 2){
+                fetch(product.downloadUrl).then(async (response) => {
+                    newProduct.size = parseInt(response.headers.get("Content-Length"), 10)
+                }).catch((err) => {
+                    sessionStorage.setItem("size", err)
+                    console.error(err)
+                })
+            }
+            else{
+                console.error("could not request download size")
+            }
             const res = await send("/api/download", newProduct)
             console.log(res)
             const res2 = await get("/api/updates/clear?name=" + name)
