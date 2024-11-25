@@ -151,17 +151,22 @@ function setPasswordValid(text){
 }
 $("#submit").click(login)
 async function login(){
+    if($("#submit").attr("disabled")) return
     if($("#usernameInvalid").hasClass("invalid") || $("#passwordInvalid").hasClass("invalid")){
         notify("Fehlgeschlagen", "Deine Anmeldedaten sind ungültig. Überprüfe sie und probiers nochmal!", "error")
         console.error("invalid login")
         return
     }
+    $("#submit").attr("disabled", " ")
+    $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
     const userOrEmail = $("#username").val()
     const password = $("#password").val()
     const res = await send("/api/account/login", {userOrEmail, password})
     console.log(res)
     if(!res.correct){
         notify("Fehlgeschlagen", res.data, "error", 15000)
+        $("#submit").removeAttr("disabled")
+        $("#submit").html("Anmelden")
     }
     else{
         notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 2000, function(){

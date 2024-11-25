@@ -27,7 +27,7 @@ $(document).ready(async function(){
         const res = await get("/api/patch-notes")
         console.log("patch notes", res)
         
-        const element = res[3]
+        const element = res[0]
         const note = $(document.createElement("div")).addClass("patch-note")
         note.append([element.description])
         $(".notes").append(note)

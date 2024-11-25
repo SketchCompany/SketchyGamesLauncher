@@ -179,7 +179,8 @@
     flex-wrap: wrap;
 }
 .categorieHolder::-webkit-scrollbar, .categorieHolder::-webkit-scrollbar-track, .categorieHolder::-webkit-scrollbar-thumb{
-    height: 10px;
+    height: 15px;
+    border-radius: 2px;
 }
 .categorieHolder{
     padding: 25px 30px;

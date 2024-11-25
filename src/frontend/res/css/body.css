@@ -51,6 +51,9 @@ body{
     background-attachment: fixed;
     overflow-y: scroll;
 }
+p, ul li{
+    color: rgb(175,175,175);
+}
 a{
     text-decoration: none;
     color: var(--f0);
@@ -79,6 +82,14 @@ button:disabled{
     background-color: var(--darkgray);
     cursor: not-allowed;
     color: var(--gray);
+}
+code{
+    padding: 2px 6px;
+    background-color: var(--b2);
+    border-radius: 6px;
+    font-size: inherit;
+    color: springgreen;
+    display: inline-block;
 }
 input[type="checkbox"]{
     width: 25px;
@@ -371,7 +382,6 @@ header .left{
     gap: 25px;
 }
 header .left .title{
-    color: var(--darkgray);
     font-style: italic;
     display: flex; 
     justify-content: center; 
@@ -384,6 +394,7 @@ header .left .title{
 header .left .title p{
     margin: 0;
     margin-top: 6px;
+    color: var(--darkgray);
 }
 header .left .title:hover{
     cursor: pointer;
@@ -481,6 +492,7 @@ notificationsCenter .content .element p{
     line-height: 25px;
     margin: 0;
     word-break: break-word;
+    color: inherit;
 }
 notificationsCenter .content .element i{
     font-size: 25px;
@@ -514,6 +526,7 @@ offcanvas .title{
     font-family: "Sedgwick Ave Display", cursive;
     font-size: 40px;
     margin: 0;
+    color: var(--f0);
 }
 offcanvas .top{
     display: flex;
@@ -581,6 +594,7 @@ offcanvas .content .bi{
 }
 offcanvas p{
     font-size: 30px;
+    line-height: 40px;
 }
 /* @media (max-width: 1200px){
     offcanvas{
@@ -774,6 +788,7 @@ footer{
 .notification p{
     line-height: 25px;
     word-break: break-word;
+    color: inherit;
 }
 .notification i{
     font-size: 25px;

@@ -9,14 +9,6 @@
     border-radius: 6px;
     box-shadow: 0 3px 6px var(--bx0);
 }
-.notes .patch-note code{
-    padding: 2px 6px;
-    background-color: var(--b2);
-    border-radius: 6px;
-    font-size: inherit;
-    color: springgreen;
-    display: inline-block;
-}
 .notes .patch-note h3{
     margin-top: 40px;
 }

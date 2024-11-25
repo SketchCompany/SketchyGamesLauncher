@@ -908,7 +908,7 @@ async function checkForUpdates(){
  * @returns {string} the selector as id of the created dialog
  */
 function createDialog(title, message, elements, width, height){
-    const id = title + "-dialog"
+    const id = title.replaceAll(" ", "_") + "-dialog"
     const headline = $(document.createElement("uh1")).html(title)
     const description = $(document.createElement("p")).html(message)
     const content = $(document.createElement("div")).addClass("content").append([headline, description, elements])

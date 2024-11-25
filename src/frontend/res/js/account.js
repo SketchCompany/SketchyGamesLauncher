@@ -21,7 +21,10 @@ $(document).ready(async function(){
         setAccordions()
     }
     else{
-        notify("Uuups", res.data, "error")
+        notifyCb("Fehlgeschlagen", res.data + "<br>Klicke um dich neu anzumelden.", "error", function(){
+            openSite("/login")
+        })
+        setTimeout(() => openSite("/login"), 5000)
     }
     $("#logout").click(function(){
         const res = get("/api/account/logout")

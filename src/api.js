@@ -526,10 +526,16 @@ router.get("/account", async (req, res) => {
         if(func.exists(config.userFile)){
             const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
             if(await func.checkInternetConnection() == 2){
-                const response = await func.send("https://api.sketch-company.de/u/find", {id: userData.id})
+                const response = await func.send("https://api.sketch-company.de/u/find", {id: userData.id}, true)
                 await func.write(config.userFile, func.encrypt(JSON.stringify(response)))
-                res.json({
-                    status: 1,
+                if(response && typeof response == "object"){
+                    res.json({
+                        status: 1,
+                        data: response
+                    })
+                }
+                else res.json({
+                    status: 0,
                     data: response
                 })
             }

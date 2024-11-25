@@ -306,6 +306,7 @@ function setPasswordConfirmValid(text){
 }
 $("#submit").click(signup)
 async function signup(){
+    if($("#submit").attr("disabled")) return
     if($("#usernameInvalid").hasClass("invalid") || 
         $("#emailInvalid").hasClass("invalid") ||
         $("#passwordInvalid").hasClass("invalid") ||
@@ -326,10 +327,14 @@ async function signup(){
     }
     const status = await get("/api/connection")
     if(status == 2){
+        $("#submit").attr("disabled", " ")
+        $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
         const res = await send("https://api.sketch-company.de/u/check", {user, email})
         console.log(res)
         if(res){
             notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
+            $("#submit").removeAttr("disabled")
+            $("#submit").html("Anmelden")
         }
         else{
             sessionStorage.setItem("signUpData", JSON.stringify({user, email, password}))

@@ -48,8 +48,36 @@ $(document).ready(async function(){
         }
         signUp()
     })
+    $("#resend").click(async function(){
+        $("#submit").attr("disabled", " ")
+        $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
+
+        code = getRandomInt(100000, 1000000)
+        const userData = JSON.parse(sessionStorage.getItem("signUpData"))
+        const user = userData.user
+        const email = userData.email
+        const subject = "Verification Code"
+        const message = "this email got sent to you to verify your Sketch Company account, because of security reasons. We use this code to check that your email exists and is correct for purposes like the recovering of your account if you forgot your password. To verify your account, use the code below and copy it to your clipboard and paste it into the input field. Or type it one by one into the input field. Here is your verification code:<h1>" + code + "</h1>If the code doesn't work or you got other problems, join our <a href=\"https://discord.gg/u94GDJycP4\">Discord Server</a> or send us an email at <a href=\"mailto:sketch-company@web.de\">sketch-company@web.de</a>.<br><br>Best Wishes<br><br>Your Sketch Company Team"
+        const res = await send("/email", {
+            user,
+            email,
+            subject,
+            message,
+        })
+        console.log("email: res", res)
+        $("#submit").removeAttr("disabled")
+        $("#submit").html("Anmelden")
+    })
+    $("#return").click(function(){
+        sessionStorage.removeItem("signUpData")
+        openSite("/signup")
+    })
 })
 async function signUp(){
+    if($("#submit").attr("disabled")) return
+    $("#submit").attr("disabled", " ")
+    $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
+
     const userData = JSON.parse(sessionStorage.getItem("signUpData"))
     const res = await send("/api/account/signup", userData)
     console.log(res)
