@@ -1,7 +1,15 @@
 let user
 $(document).ready(async function(){
+    $("#logout").attr("disabled", " ")
+    $("#logout").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
+    $("#saveAccount").attr("disabled", " ")
+    $("#saveAccount").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
     const res = await get("/api/account", true)
     console.log(res)
+    $("#logout").removeAttr("disabled")
+    $("#logout").html("Abmelden")
+    $("#saveAccount").removeAttr("disabled")
+    $("#saveAccount").html("Änderungen Speichern")
     if(res.status == 1){
         user = res.data
         $("#username").val(res.data.user).attr("placeholder", "Dein Benutzername")

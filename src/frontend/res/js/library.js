@@ -138,7 +138,15 @@ function createGameLibraryElement(product){
     // const accordionPanel2 = $(document.createElement("div")).addClass("cpanel").html(patchNotes)
     // const accordionContainer1 = $(document.createElement("div")).append(accordion1).append(accordionPanel1)
     // const accordionContainer2 = $(document.createElement("div")).append(accordion2).append(accordionPanel2)
-    const gameContainer = $(document.createElement("div")).addClass("game").append([titleElement, smallContainer, imgElement]).attr("name", product.name).attr("filepath", product.start)
+    const playButton = $(document.createElement("div")).addClass("play-button").css("opacity", "0").append([
+        $(document.createElement("div")).addClass("background"),
+        $(document.createElement("p")).addClass(["bi", "bi-play-fill"]).html("<span>START</span>"),
+    ])
+    const gameContainer = $(document.createElement("div")).addClass("game").append([titleElement, smallContainer, imgElement, playButton]).attr("name", product.name).attr("filepath", product.start).mouseenter(function(){
+        $(this).find(".play-button").css("opacity", "1")
+    }).mouseleave(function(){
+        $(this).find(".play-button").css("opacity", "0")
+    })
     if(isUpdatable) gameContainer.addClass("updatable")
     $(".games").append(gameContainer)
 }
@@ -174,7 +182,15 @@ function createSoftwareLibraryElement(product){
     // const accordionPanel2 = $(document.createElement("div")).addClass("cpanel").html(patchNotes)
     // const accordionContainer1 = $(document.createElement("div")).append(accordion1).append(accordionPanel1)
     // const accordionContainer2 = $(document.createElement("div")).append(accordion2).append(accordionPanel2)
-    const gameContainer = $(document.createElement("div")).addClass("software").append([titleElement, smallContainer]).attr("name", product.name).attr("filepath", product.start)
+    const playButton = $(document.createElement("div")).addClass("play-button").css("opacity", "0").append([
+        $(document.createElement("div")).addClass("background"),
+        $(document.createElement("p")).addClass(["bi", "bi-play-fill"]).html("<span>START</span>"),
+    ])
+    const gameContainer = $(document.createElement("div")).addClass("software").append([titleElement, smallContainer, playButton]).attr("name", product.name).attr("filepath", product.start).mouseenter(function(){
+        $(this).find(".play-button").css("opacity", "1")
+    }).mouseleave(function(){
+        $(this).find(".play-button").css("opacity", "0")
+    })
     if(isUpdatable) gameContainer.addClass("updatable")
     $(".softwares").append(gameContainer)
 }

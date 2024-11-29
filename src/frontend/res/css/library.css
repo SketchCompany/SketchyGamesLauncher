@@ -17,6 +17,7 @@
     box-shadow: 2px 4px 4px var(--bx0);
     overflow-y: hidden;
     animation: fadeinbottom 1s;
+    position: relative;
 }
 .game .cpanel, .software .cpanel{
     max-height: 250px;
@@ -54,6 +55,41 @@
     font-weight: bold;
     text-align: center;
     font-size: 24px;
+}
+.game .play-button, .software .play-button{
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 150ms;
+}
+.game .play-button .background, .software .play-button .background{
+    z-index: 11;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    backdrop-filter: blur(1px);
+    background-color: rgba(0,0,0,0.6);
+}
+.game .play-button .bi, .software .play-button .bi{
+    z-index: 12;
+    font-size: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-shadow: 0 6px 6px var(--bx0);
+    color: springgreen;
+}
+.game .play-button .bi span, .software .play-button .bi span{
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--f0);
 }
 .game.updatable, .software.updatable{
     border-color: springgreen;

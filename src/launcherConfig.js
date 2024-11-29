@@ -20,6 +20,10 @@ const globalDir = path.parse(app.getPath("appData")).dir + "/Roaming/Sketchy Gam
  */
 const defaultDir = app.isPackaged ? path.parse(app.getPath("exe")).dir : __dirname
 /**
+ * ```logFile``` is the file name to the log file where all logs are saved.
+ */
+const logFile = defaultDir + "/launcher.log"
+/**
  * ```base``` is the path, used to access files in the frontend.
  */
 const base = __dirname + "/frontend/"
@@ -89,6 +93,7 @@ async function setup(){
 
         const func = require("./functions")
         console.log("setup: defaultDir", defaultDir)
+        console.log("setup: globalDir", globalDir)
 
         // setup paths and files
         if(!func.exists(installs)) await func.mkDir(installs)
@@ -260,14 +265,22 @@ function loadSettings(){
     return new Promise(async cb => {
         try{
             const func = require("./functions")
-            const settings = JSON.parse(func.decrypt(await func.read(settingsFile)))
-            if(func.checkForIntegrity(settings, settingsIntegrity)){
-                console.log("loadSettings: correct")
-                installs = settings.installationPath
+            try{
+                const settings = JSON.parse(func.decrypt(await func.read(settingsFile)))
+                if(func.checkForIntegrity(settings, settingsIntegrity)){
+                    console.log("loadSettings: correct")
+                    installs = settings.installationPath
+                }
+                else{
+                    console.log("loadSettings: incorrect")
+                    await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity))) // replace settings file with default settings
+                }
             }
-            else{
-                console.log("loadSettings: incorrect")
-                await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity))) // replace settings file with default settings
+            catch(err){
+                await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity)))
+                const settings = settingsIntegrity
+                console.log("loadSettings: incorrect when decrypting settingsFile at", settingsFile, "fixed by overwriting settingsFile and using settingsIntegrity object")
+                installs = settings.installationPath
             }
             cb()
         }
@@ -281,6 +294,7 @@ function loadSettings(){
 module.exports = {
     requestToken,
     PORT,
+    logFile,
     base,
     resources,
     installs,

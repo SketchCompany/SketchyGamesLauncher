@@ -396,9 +396,11 @@ header .left .title p{
     margin-top: 6px;
     color: var(--darkgray);
 }
+header .left .title p:hover{
+    color: var(--gray);
+}
 header .left .title:hover{
     cursor: pointer;
-    color: var(--gray);
 }
 header .left .title img{
     width: 32px; 

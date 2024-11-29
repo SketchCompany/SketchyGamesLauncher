@@ -5,7 +5,7 @@ const path = require("path")
 const log = require("electron-log/main")
 
 log.transports.file.resolvePathFn = (variables) => {
-    return path.join(path.parse(app.getPath("exe")).dir, variables.fileName)
+    return config.logFile
 }
 Object.assign(console, log.functions)
 
@@ -18,12 +18,11 @@ function checkIfLauncherIsAlreadyOpen(){
             cb(response)
         }
         catch(err){
-            console.log("checkIfLauncherIsAlreadyOpen: could not request, launcher is already closed")
+            console.log("checkIfLauncherIsAlreadyOpen: could not request so launcher is already closed")
             config.PORT = 1520
             cb(err)
         }
     })
-    
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.

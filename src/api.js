@@ -356,9 +356,9 @@ router.post("/account/update", async (req, res) => {
         if(status == 2){
             const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
 
-            const userExists = await func.send("https://api.sketch-company.de/u/check")
+            const accountApproved = await func.send("https://api.sketch-company.de/u/proof", {id: userData.id, user: req.body.user, email: req.body.email})
 
-            if(!userExists){
+            if(accountApproved){
                 const newUserData = {user: req.body.user, email: req.body.email, password: req.body.password, id: userData.id}
 
                 const updateRes = await func.send("https://api.sketch-company.de/u/update", newUserData)
