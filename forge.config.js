@@ -33,20 +33,18 @@ module.exports = {
         icon: "app.ico",
         title: "Sketchy Games Launcher",
         setupIcon: "appSetup.ico",
-        exe: "Sketchy Games Launcher.exe",
-        name: "Sketchy Games Launcher"
       },
     },
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
+      platforms: ["darwin", "windows", "linux"],
     },
     {
       name: '@electron-forge/maker-deb',
       config: {
         options: {
           icon: "app.png",
-          bin: "Sketchy Games Launcher",
+          bin: "SketchyGamesLauncher",
           maintainer: "Sketch Company",
           homepage: "https://sketchy-games.sketch-company.de"
         }
@@ -57,7 +55,7 @@ module.exports = {
       config: {
         options: {
           icon: "app.png",
-          bin: "Sketchy Games Launcher",
+          bin: "SketchyGamesLauncher",
           maintainer: "Sketch Company",
           homepage: "https://sketchy-games.sketch-company.de"
         }
@@ -67,13 +65,6 @@ module.exports = {
       name: '@electron-forge/maker-dmg',
       config: {
         icon: "app.icns"
-      },
-    },
-    {
-      name: '@electron-forge/maker-wix',
-      config: {
-        icon: "app.ico",
-        iconUrl: "https://sketchy-games.sketch-company.de/res?file=launcher.ico",
       },
     },
   ],
