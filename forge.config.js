@@ -29,9 +29,12 @@ module.exports = {
         authors: "Sketch Company",
         description: "The official Sketchy Games Launcher of the Sketch Company.",
         noMsi: "false",
+        iconUrl: "https://sketchy-games.sketch-company.de/res?file=launcher.ico",
         icon: "app.ico",
         title: "Sketchy Games Launcher",
-        setupIcon: "appSetup.ico"
+        setupIcon: "appSetup.ico",
+        exe: "Sketchy Games Launcher.exe",
+        name: "Sketchy Games Launcher"
       },
     },
     {
@@ -40,11 +43,38 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        options: {
+          icon: "app.png",
+          bin: "Sketchy Games Launcher",
+          maintainer: "Sketch Company",
+          homepage: "https://sketchy-games.sketch-company.de"
+        }
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        options: {
+          icon: "app.png",
+          bin: "Sketchy Games Launcher",
+          maintainer: "Sketch Company",
+          homepage: "https://sketchy-games.sketch-company.de"
+        }
+      },
+    },
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        icon: "app.icns"
+      },
+    },
+    {
+      name: '@electron-forge/maker-wix',
+      config: {
+        icon: "app.ico",
+        iconUrl: "https://sketchy-games.sketch-company.de/res?file=launcher.ico",
+      },
     },
   ],
   plugins: [

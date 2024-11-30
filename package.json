@@ -1,17 +1,22 @@
 {
   "name": "sketchy-games-launcher",
   "productName": "Sketchy Games Launcher",
+  "description": "The official Sketchy Games Launcher of the Sketch Company.",
   "version": "0.0.8",
-  "bugs": {
-    "url": "https://github.com/SketchCompany/SketchyGamesLauncher/issues",
-    "email": "sketch-company@web.de"
+  "author": {
+    "name": "Sketch Company",
+    "email": "sketch-company@web.de",
+    "url": "https://sketchy-games.sketch-company.de"
   },
   "homepage": "https://github.com/SketchCompany/SketchyGamesLauncher",
   "repository": {
     "url": "https://github.com/SketchCompany/SketchyGamesLauncher",
     "type": "github"
   },
-  "description": "The official Sketchy Games Launcher of the Sketch Company.",
+  "bugs": {
+    "url": "https://github.com/SketchCompany/SketchyGamesLauncher/issues",
+    "email": "sketch-company@web.de"
+  },
   "main": "src/index.js",
   "icon": "app.ico",
   "scripts": {
@@ -22,6 +27,16 @@
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
+  "keywords": [
+    "application",
+    "software",
+    "launcher",
+    "sketchy",
+    "games",
+    "sketch",
+    "company"
+  ],
+  "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^7.3.0",
     "@electron-forge/maker-deb": "^7.3.0",
@@ -35,21 +50,6 @@
     "electron": "29.1.1",
     "nodemon": "^3.1.0"
   },
-  "keywords": [
-    "application",
-    "software",
-    "launcher",
-    "sketchy",
-    "games",
-    "sketch",
-    "company"
-  ],
-  "author": {
-    "name": "Sketch Company",
-    "email": "sketch-company@web.de",
-    "url": "https://sketchy-games.sketch-company.de"
-  },
-  "license": "MIT",
   "dependencies": {
     "@octokit/rest": "^21.0.2",
     "body-parser": "^1.20.2",
