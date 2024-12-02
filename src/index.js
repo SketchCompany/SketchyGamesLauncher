@@ -37,7 +37,6 @@ const createWindow = async () => {
     // check for updates
     require("update-electron-app").updateElectronApp({updateInterval: "5 minutes"})
     
-
     // Create the browser window.
     const mainWindow = new BrowserWindow({
         width: 1280,
