@@ -31,10 +31,14 @@ if (require('electron-squirrel-startup')) {
 }
 
 const createWindow = async () => {
+    // check if launcher is already open before initializing the backend server for the launcher
     await checkIfLauncherIsAlreadyOpen()
-    const launcher = require("./launcher")
+    require("./launcher")
 
-    // check for updates
+    // check for updates and react with a message if there is an update available
+    autoUpdater.on("update-available", async function(){
+        const response = await func.showMessageBox("Update Available", "There is an Update for the launcher available. It is currently being downloaded, please do not close the launcher until you are offered to restart it.", [], "info")
+    })
     require("update-electron-app").updateElectronApp({updateInterval: "5 minutes"})
     
     // Create the browser window.
@@ -65,15 +69,27 @@ const createWindow = async () => {
     await config.setup()
     
     // and load the index.html of the app.
-    const settings = JSON.parse(func.decrypt(await func.read(config.settingsFile)))
-    const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+    let settings = config.settingsIntegrity
+    try{
+        settings = JSON.parse(func.decrypt(await func.read(config.settingsFile)))
+    }
+    catch(err){
+        console.error("createWindow: settings failed to read, decrypt and parse to JSON, using the settingsIntegrity object:", err)
+    }
+    let userData
+    try{
+        userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+    }
+    catch(err){
+        console.error("createWindow: userData failed to read, decrypt and parse to JSON, user has to login before using the launcher:", err)
+    }
     if(!settings.loginOnStartup && userData.user && userData.email && userData.password){
         mainWindow.loadURL("http://localhost:" + config.PORT)
     }
     else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")
 
     // Open the DevTools.
-    !app.isPackaged || settings.console ? mainWindow.webContents.openDevTools() : console.log("blocked dev tools from opening")
+    !app.isPackaged || settings.console ? mainWindow.webContents.openDevTools() : console.log("createWindow: blocked dev tools from opening")
 }
 
 // This method will be called when Electron has finished

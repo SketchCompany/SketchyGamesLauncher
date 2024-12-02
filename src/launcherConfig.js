@@ -308,6 +308,7 @@ module.exports = {
     userFile,
     settingsFile,
     updatesFile,
+    settingsIntegrity,
     setup,
     checkForUpdates,
 }
