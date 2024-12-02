@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, autoUpdater } = require('electron')
 const config = require("./launcherConfig")
 const func = require("./functions")
 const path = require("path")
@@ -35,7 +35,8 @@ const createWindow = async () => {
     const launcher = require("./launcher")
 
     // check for updates
-    require("update-electron-app").updateElectronApp()
+    require("update-electron-app").updateElectronApp({updateInterval: "5 minutes"})
+    
 
     // Create the browser window.
     const mainWindow = new BrowserWindow({
