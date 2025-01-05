@@ -390,11 +390,12 @@ header .left .title{
     font-family: "Sedgwick Ave Display", cursive;
     font-size: 24px;
     -webkit-app-region: no-drag;
+    color: var(--darkgray);
 }
 header .left .title p{
     margin: 0;
     margin-top: 6px;
-    color: var(--darkgray);
+    color: inherit;
 }
 header .left .title p:hover{
     color: var(--gray);

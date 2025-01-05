@@ -12,6 +12,25 @@ const config = require("./launcherConfig")
 
 router.use(bodyParser.json())
 
+router.post("/browser", async (req, res) => {
+    try{
+        const openBrowser = await import("open")
+        const asd = await openBrowser.default(req.body.url);
+        asd.unref()
+        console.log(req.path, "opened browser at " + req.body.url)
+        res.json({
+            status: 1,
+            data: "opened browser"
+        })
+    }
+    catch(err){
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+
 router.get("/patch-notes", async (req, res) => {
     try{
         const data = await func.getRepository()

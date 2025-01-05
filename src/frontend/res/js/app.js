@@ -928,6 +928,11 @@ function removeDialog(id){
     enableScroll()
     $(id).remove()
 }
+async function openBrowser(url){
+    const res = await send("/api/browser", {url})
+    console.log(res)
+}
+
 waitForElement(".tag").then(function(el){
     const tags = $(".tag").map(function(){return this}).get()
     for (let i = 0; i < tags.length; i++) {

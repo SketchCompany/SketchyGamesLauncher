@@ -2,7 +2,7 @@
   "name": "sketchy-games-launcher",
   "productName": "Sketchy Games Launcher",
   "description": "The official Sketchy Games Launcher of the Sketch Company.",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": {
     "name": "Sketch Company",
     "email": "sketch-company@web.de",
@@ -66,6 +66,7 @@
     "node-file-dialog": "^1.0.3",
     "nodemailer": "^6.9.12",
     "nodemailer-smtp-transport": "^2.7.4",
+    "open": "^10.1.0",
     "path": "^0.12.7",
     "unzipper": "^0.12.1",
     "update-electron-app": "^3.0.0"
