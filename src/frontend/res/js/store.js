@@ -48,12 +48,12 @@ $(document).ready(async function(){
     }
     startLoop()
     createCtxMenu(".popular", "popular-element", `
-        <button>Ansehen</button>
-        <button>Download</button>
+        <button><span class="bi bi-box-arrow-up-left"></span> Ansehen</button>
+        <button><span class="bi bi-download"></span> Download</button>
     `, elementClicked)
     createCtxMenu(".categorieElement", "categorie-element", `
-        <button>Ansehen</button>
-        <button>Download</button>
+        <button><span class="bi bi-box-arrow-up-left"></span> Ansehen</button>
+        <button><span class="bi bi-download"></span> Download</button>
     `, elementClicked)
 
     $("#searchBtn").click(search)

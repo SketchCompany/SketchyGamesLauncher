@@ -167,8 +167,8 @@ async function download(){
             <input id="shortcut" type="checkbox" checked>
         </div>
         <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
-            <button id="startDownload" class="marked">Download Starten</button> 
-            <button id="cancelDownload">Abbrechen</button>
+            <button id="startDownload" class="marked"><span class="bi bi-download"></span> Download Starten</button> 
+            <button id="cancelDownload"><span class="bi bi-x-circle"></span> Abbrechen</button>
         </div>
     `, 550, 525)
 

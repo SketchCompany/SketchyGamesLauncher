@@ -397,11 +397,9 @@ header .left .title p{
     margin-top: 6px;
     color: inherit;
 }
-header .left .title p:hover{
-    color: var(--gray);
-}
 header .left .title:hover{
     cursor: pointer;
+    color: var(--gray);
 }
 header .left .title img{
     width: 32px; 
@@ -763,6 +761,9 @@ footer{
     background-color: var(--b3);
     border-radius: 6px;
     cursor: pointer;
+}
+.context-menu div .bi, .context-menu button .bi{
+    margin-right: 5px;
 }
 .lastItem{
     border-width: 0 !important;

@@ -1,8 +1,8 @@
 const code = getRandomInt(100000, 1000000)
 $(document).ready(async function(){
     createCtxMenu("html", "login-default", `
-        <button onclick="back()">Zurück</button>
-        <button onclick="location.reload()">Neuladen</button>
+        <button onclick="back()"><span class="bi bi-arrow-left-circle"></span> Zurück</button>
+        <button onclick="location.reload()"><span class="bi bi-arrow-clockwise"></span> Neuladen</button>
     `, () => {})
     
     if(!sessionStorage.getItem("signUpData")) openSite("/signup")

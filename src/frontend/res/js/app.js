@@ -220,7 +220,7 @@ if(isValid()){
                     <span onclick="toggleNotificationsCenter()" class="bi bi-x-lg"></span>
                 </span>
             </span>
-            <div class="navigation"><button onclick="deleteAllNotifications()">Alle löschen</button></div>
+            <div class="navigation"><button onclick="deleteAllNotifications()"><span class="bi bi-trash"></span> Alle löschen</button></div>
             <div class="wrapper">
                 <div class="content">
                     
@@ -231,14 +231,14 @@ if(isValid()){
 
     // create default context menu
     createCtxMenu("html", "default", `
-        <button onclick="back()">Zurück</button>
-        <button onclick="location.reload()">Neuladen</button>
-        <button onclick="openSite('/')">Start</button>
-        <button onclick="openSite('/library')">Library</button>
-        <button onclick="openSite('/store')">Store</button>
-        <button onclick="openSite('/downloads')">Downloads</button>
-        <button onclick="openSite('/account')">Account</button>
-        <button onclick="openSite('/settings')">Settings</button>
+        <button onclick="back()"><span class="bi bi-arrow-left-circle"></span> Zurück</button>
+        <button onclick="location.reload()"><span class="bi bi-arrow-clockwise"></span> Neuladen</button>
+        <button onclick="openSite('/')"><span class="bi bi-house"></span> Start</button>
+        <button onclick="openSite('/library')"><span class="bi bi-controller"></span> Library</button>
+        <button onclick="openSite('/store')"><span class="bi bi-shop"></span> Store</button>
+        <button onclick="openSite('/downloads')"><span class="bi bi-download"></span> Downloads</button>
+        <button onclick="openSite('/account')"><span class="bi bi-person"></span> Account</button>
+        <button onclick="openSite('/settings')"><span class="bi bi-gear"></span> Settings</button>
     `, () => {})
 }
 
@@ -249,6 +249,12 @@ window.addEventListener("scroll", () => {
     }
     else if($("header").hasClass("header-scrolling")){
        $("header").removeClass("header-scrolling")
+    }
+    const menus = $(".context-menu").map(function(){return this}).get()
+    if(menus.length > 0){
+        menus.forEach(element => {
+            element.style.display = "none"
+        })
     }
 })
 
@@ -532,8 +538,8 @@ async function notifyCb(title, message, type, cb, hideFromCenter){
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Ablehnen</button>
-        <button>Schließen</button>
+        <button><span class="bi bi-arrow-right-bar"></span> Ablehnen</button>
+        <button><span class="bi bi-x-circle"></span> Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -585,8 +591,8 @@ async function notify(title, message, type, hideFromCenter){
     }, duration)
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Ablehnen</button>
-        <button>Schließen</button>
+        <button><span class="bi bi-arrow-right-bar"></span> Ablehnen</button>
+        <button><span class="bi bi-x-circle"></span> Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -642,8 +648,8 @@ async function notifyCb(title, message, type, duration, cb, hideFromCenter){
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Ablehnen</button>
-        <button>Schließen</button>
+        <button><span class="bi bi-arrow-right-bar"></span> Ablehnen</button>
+        <button><span class="bi bi-x-circle"></span> Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")
@@ -698,8 +704,8 @@ async function notify(title, message, type, duration, hideFromCenter){
     })
     $("body").append(element)
     createCtxMenu(".notification", "notification", `
-        <button>Ablehnen</button>
-        <button>Schließen</button>
+        <button><span class="bi bi-arrow-right-bar"></span> Ablehnen</button>
+        <button><span class="bi bi-x-circle"></span> Schließen</button>
     `, async function(i, element2){
         if(i == 0){
             element.css("animation", "notificationSlideOut 1000ms")

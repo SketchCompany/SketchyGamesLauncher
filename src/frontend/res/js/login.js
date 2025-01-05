@@ -1,8 +1,8 @@
 $(document).ready(function(){
     $("input").map(function(){return this}).get(0).focus()
     createCtxMenu("html", "login-default", `
-        <button onclick="back()">Zurück</button>
-        <button onclick="location.reload()">Neuladen</button>
+        <button onclick="back()"><span class="bi bi-arrow-left-circle"></span> Zurück</button>
+        <button onclick="location.reload()"><span class="bi bi-arrow-clockwise"></span> Neuladen</button>
     `, () => {})
 })
 // $("#username").keyup(function(e){

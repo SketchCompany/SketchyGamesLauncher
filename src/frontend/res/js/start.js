@@ -13,10 +13,10 @@ $(document).ready(async function(){
         })
         $(".lastPlayed").prepend(div)
         createCtxMenu("#lastplayed", "lastplayed", `
-            <button>Start</button>
-            <button>Store Seite</button>
-            <button>In Library Ansehen</button>
-            <button>Deinstallieren</button>
+            <button><span class="bi bi-play-fill"></span> Start</button>
+            <button><span class="bi bi-box-arrow-up-left"></span> Store Seite</button>
+            <button><span class="bi bi-controller"></span> In Library Ansehen</button>
+            <button><span class="bi bi-trash"></span> Deinstallieren</button>
         `, lastPlayedCtxMenu)
     }
     else console.warn("could not find last played game")

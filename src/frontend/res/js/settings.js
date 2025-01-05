@@ -37,8 +37,8 @@ $(document).ready(async function(){
         if(originalSettings.installationPath != newSettings.installationPath){
             const dialog = createDialog("Verschieben", "Da das Installations Verzeichnis geändert wurde, nehmen wir an das du auch deine Spiele dort hin verschieben willst. Möchtest du deine installierten Spiele und Programme verschieben?", `
                 <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
-                    <button id="dialog-move-yes" class="marked">Ja - Verschieben</button>
-                    <button id="dialog-move-no">Nein - Nicht Verschieben</button>
+                    <button id="dialog-move-yes" class="marked"><span class="bi bi-folder-symlink"></span> Ja - Verschieben</button>
+                    <button id="dialog-move-no"><span class="bi bi-x-circle"></span> Nein - Nicht Verschieben</button>
                 </div>
             `, 500, 400)
             $("#dialog-move-yes").click(async function(){

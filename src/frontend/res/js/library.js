@@ -12,16 +12,16 @@ $(document).ready(async function(){
         $(".games").children().each(setClick)
         $(".softwares").children().each(setClick)
         createCtxMenu(".game", "game", `
-            <button>Start</button>
-            <button>Store Seite</button>
-            <button>Ordner Öffnen</button>
-            <button>Deinstallieren</button>
+            <button><span class="bi bi-play-fill"></span> Start</button>
+            <button><span class="bi bi-box-arrow-up-left"></span> Store Seite</button>
+            <button><span class="bi bi-folder-symlink"></span> Ordner Öffnen</button>
+            <button><span class="bi bi-trash"></span> Deinstallieren</button>
         `, libraryElementCtxMenu)
         createCtxMenu(".software", "software", `
-            <button>Start</button>
-            <button>Store Seite</button>
-            <button>Ordner Öffnen</button>
-            <button>Deinstallieren</button>
+            <button><span class="bi bi-play-fill"></span> Start</button>
+            <button><span class="bi bi-box-arrow-up-left"></span> Store Seite</button>
+            <button><span class="bi bi-folder-symlink"></span> Ordner Öffnen</button>
+            <button><span class="bi bi-trash"></span> Deinstallieren</button>
         `, libraryElementCtxMenu)
     }
     else{
@@ -386,16 +386,16 @@ async function checkForUpdates(){
             $(".games").children().each(setClick)
             $(".softwares").children().each(setClick)
             createCtxMenu(".game", "game", `
-                <button>Start</button>
-                <button>Store Seite</button>
-                <button>Ordner Öffnen</button>
-                <button>Deinstallieren</button>
+                <button><span class="bi bi-play-fill"></span> Start</button>
+                <button><span class="bi bi-box-arrow-up-left"></span> Store Seite</button>
+                <button><span class="bi bi-folder-symlink"></span> Ordner Öffnen</button>
+                <button><span class="bi bi-trash"></span> Deinstallieren</button>
             `, libraryElementCtxMenu)
             createCtxMenu(".software", "software", `
-                <button>Start</button>
-                <button>Store Seite</button>
-                <button>Ordner Öffnen</button>
-                <button>Deinstallieren</button>
+                <button><span class="bi bi-play-fill"></span> Start</button>
+                <button><span class="bi bi-box-arrow-up-left"></span> Store Seite</button>
+                <button><span class="bi bi-folder-symlink"></span> Ordner Öffnen</button>
+                <button><span class="bi bi-trash"></span> Deinstallieren</button>
             `, libraryElementCtxMenu)
             $("#filter-all").click()
         }
