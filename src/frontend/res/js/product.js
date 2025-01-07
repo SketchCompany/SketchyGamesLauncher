@@ -200,7 +200,6 @@ async function download(){
                 console.log(res)
                 setTimeout(() => openSite("/downloads"), 100)
             }).catch((err) => {
-                sessionStorage.setItem("size", err)
                 console.error(err)
             })
         }

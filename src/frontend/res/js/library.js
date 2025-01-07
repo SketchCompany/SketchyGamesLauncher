@@ -270,10 +270,9 @@ function setClick(i, element){
         if(isUpdatable){
             const status = await get("/api/connection")
             if(status == 2){
-                fetch(product.downloadUrl).then(async (response) => {
+                fetch(newProduct.downloadUrl).then(async (response) => {
                     newProduct.size = parseInt(response.headers.get("Content-Length"), 10)
                 }).catch((err) => {
-                    sessionStorage.setItem("size", err)
                     console.error(err)
                 })
             }
@@ -350,6 +349,7 @@ async function checkForUpdates(){
                 sessionStorage.setItem("showedUpdatesNotification", true)
                 if(updates.length == 1) notifyCb("Update Verfügbar", "Es ist ein Update für <b>" + updates[0].name + "</b> verfügbar. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
                     const updates = (await get("/api/updates")).updates
+                    if(updates.length == 0) return
                     const res = await send("/api/download", updates[0])
                     console.log(res)
                     const res2 = await get("/api/updates/clear")
@@ -359,6 +359,7 @@ async function checkForUpdates(){
                 })
                 else notifyCb("Updates Verfügbar", "Es können mehrere Spiele oder Softwares aktualisiert werden. Klicke um die Aktualisierung zu starten.", "note", 10000, async function(){
                     const updates = (await get("/api/updates")).updates
+                    if(updates.length == 0) return
                     for (let i = 0; i < updates.length; i++) {
                         const element = updates[i];
                         const res = await send("/api/download", element)
