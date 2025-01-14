@@ -16,7 +16,7 @@
 .product .imagesHolder .images{
     height: 100%;
     border-radius: 6px;
-    background-color: var(--b2);
+    background-color: var(--background2);
 }
 .product .imagesHolder .images img{
     object-fit: cover;
@@ -56,7 +56,7 @@
     border: 1px solid transparent;
 }
 .product .imagesHolder button:hover{
-    background-color: var(--b2);
+    background-color: var(--background2);
     color: var(--gray);
     border: 1px solid var(--darkgray);
 }

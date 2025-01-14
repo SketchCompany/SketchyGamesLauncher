@@ -10,11 +10,11 @@
     flex-direction: column;
     gap: 5px;
     padding: 30px 35px;
-    background-color: var(--b0);
+    background-color: var(--background0);
     border-radius: 12px;
-    border: 1px solid var(--b0);
+    border: 1px solid var(--background0);
     transition: all 150ms;
-    box-shadow: 2px 4px 4px var(--bx0);
+    box-shadow: 2px 4px 4px var(--box-shadow);
     overflow-y: hidden;
     animation: fadeinbottom 1s;
     position: relative;
@@ -41,14 +41,14 @@
     align-items: center;
 }
 .game:hover, .software:hover{
-    background-color: var(--b1);
+    background-color: var(--background1);
     border-color: var(--darkgray);
     cursor: pointer;
     transform: scale(1.015);
     overflow-y: auto;
 }
 .game div .updatable, .software div .updatable{
-    background-color: springgreen;
+    background-color: var(--primary);
     border-radius: 360px;
     width: 35px;
     height: 35px;
@@ -67,6 +67,7 @@
     justify-content: center;
     align-items: center;
     transition: all 150ms;
+    border-radius: 6px;
 }
 .game .play-button .background, .software .play-button .background{
     z-index: 11;
@@ -75,6 +76,7 @@
     position: fixed;
     backdrop-filter: blur(1px);
     background-color: rgba(0,0,0,0.6);
+    border-radius: 6px;
 }
 .game .play-button .bi, .software .play-button .bi{
     z-index: 12;
@@ -83,16 +85,16 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    text-shadow: 0 6px 6px var(--bx0);
-    color: springgreen;
+    text-shadow: 0 6px 6px var(--box-shadow);
+    color: var(--primary);
 }
 .game .play-button .bi span, .software .play-button .bi span{
     font-size: 30px;
     font-weight: bold;
-    color: var(--f0);
+    color: var(--font-primary);
 }
 .game.updatable, .software.updatable{
-    border-color: springgreen;
+    border-color: var(--primary);
 }
 .filter{
     display: flex;

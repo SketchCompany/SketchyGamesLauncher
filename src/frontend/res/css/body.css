@@ -6,16 +6,20 @@ cbutton = custom button
 
 */
 :root{
-    --f0: rgb(225, 225, 225);
-    --b0: rgb(25,25,25);
-    --b1: rgb(30,30,30);
-    --b2: rgb(40,40,40);
-    --b3: rgb(50,50,50);
-    --bx0: rgb(0,0,0,0.4);
-    --darkgray: rgb(70,70,70);
-    --gray: rgb(100,100,100);
-    --hover: rgb(150,150,150);
-    --hover2: rgb(100,100,100);
+    --primary: springgreen;
+    --primary-border: rgb(50, 255, 150);
+    --font-primary: rgb(225, 225, 225);
+    --font-secondary: rgb(200,200,200);
+    --background0: rgb(25,25,30);
+    --background1: rgb(30,30,35);
+    --background2: rgb(40,40,45);
+    --background3: rgb(50,50,55);
+    --button-background: rgb(0,75,255);
+    --button-border: rgb(0,150,255);
+    --box-shadow: rgb(0,0,0,0.4);
+    --darkgray: rgb(70,70,75);
+    --gray: rgb(100,100,105);
+    --hover: rgb(150,150,155);
 
     --padding: 5%;
 }
@@ -31,32 +35,32 @@ html{
     width: 12px;
 }
 ::-webkit-scrollbar-thumb{
-    background-color: rgb(34,34,34);
+    background-color: var(--background2);
     width: 12px;
     border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb:hover{
-    background-color: var(--b3);
+    background-color: var(--background3);
     cursor: pointer;
 }
 body{
-    background-color: var(--b1);
-    color: var(--f0);
+    background-color: var(--background1);
+    color: var(--font-primary);
     font-family: "Open Sans", sans-serif;
     padding: 0;
     margin: 0;
     user-select: none;
     text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.3);
-    background-image: linear-gradient(340deg, var(--b1) 60%, var(--b2));
+    background-image: linear-gradient(340deg, var(--background1) 60%, var(--background2));
     background-attachment: fixed;
     overflow-y: scroll;
 }
 p, ul li{
-    color: rgb(175,175,175);
+    color: var(--font-secondary);
 }
 a{
     text-decoration: none;
-    color: var(--f0);
+    color: var(--font-primary);
 }
 a:hover{
     text-decoration: underline;
@@ -64,17 +68,17 @@ a:hover{
     color: var(--hover);
 }
 button{
-    background-color: var(--b2);
+    background-color: var(--background2);
     border-radius: 4px;
     border: 1px solid var(--darkgray);
-    color: var(--f0);
+    color: var(--font-primary);
     padding: 5px 15px;
     width: fit-content;
     transition: all 100ms;
 }
 button:hover{
-    border-color: rgb(0,150,255);
-    background-color: rgb(0,75,255);
+    border-color: var(--button-border);
+    background-color: var(--button-background);
     cursor: pointer;
 }
 button:disabled{
@@ -85,10 +89,10 @@ button:disabled{
 }
 code{
     padding: 2px 6px;
-    background-color: var(--b2);
+    background-color: var(--background2);
     border-radius: 6px;
     font-size: inherit;
-    color: springgreen;
+    color: var(--primary);
     display: inline-block;
 }
 input[type="checkbox"]{
@@ -105,36 +109,36 @@ input[type="checkbox"]:focus{
     outline: none;
 }
 input[type="checkbox"]:checked{
-    background-color: springgreen;
-    border-color: rgb(50, 255, 150);
+    background-color: var(--primary);
+    border-color: var(--primary-border);
 }
 input[type="checkbox"]:checked::after{
     content: '\2714';
 	position: absolute;
-	color: var(--f0);
+	color: var(--font-primary);
     font-size: 16px;
     font-weight: bold;
     top: -1px;
     left: 6px;
 }
 select option{
-    background-color: var(--b2);
-    color: var(--f0);
+    background-color: var(--background2);
+    color: var(--font-primary);
     transition: all 100ms;
     padding: 5px;
 }
 select option:hover{
-    background-color: rgb(0,75,255);
+    background-color: var(--button-background);
     cursor: pointer;
 }
 select:hover{
     cursor: pointer;
 }
 input, select{
-    background-color: var(--b2);
+    background-color: var(--background2);
     border-radius: 4px;
     border: 1px solid var(--darkgray);
-    color: var(--f0);
+    color: var(--font-primary);
     padding: 5px;
     width: 250px;
     transition: all 100ms;
@@ -142,7 +146,7 @@ input, select{
 }
 input:hover, input:not(input[type="checkbox"]):focus, select:hover, select:focus{
     border-color: var(--gray);
-    background-color: var(--b3);
+    background-color: var(--background3);
 }
 input:focus{
     outline: 2px solid var(--darkgray);
@@ -212,20 +216,20 @@ input::-webkit-inner-spin-button {
     outline-color: rgb(255, 50, 50);
 }
 .input-validator.valid .input-viewable button{
-    border-color: springgreen;
+    border-color: var(--primary);
 }
 .input-validator{
     display: flex;
     flex-direction: column;
 }
 .input-validator.valid p{
-    color: springgreen;
+    color: var(--primary);
 }
 .input-validator.valid input{
-    border-color: springgreen;
+    border-color: var(--primary);
 }
 .input-validator.valid input:focus{
-    outline-color: rgb(50, 255, 150);
+    outline-color: var(--primary-border);
 }
 .input-code{
     display: flex;
@@ -238,8 +242,8 @@ input::-webkit-inner-spin-button {
     text-align: center;
 }
 button.marked{
-    border-color: rgb(0,150,255);
-    background-color: rgb(0,75,255);
+    border-color: var(--button-border);
+    background-color: var(--button-background);
 }
 button.marked:hover{
     border-color: rgb(150, 100, 255);
@@ -247,19 +251,19 @@ button.marked:hover{
     cursor: pointer;
 }
 button.marked:disabled{
-    border-color: var(--b3);
+    border-color: var(--background3);
     background-color: var(--darkgray);
     cursor: not-allowed;
     color: var(--gray);
 }
 a.marked{
-    color: mediumspringgreen;
+    color: mediumvar(--primary);
 }
 a.marked:hover{
     color:darkturquoise;
 }
 span.marked{
-    color: rgb(0,150,255);
+    color: var(--button-border);
 }
 .dialog{
     position: fixed;
@@ -275,11 +279,11 @@ span.marked{
 }
 .dialog .content{
     z-index: 502;
-    background-color: var(--b0);
+    background-color: var(--background0);
     border: 1px solid var(--darkgray);
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 6px 6px var(--bx0);
+    box-shadow: 0 6px 6px var(--box-shadow);
     min-width: 500px;
     -webkit-app-region: no-drag;
     animation: fadein 1s;
@@ -326,7 +330,7 @@ h1, h2, h3, h4, h5, h6{
 }
 uh1, uh2, uh3, uh4{
     display: block;
-    border: 1px solid var(--f0);
+    border: 1px solid var(--font-primary);
     border-width: 0 0 1px 0;
     width: 100%;
     margin-bottom: 0.5rem;
@@ -397,6 +401,14 @@ header .left .title p{
     margin-top: 6px;
     color: inherit;
 }
+header .left .title .beta{
+    color: var(--primary);
+    font-family: "Open Sans", sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 16px;
+    margin-left: 10px;
+}
 header .left .title:hover{
     cursor: pointer;
     color: var(--gray);
@@ -414,20 +426,20 @@ header .left .bi:hover{
     color: var(--hover);
 }
 .header-scrolling{
-    box-shadow: 0 4px 6px var(--bx0);
-    background-color: var(--b1);
+    box-shadow: 0 4px 6px var(--box-shadow);
+    background-color: var(--background1);
 }
 notificationsCenter{
     display: block;
     width: 435px;
     height: 100%;
-    background-color: var(--b0);
-    /* background-image: linear-gradient(330deg, var(--b1) 4%, var(--b0)); */
+    background-color: var(--background0);
+    /* background-image: linear-gradient(330deg, var(--background1) 4%, var(--background0)); */
     top: 0;
     left: 0;
     position: fixed;
     padding: 20px 25px;
-    box-shadow: 6px 0 10px 4px var(--bx0);
+    box-shadow: 6px 0 10px 4px var(--box-shadow);
     z-index: 300;
     -webkit-app-region: no-drag;
 }
@@ -478,12 +490,12 @@ notificationsCenter .content .element{
     border-radius: 6px;
     transition: all 100ms;
     border: 1px solid  var(--darkgray);
-    background-color: var(--b0);
+    background-color: var(--background0);
     padding: 20px;
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    box-shadow: 2px 4px 4px var(--bx0);
+    box-shadow: 2px 4px 4px var(--box-shadow);
     animation: fadein 250ms;
 }
 notificationsCenter .content .element h3{
@@ -502,7 +514,7 @@ notificationsCenter .content .element i{
     border-radius: 6px;
 }
 notificationsCenter .content .element i:hover{
-    background-color: var(--b1);
+    background-color: var(--background1);
 }
 notificationsCenter .content .element:hover{
     border: 1px solid var(--darkgray);
@@ -513,13 +525,13 @@ offcanvas{
     display: block;
     width: 400px;
     height: 100%;
-    background-color: var(--b0);
-    /* background-image: linear-gradient(330deg, var(--b1) 4%, var(--b0)); */
+    background-color: var(--background0);
+    /* background-image: linear-gradient(330deg, var(--background1) 4%, var(--background0)); */
     top: 0;
     left: 0;
     position: fixed;
     padding: 20px 25px;
-    box-shadow: 6px 0 10px 4px var(--bx0);
+    box-shadow: 6px 0 10px 4px var(--box-shadow);
     z-index: 200;
     -webkit-app-region: no-drag;
 }
@@ -527,7 +539,7 @@ offcanvas .title{
     font-family: "Sedgwick Ave Display", cursive;
     font-size: 40px;
     margin: 0;
-    color: var(--f0);
+    color: var(--font-primary);
 }
 offcanvas .top{
     display: flex;
@@ -571,19 +583,19 @@ offcanvas a{
     padding: 15px 20px;
     width: 100%;
     border-radius: 6px;
-    border: 1px solid var(--b0);
+    border: 1px solid var(--background0);
     font-size: 18px;
     display: flex;
     align-items: center;
     transition: all 150ms;
-    background-color: var(--b0);
+    background-color: var(--background0);
 }
 offcanvas a:hover{
-    background-color: var(--b2);
+    background-color: var(--background2);
     color: inherit;
     text-decoration: none;
     transform: scale(1.015);
-    box-shadow: 2px 2px 6px var(--bx0);
+    box-shadow: 2px 2px 6px var(--box-shadow);
     border-color: var(--darkgray);
 }
 offcanvas .content div{
@@ -644,11 +656,11 @@ offcanvas p{
     flex-direction: column;
     gap: 5px;
     padding: 25px 30px;
-    background-color: var(--b0);
+    background-color: var(--background0);
     border-radius: 12px;
     border: 1px solid var(--darkgray);
     transition: all 150ms;
-    box-shadow: 2px 4px 4px var(--bx0);
+    box-shadow: 2px 4px 4px var(--box-shadow);
     overflow-y: hidden;
 }
 .lastPlayed .lastPlayedElement h3, .lastPlayed .lastPlayedElement p{
@@ -661,16 +673,17 @@ offcanvas p{
     flex-direction: column;
     gap: 20px;
     padding: 30px 35px;
-    background-color: var(--b0);
+    background-color: var(--background0);
     border-radius: 12px;
-    border: 1px solid var(--b0);
+    border: 1px solid var(--background0);
     transition: all 150ms;
-    box-shadow: 2px 4px 4px var(--bx0);
+    box-shadow: 2px 4px 4px var(--box-shadow);
     animation: fadein 1s;
     z-index: 4;
+    background-image: linear-gradient(160deg, var(--background1) 20%, var(--background0) 60%, rgb(20, 20, 25));
 }
 .ccard:hover{
-    background-color: var(--b1);
+    background-color: var(--background1);
     border-color: var(--darkgray);
     cursor: pointer;
     transform: scale(1.015);
@@ -684,7 +697,7 @@ offcanvas p{
 }
 .ccard.notes::-webkit-scrollbar-thumb{
     width: 8px;
-    background-color: var(--b0);
+    background-color: var(--background0);
 }
 footer{
     margin-top: 100px;
@@ -715,7 +728,7 @@ footer{
 }
 .breadcrumb ul li+li:before {
     padding: 0 5px;
-    color: var(--f0);
+    color: var(--font-primary);
     content: "/";
 }
 .breadcrumb p{
@@ -738,14 +751,14 @@ footer{
     flex-direction: column;
 }
 .context-menu{
-    background-color: var(--b2);
+    background-color: var(--background2);
     padding: 5px;
     border-radius: 6px;
     border: 1px solid var(--darkgray);
     position: fixed;
     z-index: 1000;
     width: 250px;
-    box-shadow: 2px 4px 4px var(--bx0);
+    box-shadow: 2px 4px 4px var(--box-shadow);
     display: flex;
     flex-direction: column;
 }
@@ -758,7 +771,7 @@ footer{
     text-align: left;
 }
 .context-menu div:hover, .context-menu button:hover{
-    background-color: var(--b3);
+    background-color: var(--background3);
     border-radius: 6px;
     cursor: pointer;
 }
@@ -778,12 +791,12 @@ footer{
     border-radius: 6px;
     transition: all 100ms;
     border: 1px solid  var(--darkgray);
-    background-color: var(--b0);
+    background-color: var(--background0);
     padding: 20px;
     display: flex;
     justify-content: space-between;
     gap: 10px;
-    box-shadow: 2px 4px 4px var(--bx0);
+    box-shadow: 2px 4px 4px var(--box-shadow);
     z-index: 600;
 }
 .notification h3{
@@ -801,7 +814,7 @@ footer{
     border-radius: 6px;
 }
 .notification i:hover{
-    background-color: var(--b1);
+    background-color: var(--background1);
 }
 .notification:hover{
     border: 1px solid var(--darkgray);
@@ -809,8 +822,8 @@ footer{
     cursor: pointer;
 }
 .success, .success:hover{
-    color: springgreen !important;
-    border-color: springgreen !important;
+    color: var(--primary) !important;
+    border-color: var(--primary) !important;
 }
 .error, .error:hover{
     color: red !important;
@@ -843,11 +856,11 @@ footer{
 .caccordion.active{
     border-radius: 6px 6px 0 0;
     border: 1px solid var(--darkgray);
-    background-color: var(--b2);
+    background-color: var(--background2);
 }
 .caccordion{
-    background-color: var(--b1);
-    border: 1px solid var(--b2);
+    background-color: var(--background1);
+    border: 1px solid var(--background2);
     border-radius: 6px;
     padding: 10px 15px;
     display: flex;
@@ -855,7 +868,7 @@ footer{
     gap: 10px;
 }
 .caccordion:hover{
-    background-color: var(--b2);
+    background-color: var(--background2);
     border-color: var(--darkgray);
     cursor: pointer;
 }
@@ -871,14 +884,14 @@ footer{
     height: 25px;
     border-radius: 12px;
     border: 1px solid var(--darkgray);
-    background-color: var(--b0);
+    background-color: var(--background0);
     width: 100%;
 }
 .cprogress{
     width: 0%;
     height: 100%;
     border-radius: 12px;
-    background-color: springgreen;
+    background-color: var(--primary);
     transition: all 250ms;
 }
 .cbadge{
@@ -889,7 +902,7 @@ footer{
     right: -10px; 
     top: -5px; 
     font-size: 12px; 
-    background-color: springgreen; 
+    background-color: var(--primary); 
     padding: 1px; 
     border-radius: 12px; 
     min-width: 25px; 
@@ -902,7 +915,7 @@ footer{
     font-style: italic;
 }
 .tag{
-    background-color: var(--b3);
+    background-color: var(--background3);
     padding: 5px;
     color: var(--hover);
     border-radius: 6px;
@@ -913,7 +926,7 @@ footer{
     cursor: pointer;
 }
 .badgetag{
-    background-color: var(--b3);
+    background-color: var(--background3);
     padding: 5px;
     color: white;
     border-radius: 6px;
@@ -921,7 +934,7 @@ footer{
     font-weight: bold;
 }
 .badgetag.new{
-    background-color: springgreen;
+    background-color: var(--primary);
 }
 .badgetag.soon{
     background-color:darkviolet;

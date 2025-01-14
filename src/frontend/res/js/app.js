@@ -139,7 +139,7 @@ if(isValid()){
                     0
                 </span>
             </span>
-            <span onclick="openSite('/')" class="title"><img src="/res?f=img/icon.png"><p>ketchy Games Launcher</p></span>
+            <span onclick="openSite('/')" class="title"><img src="/res?f=img/icon.png"><p>ketchy Games Launcher</p> <p class="beta">BETA</p></span>
         </span>
     </header>`)
     
@@ -449,16 +449,27 @@ function get(url, raw){
     })
 }
 
-// fetch information from the backend with the GET method and return the complete response but only log it when "log" was set to true
-function get(url, raw, log){
+// fetch information from the backend with the GET method and return the complete response and cache
+function getAndCache(url, raw){
     return new Promise(async cb => {
-        const response = await fetch(url)
+        const response = await fetch("/api/request-and-cache?url=" + url)
         const result = await response.json()
-        if(log) console.log("get:", url, "response:", result)
+        console.log("get:", url, "response:", result)
         if(raw) cb(result)
         else cb(result.data)   
     })
 }
+
+// // fetch information from the backend with the GET method and return the complete response but only log it when "log" was set to true
+// function get(url, raw, log){
+//     return new Promise(async cb => {
+//         const response = await fetch(url)
+//         const result = await response.json()
+//         if(log) console.log("get:", url, "response:", result)
+//         if(raw) cb(result)
+//         else cb(result.data)   
+//     })
+// }
 
 // fetch information from or to the backend with the POST method and return the data of the response
 /**
@@ -488,16 +499,16 @@ function send(url, data, raw){
     })
 }
 
-// fetch information from or to the backend with the POST method and return the complete response but only log it when "log" was set to true
-function send(url, data, raw, log){
-    return new Promise(async cb => {
-        const response = await fetch(url, {method: "post", body: JSON.stringify(data), headers: {"Content-Type": "application/json"}})
-        const result = await response.json()
-        if(log) console.log("send:", url, "response:", result)
-        if(raw) cb(result)
-        else cb(result.data)
-    })
-}
+// // fetch information from or to the backend with the POST method and return the complete response but only log it when "log" was set to true
+// function send(url, data, raw, log){
+//     return new Promise(async cb => {
+//         const response = await fetch(url, {method: "post", body: JSON.stringify(data), headers: {"Content-Type": "application/json"}})
+//         const result = await response.json()
+//         if(log) console.log("send:", url, "response:", result)
+//         if(raw) cb(result)
+//         else cb(result.data)
+//     })
+// }
 
 // create an notification in the bottom right and call a callback when it was clicked
 /**

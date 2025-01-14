@@ -7,7 +7,7 @@
     padding: 25px;
     border: 1px solid var(--darkgray);
     border-radius: 6px;
-    box-shadow: 0 3px 6px var(--bx0);
+    box-shadow: 0 3px 6px var(--box-shadow);
 }
 .notes .patch-note h3{
     margin-top: 40px;

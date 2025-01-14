@@ -40,7 +40,7 @@ $(document).ready(async function(){
 
 window.addEventListener("scroll", (e) => {
     if(window.scrollY > 870){
-        $("#downloadBtn").css("box-shadow", "0 6px 8px var(--bx0)")
+        $("#downloadBtn").css("box-shadow", "0 6px 8px var(--box-shadow)")
     }
     else{
         $("#downloadBtn").css("box-shadow", "none")

@@ -14,13 +14,21 @@
 }
 .settings div p{
     margin: 0;
-    color: var(--f0);
+    color: var(--font-primary);
 }
 .settings button{
     width: 100%;
 }
 input, select{
     width: 500px;
+}
+.help{
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+.help button{
+    min-width: 125px;
 }
 #installationPath:hover{
     cursor: pointer;

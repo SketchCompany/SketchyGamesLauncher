@@ -116,7 +116,7 @@ function createGameLibraryElement(product){
     if(isUpdatable){ 
         versionElement = $(document.createElement("p"))
         versionElement.append($(document.createElement("span")).html(product.version + " " + product.versionLevel).css("text-decoration", "line-through").css("text-decoration-color", "var(--hover)"))
-        const newVersionElement = $(document.createElement("span")).css("color", "springgreen").html(" ").append($(document.createElement("span")).addClass(["bi", "bi-arrow-up"])).append(" " + newProduct.version + " " + newProduct.versionLevel)
+        const newVersionElement = $(document.createElement("span")).css("color", "var(--primary)").html(" ").append($(document.createElement("span")).addClass(["bi", "bi-arrow-up"])).append(" " + newProduct.version + " " + newProduct.versionLevel)
         versionElement.append(newVersionElement)
     }
     else{
@@ -163,7 +163,7 @@ function createSoftwareLibraryElement(product){
     if(isUpdatable){ 
         versionElement = $(document.createElement("p"))
         versionElement.append($(document.createElement("span")).html(product.version + " " + product.versionLevel).css("text-decoration", "line-through").css("text-decoration-color", "var(--hover)"))
-        const newVersionElement = $(document.createElement("span")).css("color", "springgreen").html(" ").append($(document.createElement("span")).addClass(["bi", "bi-arrow-up"])).append(" " + newProduct.version + " " + newProduct.versionLevel)
+        const newVersionElement = $(document.createElement("span")).css("color", "var(--primary)").html(" ").append($(document.createElement("span")).addClass(["bi", "bi-arrow-up"])).append(" " + newProduct.version + " " + newProduct.versionLevel)
         versionElement.append(newVersionElement)
     }
     else{

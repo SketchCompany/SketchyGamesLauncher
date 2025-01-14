@@ -53,7 +53,7 @@ const createWindow = async () => {
         title: "Sketchy Games Launcher",
         titleBarStyle: "hidden",
         titleBarOverlay: {
-            color: "rgb(30,30,30)",
+            color: "rgb(30,30,35)",
             symbolColor: "springgreen",
             height: 25,
         },

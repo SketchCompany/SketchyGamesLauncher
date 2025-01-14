@@ -6,11 +6,20 @@ $(document).ready(async function(){
         const h3 = $(document.createElement("h3")).html(res.name)
         const p = $(document.createElement("p")).html(res.versionLevel + " " + res.version)
         const img = $(document.createElement("img")).attr("src", "/api/library/img/" + res.name + "?installationPath=" + res.installationPath).attr("alt", "")
-        const paddingDiv = $(document.createElement("div")).addClass("lastPlayedElement").append(h3).append(p).append(img)
-        const div = $(document.createElement("div")).attr("name", res.name).attr("filepath", res.start).attr("id", "lastplayed").addClass("ccard").append(uh2).append(paddingDiv).click(async function(){
+        const playButton = $(document.createElement("div")).addClass("play-button").css("opacity", "0").append([
+            $(document.createElement("div")).addClass("background"),
+            $(document.createElement("p")).addClass(["bi", "bi-play-fill"]).html("<span>START</span>"),
+        ])
+        const paddingDiv = $(document.createElement("div")).addClass("lastPlayedElement").append([h3, p, img, playButton])
+        const div = $(document.createElement("div")).attr("name", res.name).attr("filepath", res.start).attr("id", "lastplayed").addClass(["ccard", "pink-gradient"]).append([uh2, paddingDiv]).click(async function(){
             const res2 = await send("/api/games/start", {filepath: res.start, name: res.name})
             console.log(res2)
+        }).mouseenter(function(){
+            $(this).find(".play-button").css("opacity", "1")
+        }).mouseleave(function(){
+            $(this).find(".play-button").css("opacity", "0")
         })
+
         $(".lastPlayed").prepend(div)
         createCtxMenu("#lastplayed", "lastplayed", `
             <button><span class="bi bi-play-fill"></span> Start</button>
@@ -21,8 +30,8 @@ $(document).ready(async function(){
     }
     else console.warn("could not find last played game")
 
-    const status = await get("/api/connection")
     $(".notes").append($(document.createElement("p")).html("Patch Notes werden geladen...").css("text-align", "center").attr("id", "loadingText"))
+    const status = await get("/api/connection")
     if(status == 2){
         const res = await get("/api/patch-notes")
         console.log("patch notes", res)
@@ -35,9 +44,11 @@ $(document).ready(async function(){
     }
     else if(status == 1){
         $(".notes").append($(document.createElement("p")).html("Keine Verbindung zum Server.").css("text-align", "center"))
+        $("#loadingText").remove()
     }
     else{
         $(".notes").append($(document.createElement("p")).html("Keine Verbindung zum Internet").css("text-align", "center"))
+        $("#loadingText").remove()
     }
 })
 async function lastPlayedCtxMenu(i, element){

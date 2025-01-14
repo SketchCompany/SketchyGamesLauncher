@@ -18,7 +18,7 @@ $(document).ready(async function(){
         return
     }
 
-    const res = await get("https://api.sketch-company.de/store")
+    const res = await getAndCache("https://api.sketch-company.de/store")
     console.log(res)
     store = res
     for (let i = 0; i < res.populars.length; i++) {
@@ -92,13 +92,13 @@ $(document).ready(async function(){
         else{
             for (let i = 0; i < res.games.length; i++) {
                 const element = res.games[i];
-                if(element.name.toLowerCase().includes(search)){
+                if(element.name.toLowerCase().includes(search) || element.tags.find(e => e.toLowerCase().includes(search))){
                     createSearchResultElement(".searchResults", element)
                 }
             }
             for (let i = 0; i < res.softwares.length; i++) {
                 const element = res.softwares[i];
-                if(element.name.toLowerCase().includes(search)){
+                if(element.name.toLowerCase().includes(search) || element.tags.find(e => e.toLowerCase().includes(search))){
                     createSearchResultElement(".searchResults", element)
                 }
             }
@@ -118,6 +118,25 @@ $(document).ready(async function(){
             }
         }
     }
+
+    // Add event listeners for scroll buttons
+    $(".scrollBtnLeft").click(function() {
+        $(this).siblings(".categorieHolder").animate({ scrollLeft: '-=1000' }, 300);
+    });
+
+    $(".scrollBtnRight").click(function() {
+        $(this).siblings(".categorieHolder").animate({ scrollLeft: '+=1000' }, 300);
+    });
+
+    // Show scroll buttons only if there are multiple elements
+    $(".categorieHolder").each(function() {
+        const $this = $(this);
+        if ($this.get(0).scrollWidth > $this.innerWidth()) {
+            $this.siblings(".scrollBtnLeft, .scrollBtnRight").show();
+        } else {
+            $this.siblings(".scrollBtnLeft, .scrollBtnRight").hide();
+        }
+    });
 })
 
 const time = 10 * 1000
@@ -228,14 +247,47 @@ function createCategorieElement(type, product){
     if(product.isTeaser){
         h3.append($(document.createElement("span")).addClass(["badgetag", "soon"]).html("SOON"))
     }
-    const div = $(document.createElement("div")).addClass("categorieElement").append([imgElement, h3, p, tags]).click(() => openSite("/store/" + product.name)).attr("name", product.name)
+    const div = $(document.createElement("div")).attr("name", product.name).attr("draggable", "true").addClass("categorieElement").click(() => openSite("/store/" + product.name)).append([imgElement, h3, p, tags])
     if(product.isTeaser){
         div.attr("isTeaser", "true")
     }
+
+    // Dragging
+    let isDragging = false
+    let startX, startY
+
+    div.on("mousedown", function(e) {
+        isDragging = true
+        startX = e.clientX
+        startY = e.clientY
+        e.preventDefault()
+    })
+
+    $(document).on("mousemove", function(e) {
+        if (isDragging) {
+            const dx = e.clientX - startX
+            const dy = e.clientY - startY
+            div.parent().scrollLeft(div.parent().scrollLeft() - dx)
+            div.parent().scrollTop(div.parent().scrollTop() - dy)
+            startX = e.clientX
+            startY = e.clientY
+        }
+    })
+
+    $(document).on("mouseup", function() {
+        isDragging = false
+    })
+
+    div.on("click", function(e) {
+        if (isDragging) {
+            e.stopImmediatePropagation();
+        }
+    });
+
     $(type).append(div)
 }
 function elementClicked(i, element){
-    if($(element).attr("isTeaser")) return
+    //if($(element).attr("isTeaser")) return
 
     const name = $(element).attr("name")
     if(i == 0){

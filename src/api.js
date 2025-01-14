@@ -12,6 +12,24 @@ const config = require("./launcherConfig")
 
 router.use(bodyParser.json())
 
+router.get("/request-and-cache", async (req, res) => {
+    try{
+        const url = req.query.url
+        const response = await func.getAndCache(url, 30)
+        res.json({
+            status: 1,
+            data: response
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
+})
+
 router.post("/browser", async (req, res) => {
     try{
         const openBrowser = await import("open")

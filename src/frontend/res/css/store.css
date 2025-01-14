@@ -47,18 +47,18 @@
 .hero .navigation a{
     padding: 35px 10px;
     border-radius: 12px;
-    border: 1px solid var(--b0);
-    background-color: var(--b0);
+    border: 1px solid var(--background0);
+    background-color: var(--background0);
     transition: all 100ms;
     text-align: center;
     font-size: 20px;
 }
 .hero .navigation a:hover{
     border-color: var(--darkgray);
-    background-color: var(--b1);
+    background-color: var(--background1);
     transform: scale(1.04);
     text-decoration: none;
-    color: var(--f0);
+    color: var(--font-primary);
 }
 .populars{
     width: 100%;
@@ -70,6 +70,7 @@
     align-items: stretch;
     height: fit-content;
     animation: fadeinbottom 1s;
+    min-height: 750px;
 }
 .popularsHolder button{
     width: 50px;
@@ -79,7 +80,7 @@
     border: 1px solid transparent;
 }
 .popularsHolder button:hover{
-    background-color: var(--b2);
+    background-color: var(--background2);
     color: var(--gray);
     border: 1px solid var(--darkgray);
 }
@@ -103,25 +104,40 @@
     .popular img{
         height: 600px;
     }
+    .popularsHolder{
+        min-height: 600px;
+    }
 }
 @media (min-width: 1450px) {
     .popular img{
         height: 550px;
+    }
+    .popularsHolder{
+        min-height: 550px;
     }
 }
 @media (min-width: 1600px) {
     .popular img{
         height: 600px;
     }
+    .popularsHolder{
+        min-height: 600px;
+    }
 }
 @media (min-width: 1700px) {
     .popular img{
         height: 650px;
     }
+    .popularsHolder{
+        min-height: 650px;
+    }
 }
 @media (min-width: 1750px) {
     .popular img{
         height: 750px;
+    }
+    .popularsHolder{
+        min-height: 750px;
     }
 }
 .space{
@@ -133,10 +149,17 @@
 .searchbar #search{
     width: 100%;
 }
+.searchResultsHolder .categorieHolder{
+    padding: 5px 30px;
+}
 
+.categories div.space#suggestions{
+    padding: 40px;
+}
 .categorie{
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 .categorieElement{
     width: 500px;
@@ -156,7 +179,7 @@
 }
 .categorieElement:hover{
     border: 1px solid var(--darkgray);
-    background-color: var(--b2);
+    background-color: var(--background2);
     cursor: pointer;
     transform: scale(1.025);
 }
@@ -189,4 +212,29 @@
     height: fit-content;
     display: flex;
     gap: 10px;
+}
+.categorie .scrollBtnLeft, .categorie .scrollBtnRight {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--background0);
+    border: 1px solid transparent;
+    color: var(--font-primary);
+    font-size: 24px;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 100ms;
+    display: none;
+}
+.categorie .scrollBtnLeft {
+    left: -25px;
+}
+.categorie .scrollBtnRight {
+    right: -25px;
+}
+.categorie .scrollBtnLeft:hover, .categorie .scrollBtnRight:hover {
+    background-color: var(--background2);
+    color: var(--gray);
+    border: 1px solid var(--darkgray);
 }

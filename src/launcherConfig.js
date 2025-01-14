@@ -210,7 +210,7 @@ function checkForUpdates(){
         const installs = JSON.parse(await func.read(installsFile))
 
         // get latest information from the store api
-        const storeProducts = await func.get("https://api.sketch-company.de/store")
+        const storeProducts = await func.getAndCache("https://api.sketch-company.de/store", 60)
 
         // check installed games for updates
         if(installs.games.length > 0){

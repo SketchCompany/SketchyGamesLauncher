@@ -1,5 +1,5 @@
 .currentDownload{
-    background-color: var(--b1);
+    background-color: var(--background1);
     border: 1px solid var(--darkgray);
     border-radius: 6px;
     padding: 25px;
@@ -31,8 +31,8 @@ uh1{
     gap: 10px;
 }
 .queue .download{
-    background-color: var(--b0);
-    border: 1px solid var(--b0);
+    background-color: var(--background0);
+    border: 1px solid var(--background0);
     border-radius: 6px;
     padding: 25px;
     display: flex;
@@ -41,7 +41,7 @@ uh1{
     animation: fadeinbottom 1s;
 }
 .queue .download:hover{
-    background-color: var(--b1);
+    background-color: var(--background1);
     border-color: var(--darkgray);
     cursor: pointer;
     transform: scale(1.0125);
