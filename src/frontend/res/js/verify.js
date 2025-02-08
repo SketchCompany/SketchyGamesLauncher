@@ -82,14 +82,14 @@ async function signUp(){
     const res = await send("/api/account/signup", userData)
     console.log(res)
     if(res.exists){
-        notifyCb("Fehlgeschlagen", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal. Klicke um zurück zur Regestrierungs Seite zu kommen.", "error", 100000, function(){
+        notifyCb("Fehlgeschlagen", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal. Klicke um zurück zur Registrierungs Seite zu kommen.", "error", 100000, function(){
             openSite("/signup")
         })
         sessionStorage.removeItem("signUpData")
         setTimeout(() => openSite("/signup"), 11000)
     }
     else{
-        notifyCb("Erfolgreich", "Erfolgreich regestriert als " + userData.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 4000, function(){
+        notifyCb("Erfolgreich", "Erfolgreich registriert als " + userData.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 4000, function(){
             openSite("/")
         })
         sessionStorage.removeItem("signUpData")

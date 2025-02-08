@@ -125,30 +125,30 @@ $("#username").keypress(function(e){
 $("#password").keypress(function(e){
     if(e.key == "Enter") $("#submit").click()
 })
-function setUsernameInvalid(text){
-    $("#usernameInvalid").children().first().css("opacity", "1")
-    if($("#usernameInvalid").hasClass("valid")) $("#usernameInvalid").removeClass("valid")            
-    $("#usernameInvalid").addClass("invalid")
-    $("#usernameInvalid").children().first().html(text)
-}
-function setUsernameValid(text){
-    $("#usernameInvalid").children().first().css("opacity", "1")
-    if($("#usernameInvalid").hasClass("invalid")) $("#usernameInvalid").removeClass("invalid")            
-    $("#usernameInvalid").addClass("valid")
-    $("#usernameInvalid").children().first().html(text)
-}
-function setPasswordInvalid(text){
-    $("#passwordInvalid").children().first().css("opacity", "1")
-    if($("#passwordInvalid").hasClass("valid")) $("#passwordInvalid").removeClass("valid")            
-    $("#passwordInvalid").addClass("invalid")
-    $("#passwordInvalid").children().first().html(text)
-}
-function setPasswordValid(text){
-    $("#passwordInvalid").children().first().css("opacity", "1")
-    if($("#passwordInvalid").hasClass("invalid")) $("#passwordInvalid").removeClass("invalid")            
-    $("#passwordInvalid").addClass("valid")
-    $("#passwordInvalid").children().first().html(text)
-}
+// function setUsernameInvalid(text){
+//     $("#usernameInvalid").children().first().css("opacity", "1")
+//     if($("#usernameInvalid").hasClass("valid")) $("#usernameInvalid").removeClass("valid")            
+//     $("#usernameInvalid").addClass("invalid")
+//     $("#usernameInvalid").children().first().html(text)
+// }
+// function setUsernameValid(text){
+//     $("#usernameInvalid").children().first().css("opacity", "1")
+//     if($("#usernameInvalid").hasClass("invalid")) $("#usernameInvalid").removeClass("invalid")            
+//     $("#usernameInvalid").addClass("valid")
+//     $("#usernameInvalid").children().first().html(text)
+// }
+// function setPasswordInvalid(text){
+//     $("#passwordInvalid").children().first().css("opacity", "1")
+//     if($("#passwordInvalid").hasClass("valid")) $("#passwordInvalid").removeClass("valid")            
+//     $("#passwordInvalid").addClass("invalid")
+//     $("#passwordInvalid").children().first().html(text)
+// }
+// function setPasswordValid(text){
+//     $("#passwordInvalid").children().first().css("opacity", "1")
+//     if($("#passwordInvalid").hasClass("invalid")) $("#passwordInvalid").removeClass("invalid")            
+//     $("#passwordInvalid").addClass("valid")
+//     $("#passwordInvalid").children().first().html(text)
+// }
 $("#submit").click(login)
 async function login(){
     if($("#submit").attr("disabled")) return
@@ -166,7 +166,7 @@ async function login(){
     if(!res.correct){
         notify("Fehlgeschlagen", res.data, "error", 15000)
         $("#submit").removeAttr("disabled")
-        $("#submit").html("Anmelden")
+        $("#submit").html("<span class='bi bi-box-arrow-in-right'></span> Anmelden")
     }
     else{
         notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 2000, function(){

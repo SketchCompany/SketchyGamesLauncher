@@ -1,359 +1,145 @@
-$(document).ready(function(){
-    $("input").map(function(){return this}).get(0).focus()
+$(document).ready(function () {
+    $("input").first().focus();
+  
     createCtxMenu("html", "login-default", `
         <button onclick="back()"><span class="bi bi-arrow-left-circle"></span> Zurück</button>
         <button onclick="location.reload()"><span class="bi bi-arrow-clockwise"></span> Neuladen</button>
-    `, () => {})
-    
-    if(sessionStorage.getItem("signUpData")){
-        const oldData = sessionStorage.getItem("signUpData")
-        $("#username").val(oldData.user)
-        $("#email").val(oldData.email)
-        $("#password").val(oldData.password)
-        $("#passwordConfirm").val(oldData.password)
-        sessionStorage.removeItem("signUpData")
+    `, () => {});
+  
+    const signUpData = sessionStorage.getItem("signUpData");
+    if (signUpData) {
+      const { user, email, password } = JSON.parse(signUpData);
+      $("#username").val(user);
+      $("#email").val(email);
+      $("#password, #passwordConfirm").val(password);
+      sessionStorage.removeItem("signUpData");
     }
-})
-$("#username").keyup(function(e){
-    const username = $("#username").val()
-    if(!/\S/.test(username)){
-        setUsernameInvalid("Benutzername leer")
+  });
+
+  const forbiddenUsername = ['"', '§', '$', '%', '&', '/', '\\', '=', '?', '`', '´', '*', ',', ';',':', '<', '>', '²', '³', '{', '}', '[', ']', '^', '|', '~', '@', '€'];
+  const forbiddenEmail = Array.from(forbiddenUsername);
+  forbiddenEmail.push(['#', "'", '+']);
+  forbiddenEmail.splice(forbiddenEmail.indexOf("@"), 1);
+  const forbiddenPassword = ['"', '§', '%', '\\', '=', '`', '´', ',', ';', '<', '>', '²', '³', '{','}', '[', ']', '^', '|', '~', '€'];
+  
+  const hasForbidden = (text, forbidden) => forbidden.some(char => text.includes(char));
+  
+  const setValidity = ($container, text, isValid) => {
+    const validClass = "valid", invalidClass = "invalid";
+    $container.children().first().css("opacity", "1")
+      .html(text);
+    $container.removeClass(isValid ? invalidClass : validClass)
+      .addClass(isValid ? validClass : invalidClass);
+  };
+  
+  $("#username").on("keyup", () => {
+    const username = $("#username").val().trim();
+    if (!username) {
+      setValidity($("#usernameInvalid"), "Benutzername leer", false);
+    } else if (hasForbidden(username, forbiddenUsername)) {
+      setValidity($("#usernameInvalid"), "Benutzername enthält ungültige Zeichen", false);
+    } else if (username.length < 3) {
+      setValidity($("#usernameInvalid"), "Benutzername zu kurz", false);
+    } else if (username.length > 20) {
+      setValidity($("#usernameInvalid"), "Benutzername zu lang", false);
+    } else {
+      setValidity($("#usernameInvalid"), "Der Benutzername ist perfekt", true);
     }
-    else if(username.includes("\"") ||
-        username.includes("§") ||
-        username.includes("$") ||
-        username.includes("%") ||
-        username.includes("&") ||
-        username.includes("/") ||
-        username.includes("\\") ||
-        username.includes("=") ||
-        username.includes("?") ||
-        username.includes("`") ||
-        username.includes("´") ||
-        username.includes("*") ||
-        username.includes(",") ||
-        username.includes(";") ||
-        username.includes(":") ||
-        username.includes("<") ||
-        username.includes(">") ||
-        username.includes("²") ||
-        username.includes("³") ||
-        username.includes("{") ||
-        username.includes("}") ||
-        username.includes("[") ||
-        username.includes("]") ||
-        username.includes("^") ||
-        username.includes("|") ||
-        username.includes("~") ||
-        username.includes("@") ||
-        username.includes("€")
-    ){
-        setUsernameInvalid("Benutzername enthält ungültige Zeichen")
+  });
+  
+  $("#email").on("keyup", () => {
+    const email = $("#email").val().trim();
+    if (!email) {
+      setValidity($("#emailInvalid"), "Email leer", false);
+    } else if (hasForbidden(email, forbiddenEmail)) {
+      setValidity($("#emailInvalid"), "Email enthält ungültige Zeichen", false);
+    } else if (email.length < 5) {
+      setValidity($("#emailInvalid"), "Email zu kurz", false);
+    } else if (!email.includes("@") || !email.substring(email.indexOf("@")).includes(".")) {
+      setValidity($("#emailInvalid"), "Email nicht vollständig", false);
+    } else {
+      setValidity($("#emailInvalid"), "Die Email gefällt uns", true);
     }
-    else if(username.length < 3){
-        setUsernameInvalid("Benutzername zu kurz")
+  });
+  
+  const validatePassword = (password, $output) => {
+    if (!password.trim()) {
+      setValidity($output, "Passwort leer", false);
+    } else if (hasForbidden(password, forbiddenPassword)) {
+      setValidity($output, "Passwort enthält ungültige Zeichen", false);
+    } else if (password.length < 8) {
+      setValidity($output, "Passwort zu kurz", false);
+    } else if (password.length > 50) {
+      setValidity($output, "Passwort zu lang", false);
+    } else if (!/[.!$&:#+*_\-?@/]/.test(password)) {
+      // Mindestens 1 Sonderzeichen aus der Liste
+      setValidity($output, "Mind. 1 Sonderzeichen", false);
+    } else if (!/\d/.test(password)) {
+      // Mindestens 1 Zahl
+      setValidity($output, "Mind. 1 Zahl", false);
+    } else {
+      setValidity($output, "Das Passwort ist sehr stark", true);
     }
-    else if(username.length > 20){
-        setUsernameInvalid("Benutzername zu lang")
+  };
+  
+  $("#password").on("keyup", () => {
+    const password = $("#password").val();
+    validatePassword(password, $("#passwordInvalid"));
+  });
+  $("#passwordConfirm").on("keyup", () => {
+    const passwordConfirm = $("#passwordConfirm").val();
+    validatePassword(passwordConfirm, $("#passwordConfirmInvalid"));
+  });
+  
+  $("#username").on("keypress", e => { if (e.key === "Enter") $("#email").focus(); });
+  $("#email").on("keypress", e => { if (e.key === "Enter") $("#password").focus(); });
+  $("#password").on("keypress", e => { if (e.key === "Enter") $("#passwordConfirm").focus(); });
+  $("#passwordConfirm").on("keypress", e => { if (e.key === "Enter") $("#submit").click(); });
+  
+  $("#submit").click(signup);
+  async function signup() {
+    if ($("#submit").attr("disabled")) return;
+  
+    if (
+      $("#usernameInvalid").hasClass("invalid") ||
+      $("#emailInvalid").hasClass("invalid") ||
+      $("#passwordInvalid").hasClass("invalid") ||
+      $("#passwordConfirmInvalid").hasClass("invalid")
+    ) {
+      notify("Fehlgeschalgen", "Deine Registrierungsdaten sind ungültig. Überprüfe sie und probiers nochmal.", "error");
+      console.error("invalid sign up");
+      return;
     }
-    else{   
-        setUsernameValid("Der Benutzername ist perfekt")
+  
+    const user = $("#username").val().trim();
+    const email = $("#email").val().trim();
+    const password = $("#password").val();
+    const passwordConfirm = $("#passwordConfirm").val();
+  
+    if (password !== passwordConfirm) {
+      notify("Fehlgeschalgen", "Dein Passwort stimmt nicht mit dem Bestätigungs Passwort überein.", "error");
+      console.error("invalid sign up");
+      return;
     }
-})
-$("#email").keyup(function(e){
-    const email = $("#email").val()
-    if(!/\S/.test(email)){
-        setEmailInvalid("Email leer")
+  
+    const status = await get("/api/connection");
+    if (status === 2) {
+      $("#submit").attr("disabled", true)
+        .html($("<span>").addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"));
+  
+      const res = await send("https://api.sketch-company.de/u/check", { user, email });
+      console.log(res);
+      if (res) {
+        notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000);
+        $("#submit").removeAttr("disabled").html("<span class='bi bi-check-circle'></span> Registrieren");
+      } else {
+        sessionStorage.setItem("signUpData", JSON.stringify({ user, email, password }));
+        setTimeout(() => openSite("/verify"), 1000);
+      }
+    } else if (status === 1) {
+      notify("Keine Verbindung", "Keine Verbindung zum Server.", "error");
+    } else {
+      notify("Keine Verbindung", "Keine Internetverbindung.", "error");
     }
-    else if(email.includes("\"") ||
-        email.includes("§") ||
-        email.includes("$") ||
-        email.includes("%") ||
-        email.includes("&") ||
-        email.includes("/") ||
-        email.includes("\\") ||
-        email.includes("=") ||
-        email.includes("?") ||
-        email.includes("`") ||
-        email.includes("´") ||
-        email.includes("*") ||
-        email.includes(",") ||
-        email.includes(";") ||
-        email.includes(":") ||
-        email.includes("<") ||
-        email.includes(">") ||
-        email.includes("²") ||
-        email.includes("³") ||
-        email.includes("{") ||
-        email.includes("}") ||
-        email.includes("[") ||
-        email.includes("]") ||
-        email.includes("^") ||
-        email.includes("|") ||
-        email.includes("~") ||
-        email.includes("#") ||
-        email.includes("'") ||
-        email.includes("+") ||
-        email.includes("€") 
-    ){
-        setEmailInvalid("Email enthält ungültige Zeichen")
-    }
-    else if(email.length < 5){
-        setEmailInvalid("Email zu kurz")
-    }
-    else if(!email.includes("@") || !email.substring(email.indexOf("@")).includes(".")){
-        setEmailInvalid("Email nicht vollständig")
-    }
-    else{   
-        setEmailValid("Die Email gefällt uns")
-    }
-})
-$("#password").keyup(function(e){
-    const password = $("#password").val()
-    if(!/\S/.test(password)){
-        setPasswordInvalid("Passwort leer")
-    }
-    else if(password.includes("\"") ||
-        password.includes("§") ||
-        password.includes("%") ||
-        password.includes("\\") ||
-        password.includes("=") ||
-        password.includes("`") ||
-        password.includes("´") ||
-        password.includes(",") ||
-        password.includes(";") ||
-        password.includes("<") ||
-        password.includes(">") ||
-        password.includes("²") ||
-        password.includes("³") ||
-        password.includes("{") ||
-        password.includes("}") ||
-        password.includes("[") ||
-        password.includes("]") ||
-        password.includes("^") ||
-        password.includes("|") ||
-        password.includes("~") ||
-        password.includes("€")
-    ){
-        setPasswordInvalid("Passwort enthält ungültige Zeichen")
-    }
-    else if(password.length < 8){
-        setPasswordInvalid("Passwort zu kurz")
-    }
-    else if(password.length > 50){
-        setPasswordInvalid("Passwort zu lang")
-    }
-    else if(!password.includes(".") &&
-        !password.includes("!") &&
-        !password.includes("$") &&
-        !password.includes("&") &&
-        !password.includes(":") &&
-        !password.includes("#") &&
-        !password.includes("+") &&
-        !password.includes("*") &&
-        !password.includes("_") &&
-        !password.includes("-") &&
-        !password.includes("?") &&
-        !password.includes("@") &&
-        !password.includes("/")
-    ){
-        setPasswordInvalid("Mind. 1 Sonderzeichen")
-    }
-    else if(!password.includes("0") &&
-        !password.includes("1") &&
-        !password.includes("2") &&
-        !password.includes("3") &&
-        !password.includes("4") &&
-        !password.includes("5") &&
-        !password.includes("6") &&
-        !password.includes("7") &&
-        !password.includes("8") &&
-        !password.includes("9")
-    ){
-        setPasswordInvalid("Mind. 1 Zahl")
-    }
-    else{
-        setPasswordValid("Das Passwort ist sehr stark")
-    }
-})
-$("#passwordConfirm").keyup(function(e){
-    const passwordConfirm = $("#passwordConfirm").val()
-    if(!/\S/.test(passwordConfirm)){
-        setPasswordConfirmInvalid("Passwort leer")
-    }
-    else if(passwordConfirm.includes("\"") ||
-        passwordConfirm.includes("§") ||
-        passwordConfirm.includes("%") ||
-        passwordConfirm.includes("\\") ||
-        passwordConfirm.includes("=") ||
-        passwordConfirm.includes("`") ||
-        passwordConfirm.includes("´") ||
-        passwordConfirm.includes(",") ||
-        passwordConfirm.includes(";") ||
-        passwordConfirm.includes("<") ||
-        passwordConfirm.includes(">") ||
-        passwordConfirm.includes("²") ||
-        passwordConfirm.includes("³") ||
-        passwordConfirm.includes("{") ||
-        passwordConfirm.includes("}") ||
-        passwordConfirm.includes("[") ||
-        passwordConfirm.includes("]") ||
-        passwordConfirm.includes("^") ||
-        passwordConfirm.includes("|") ||
-        passwordConfirm.includes("~") ||
-        passwordConfirm.includes("€")
-    ){
-        setPasswordConfirmInvalid("Passwort enthält ungültige Zeichen")
-    }
-    else if(passwordConfirm.length < 8){
-        setPasswordConfirmInvalid("Passwort zu kurz")
-    }
-    else if(passwordConfirm.length > 50){
-        setPasswordConfirmInvalid("Passwort zu lang")
-    }
-    else if(!passwordConfirm.includes(".") &&
-        !passwordConfirm.includes("!") &&
-        !passwordConfirm.includes("$") &&
-        !passwordConfirm.includes("&") &&
-        !passwordConfirm.includes(":") &&
-        !passwordConfirm.includes("#") &&
-        !passwordConfirm.includes("+") &&
-        !passwordConfirm.includes("*") &&
-        !passwordConfirm.includes("_") &&
-        !passwordConfirm.includes("-") &&
-        !passwordConfirm.includes("?") &&
-        !passwordConfirm.includes("@") &&
-        !passwordConfirm.includes("/")
-    ){
-        setPasswordConfirmInvalid("Mind. 1 Sonderzeichen")
-    }
-    else if(!passwordConfirm.includes("0") &&
-        !passwordConfirm.includes("1") &&
-        !passwordConfirm.includes("2") &&
-        !passwordConfirm.includes("3") &&
-        !passwordConfirm.includes("4") &&
-        !passwordConfirm.includes("5") &&
-        !passwordConfirm.includes("6") &&
-        !passwordConfirm.includes("7") &&
-        !passwordConfirm.includes("8") &&
-        !passwordConfirm.includes("9")
-    ){
-        setPasswordConfirmInvalid("Mind. 1 Zahl")
-    }
-    else{
-        setPasswordConfirmValid("Das Passwort ist sehr stark")
-    }
-})
-$("#username").keypress(function(e){
-    if(e.key == "Enter") $("#email").focus()
-})
-$("#email").keypress(function(e){
-    if(e.key == "Enter") $("#password").focus()
-})
-$("#password").keypress(function(e){
-    if(e.key == "Enter") $("#passwordConfirm").focus()
-})
-$("#passwordConfirm").keypress(function(e){
-    if(e.key == "Enter") $("#submit").click()
-})
-function setUsernameInvalid(text){
-    $("#usernameInvalid").children().first().css("opacity", "1")
-    if($("#usernameInvalid").hasClass("valid")) $("#usernameInvalid").removeClass("valid")            
-    $("#usernameInvalid").addClass("invalid")
-    $("#usernameInvalid").children().first().html(text)
-}
-function setUsernameValid(text){
-    $("#usernameInvalid").children().first().css("opacity", "1")
-    if($("#usernameInvalid").hasClass("invalid")) $("#usernameInvalid").removeClass("invalid")            
-    $("#usernameInvalid").addClass("valid")
-    $("#usernameInvalid").children().first().html(text)
-}
-function setEmailInvalid(text){
-    $("#emailInvalid").children().first().css("opacity", "1")
-    if($("#emailInvalid").hasClass("valid")) $("#emailInvalid").removeClass("valid")            
-    $("#emailInvalid").addClass("invalid")
-    $("#emailInvalid").children().first().html(text)
-}
-function setEmailValid(text){
-    $("#emailInvalid").children().first().css("opacity", "1")
-    if($("#emailInvalid").hasClass("invalid")) $("#emailInvalid").removeClass("invalid")            
-    $("#emailInvalid").addClass("valid")
-    $("#emailInvalid").children().first().html(text)
-}
-function setPasswordInvalid(text){
-    $("#passwordInvalid").children().first().css("opacity", "1")
-    if($("#passwordInvalid").hasClass("valid")) $("#passwordInvalid").removeClass("valid")            
-    $("#passwordInvalid").addClass("invalid")
-    $("#passwordInvalid").children().first().html(text)
-}
-function setPasswordValid(text){
-    $("#passwordInvalid").children().first().css("opacity", "1")
-    if($("#passwordInvalid").hasClass("invalid")) $("#passwordInvalid").removeClass("invalid")            
-    $("#passwordInvalid").addClass("valid")
-    $("#passwordInvalid").children().first().html(text)
-}
-function setPasswordConfirmInvalid(text){
-    $("#passwordConfirmInvalid").children().first().css("opacity", "1")
-    if($("#passwordConfirmInvalid").hasClass("valid")) $("#passwordConfirmInvalid").removeClass("valid")            
-    $("#passwordConfirmInvalid").addClass("invalid")
-    $("#passwordConfirmInvalid").children().first().html(text)
-}
-function setPasswordConfirmValid(text){
-    $("#passwordConfirmInvalid").children().first().css("opacity", "1")
-    if($("#passwordConfirmInvalid").hasClass("invalid")) $("#passwordConfirmInvalid").removeClass("invalid")            
-    $("#passwordConfirmInvalid").addClass("valid")
-    $("#passwordConfirmInvalid").children().first().html(text)
-}
-$("#submit").click(signup)
-async function signup(){
-    if($("#submit").attr("disabled")) return
-    if($("#usernameInvalid").hasClass("invalid") || 
-        $("#emailInvalid").hasClass("invalid") ||
-        $("#passwordInvalid").hasClass("invalid") ||
-        $("#passwordConfirmInvalid").hasClass("invalid")
-    ){
-        notify("Fehlgeschalgen", "Deine Regestrierungsdaten sind ungültig. Überprüfe sie und probiers nochmal.", "error")
-        console.error("invalid sign up")
-        return
-    }
-    const user = $("#username").val()
-    const email = $("#email").val()
-    const password = $("#password").val()
-    const passwordConfirm = $("#passwordConfirm").val()
-    if(password != passwordConfirm){
-        notify("Fehlgeschalgen", "Dein Passwort ist nicht das selbe wie dein Bestätigungs Passwort. Überprüfe ob sie gleich sind und probiers nochmal.", "error")
-        console.error("invalid sign up")
-        return
-    }
-    const status = await get("/api/connection")
-    if(status == 2){
-        $("#submit").attr("disabled", " ")
-        $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
-        const res = await send("https://api.sketch-company.de/u/check", {user, email})
-        console.log(res)
-        if(res){
-            notify("Sorry", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal.", "error", 10000)
-            $("#submit").removeAttr("disabled")
-            $("#submit").html("Anmelden")
-        }
-        else{
-            sessionStorage.setItem("signUpData", JSON.stringify({user, email, password}))
-            setTimeout(() => openSite("/verify"), 1000)
-        }
-        // const res = await send("/api/account/signup", {user, email, password})
-        // console.log(res)
-        // if(res.exists){
-        //     notify("Fehlgeschalgen", res.data, "error")
-        // }
-        // else{
-        //     notify("Erfolgreich", "Du hast dich erfolgreich regestriert.", "success")
-        //     setTimeout(() => openSite("/"), 5000)
-        // }
-    }
-    else if(status == 1){
-        notify("Keine Verbindung", "Keine Verbindung zum Server.", "error")
-    }
-    else{
-        notify("Keine Verbindung", "Keine Internetverbindung.", "error")
-    }
-}
+  }
+  
