@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- jquery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Sedgwick+Ave+Display" rel="stylesheet">
+
+    <!-- Resources -->
+    <link rel="icon" href="/res?f=img/icon.png">
+    <link rel="stylesheet" type="text/css" href="/res?f=css/body.css">
+    <link rel="stylesheet" type="text/css" href="/res?f=css/store.css">
+
+    <title>Sketchy Games Launcher | Store</title>
+</head>
+<body>
+    <padding>
+        <div class="hero">
+            <div class="popularsHolder">
+                <button id="popularsBtnLeft"><i class="bi bi-caret-left"></i></button>
+                <div class="populars"></div>
+                <button id="popularsBtnRight"><i class="bi bi-caret-right"></i></button>
+            </div>
+            
+            <div class="navigation">
+                <a href="#suggestions">Empfehlungen</a>
+                <a href="#bestofweek">Best Of The Week</a>
+                <a href="#games">Games</a>
+                <a href="#softwares">Softwares</a>               
+            </div>
+        </div>
+        <div class="searchbar">
+            <span class="input-searchbar">
+                <input id="search" type="text" placeholder="Suchen...">
+                <button id="searchBtn"><i class="bi bi-search"></i></button>
+            </span>
+        </div>
+        <div class="searchResultsHolder">
+            <div class="categorieHolder searchResults"></div>
+        </div>
+        <div class="categories">
+            <div id="suggestions" class="space"></div>
+            <div class="categorie">
+                <uh1>Empfehlungen</uh1>
+                <p>Die Empfehlungen des Tages, von Nutzern und der Sketch Company</p>
+                <button class="scrollBtnLeft"><i class="bi bi-caret-left"></i></button>
+                <div class="suggestions categorieHolder"></div>
+                <button class="scrollBtnRight"><i class="bi bi-caret-right"></i></button>
+            </div>
+            <div id="bestofweek" class="space"></div>
+            <div class="categorie">
+                <uh1>Best Of The Week</uh1>
+                <p>Die meist gespielten und empfohlenen Produkte der Woche</p>
+                <button class="scrollBtnLeft"><i class="bi bi-caret-left"></i></button>
+                <div class="bestofweek categorieHolder"></div>
+                <button class="scrollBtnRight"><i class="bi bi-caret-right"></i></button>
+            </div>
+            <div id="games" class="space"></div>
+            <div class="categorie">
+                <uh1>Games</uh1>
+                <p>Die besten Spiele der Sketch Company</p>
+                <button class="scrollBtnLeft"><i class="bi bi-caret-left"></i></button>
+                <div class="games categorieHolder"></div>
+                <button class="scrollBtnRight"><i class="bi bi-caret-right"></i></button>
+            </div>
+            <div id="softwares" class="space"></div>
+            <div class="categorie">
+                <uh1>Softwares</uh1>
+                <p>Die üblichen Softwares der Sketch Company, die du brauchst oder gerne haben willst</p>
+                <button class="scrollBtnLeft"><i class="bi bi-caret-left"></i></button>
+                <div class="softwares categorieHolder"></div>
+                <button class="scrollBtnRight"><i class="bi bi-caret-right"></i></button>
+            </div>
+        </div>
+    </padding>
+    <script src="/res?f=js/app.js"></script>
+    <script src="/res?f=js/store.js"></script>
+</body>
+</html>

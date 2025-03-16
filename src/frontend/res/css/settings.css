@@ -1,0 +1,45 @@
+.settings{
+    animation: fadeinbottom 1s;
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    flex-direction: column;
+}
+.settings .cpanel{
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    flex-direction: column;
+}
+.settings .cpanel div{
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    gap: 25px;
+    align-items: center;
+}
+.settings .cpanel div p{
+    margin: 0;
+    color: var(--font-primary);
+}
+.settings .cpanel button{
+    width: 100%;
+}
+input, select{
+    width: 500px;
+}
+#submit{
+    width: 100%;
+    margin-top: 25px;
+}
+.help{
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+.help button{
+    min-width: 125px;
+}
+#installationPath:hover{
+    cursor: pointer;
+}

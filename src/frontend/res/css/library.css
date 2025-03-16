@@ -1,0 +1,108 @@
+.games, .softwares, .searchResults{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 50px;
+}
+.game, .software{
+    width: 525px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 30px 35px;
+    background-color: var(--background0);
+    border-radius: 12px;
+    border: 1px solid var(--background0);
+    transition: all 150ms;
+    box-shadow: 2px 4px 4px var(--box-shadow);
+    overflow-y: hidden;
+    animation: fadeinbottom 1s;
+    position: relative;
+}
+.game .cpanel, .software .cpanel{
+    max-height: 250px;
+    overflow-y: auto;
+}
+/* .game *:not(div, .caccordion), .software *:not(div, .caccordion){
+    pointer-events: none;
+} */
+.game *, .software *{
+    pointer-events: none;
+}
+.game p, .software p{
+    font-size: 14px;
+}
+.game h3, .game p, .software h3, .software p{
+    margin: 0;
+}
+.game .small, .software .small{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.game:hover, .software:hover{
+    background-color: var(--background1);
+    border-color: var(--darkgray);
+    cursor: pointer;
+    transform: scale(1.015);
+    overflow-y: auto;
+}
+.game div .updatable, .software div .updatable{
+    background-color: var(--primary);
+    border-radius: 360px;
+    width: 35px;
+    height: 35px;
+    font-weight: bold;
+    text-align: center;
+    font-size: 24px;
+}
+.game .play-button, .software .play-button{
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 150ms;
+    border-radius: 6px;
+}
+.game .play-button .background, .software .play-button .background{
+    z-index: 11;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    backdrop-filter: blur(1px);
+    background-color: rgba(0,0,0,0.6);
+    border-radius: 6px;
+}
+.game .play-button .bi, .software .play-button .bi{
+    z-index: 12;
+    font-size: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-shadow: 0 6px 6px var(--box-shadow);
+    color: var(--primary);
+}
+.game .play-button .bi span, .software .play-button .bi span{
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--font-primary);
+}
+.game.updatable, .software.updatable{
+    border-color: var(--primary);
+}
+.filter{
+    display: flex;
+    gap: 5px
+}
+.filter button:not([id="searchBtn"]){
+    min-width: 100px;
+}
+.searchbar{
+    width: 250px;
+}

@@ -1,0 +1,60 @@
+.currentDownload{
+    background-color: var(--background1);
+    border: 1px solid var(--darkgray);
+    border-radius: 6px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    animation: fadeinbottom 1s;
+    gap: 5px;
+}
+.currentDownload .crow h4, .currentDownload .crow p{
+    width: fit-content;
+    margin: 0;
+}
+.currentDownload .crow{
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+uh1{
+    margin-top: 100px;
+}
+.queue{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.queue .download .crow{
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.queue .download{
+    background-color: var(--background0);
+    border: 1px solid var(--background0);
+    border-radius: 6px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    transition: all 100ms;
+    animation: fadeinbottom 1s;
+}
+.queue .download:hover{
+    background-color: var(--background1);
+    border-color: var(--darkgray);
+    cursor: pointer;
+    transform: scale(1.0125);
+}
+.options{
+    display: flex;
+    gap: 5px;
+    height: 35px;
+}
+.status{
+    padding: 0 5px;
+    min-width: 45px;
+}
+.status .bi-pause{
+    font-size: 23px;
+}

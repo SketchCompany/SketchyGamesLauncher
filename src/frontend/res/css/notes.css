@@ -1,0 +1,19 @@
+.notes{
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+.notes .patch-note{
+    padding: 25px;
+    border: 1px solid var(--darkgray);
+    border-radius: 6px;
+    box-shadow: 0 3px 6px var(--box-shadow);
+}
+.notes .patch-note h3{
+    margin-top: 40px;
+}
+.notes .patch-note h1{
+    border: 1px solid var(--darkgray);
+    border-width: 0 0 1px 0;
+    padding: 0 0 12px 0;
+}
