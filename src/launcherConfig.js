@@ -2,7 +2,12 @@ const {app} = require("electron")
 const https = require("https")
 const fs = require("fs")
 const path = require("path")
+const { platform } = require("process")
 
+/**
+ * ```platform``` defines on which os the launcher is operating
+ */
+const PLATFORM = "macOS"
 /**
  * ```roles``` are the available roles for every user to find matching rules and make individuals have specific rights
  */
@@ -335,6 +340,7 @@ function updateAccountData(){
 }
 
 module.exports = {
+    PLATFORM,
     ROLES,
     LEVELS,
     requestToken,
