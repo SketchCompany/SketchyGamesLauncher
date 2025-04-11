@@ -30,7 +30,7 @@ let PORT = 1520
 /**
  * ```globalDir``` is the path, used to store any data globally on the computer and access from every version of the launcher.
  */
-const globalDir = path.parse(app.getPath("appData")).dir + "/Roaming/Sketchy Games Launcher/"
+const globalDir = path.parse(app.getPath("userData")).dir + "/Sketchy Games Launcher/"
 /**
  * ```defaultDir``` is the path, used to get other files or directorys out of the main directory.
  */
