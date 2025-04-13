@@ -6,7 +6,7 @@
   "author": {
     "name": "Sketch Company",
     "email": "sketch-company@web.de",
-    "url": "https://sketchy-games.sketch-company.de"
+    "url": "https://sketch-company.de"
   },
   "homepage": "https://github.com/SketchCompany/SketchyGamesLauncher",
   "repository": {
@@ -58,8 +58,6 @@
     "cheerio": "^1.0.0-rc.12",
     "create-desktop-shortcuts": "^1.11.0",
     "crypto": "^1.0.1",
-    "dotenv": "^16.4.5",
-    "dotenv-expand": "^12.0.1",
     "electron-log": "^5.2.0",
     "electron-squirrel-startup": "^1.0.0",
     "express": "^4.18.3",
