@@ -25,7 +25,7 @@ $(document).ready(async function(){
         e.stopImmediatePropagation()
         const pasted = e.originalEvent.clipboardData.getData('Text');
         if(pasted.length > 6){
-            notify("Fehlgeschlagen", "Der Code aus der Zwischenablage ist zu lang!", "error")
+            notify("Einfügen fehlgeschlagen", "Der Code aus der Zwischenablage ist zu lang!", "error")
             return
         }
         for (let i = 0; i < pasted.length; i++) {
@@ -42,7 +42,7 @@ $(document).ready(async function(){
         for (let i = 0; i < codes.length; i++) {
             const element = $(codes[i]);
             if(element.val() != code.toString()[i]){
-                notify("Fehlgeschlagen", "Der Verifikations Code ist falsch.", "error")
+                notify("Verifikation fehlgeschlagen", "Der Verifikations Code ist falsch.", "error")
                 return
             }
         }
@@ -79,22 +79,27 @@ async function signUp(){
     $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
 
     const userData = JSON.parse(sessionStorage.getItem("signUpData"))
-    const res = await send("/api/account/signup", userData)
+    const res = await send("/api/account/signup", userData, true)
     console.log(res)
-    if(res.exists){
-        notifyCb("Fehlgeschlagen", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal. Klicke um zurück zur Registrierungs Seite zu kommen.", "error", 100000, function(){
-            openSite("/signup")
-        })
-        sessionStorage.removeItem("signUpData")
-        setTimeout(() => openSite("/signup"), 11000)
+    if(res.status == 1){
+        if(res.data.exists === true){
+            notifyCb("Registrierung fehlgeschlagen", "Ein Nutzer mit diesen Daten existiert bereits! Bitte ändere den Benutzernamen oder die Email und probiers nochmal. Klicke um zurück zur Registrierungs Seite zu kommen.", "error", 100000, function(){
+                openSite("/signup")
+            })
+            sessionStorage.removeItem("signUpData")
+            setTimeout(() => openSite("/signup"), 11000)
+        }
+        else{
+            // notifyCb("Erfolgreich", "Erfolgreich registriert als " + userData.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 4000, function(){
+            //     openSite("/")
+            // })
+            sessionStorage.removeItem("signUpData")
+            // setTimeout(() => openSite("/"), 5000)
+            setTimeout(() => openSite("/"), 100)
+        }
     }
     else{
-        // notifyCb("Erfolgreich", "Erfolgreich registriert als " + userData.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 4000, function(){
-        //     openSite("/")
-        // })
-        sessionStorage.removeItem("signUpData")
-        // setTimeout(() => openSite("/"), 5000)
-        setTimeout(() => openSite("/"), 100)
+        notify("Registrierung fehlgeschlagen", res.data, "error", 15000)
     }
 }
 function getRandomInt(min, max) {

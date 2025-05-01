@@ -516,7 +516,7 @@ router.post("/account/signup", async (req, res) => {
                 await func.write(config.userFile, func.encrypt(JSON.stringify(response.data, null, 3)))
                 res.json({
                     status: 1,
-                    data: {exists: false, data: response}
+                    data: {exists: false}
                 })
             }
             else{
@@ -560,7 +560,7 @@ router.post("/account/login", async (req, res) => {
                 console.log(req.path, "successfully logged in as", response.data.user)
                 res.json({
                     status: 1,
-                    data: {correct: true, data: response.data}
+                    data: {correct: true}
                 })
             }
             else{
@@ -785,9 +785,9 @@ router.post("/games/open", (req, res) => {
             })
             res.json({
                 status: 1,
-                data: "Öffne Explorer bei " + filepath + "."
+                data: "Öffne Ordner bei " + filepath + "."
             })
-            console.log(req.path, "opened folder in explorer at", filepath)
+            console.log(req.path, "opened folder at", filepath)
         }
         else{
             res.json({
@@ -974,7 +974,7 @@ async function download(){
         else if(status == 0){
             console.log("download: failed, because there is no internet connection")
             await func.showErrorBox("Download failed", "The download failed, because there was no connection to the internet.")
-            func.redirect("/store")
+            await func.redirect("/store")
             return
         }
         else console.log("download: connection established")
@@ -1030,9 +1030,9 @@ async function download(){
                     downloadProgress = percentage - 1
                     downloadSpeed = speed.toFixed(2)
                     if(downloadProgress == -1) downloadProgress = 0
-                    console.log("download:", currentDownload.name, "progress",  downloadProgress + "%")
-                    console.log("download:", currentDownload.name, "speed", downloadSpeed + " MB/s")
-                    console.log("download:", currentDownload.name, "time left", downloadTime.hours + ":" + downloadTime.minutes + ":" + downloadTime.seconds)
+                    // console.log("download:", currentDownload.name, "progress",  downloadProgress + "%")
+                    // console.log("download:", currentDownload.name, "speed", downloadSpeed + " MB/s")
+                    // console.log("download:", currentDownload.name, "time left", downloadTime.hours + ":" + downloadTime.minutes + ":" + downloadTime.seconds)
                 })
 
                 writeStream.on("finish", async() => {
@@ -1040,7 +1040,7 @@ async function download(){
                     if(!currentDownloadResponse || !currentDownloadWriteStream) return
                     currentDownloadResponse = null
                     currentDownloadWriteStream = null
-                    console.log("download:", "completed for", currentDownload.name)
+                    console.log("download:", "finished for", currentDownload.name)
                     let createShortcut
                     if(currentDownload.createShortcut != undefined){
                         if(currentDownload.createShortcut) createShortcut = true
@@ -1151,7 +1151,7 @@ function addToAccount(product){
                     lastDownload: now.toLocaleString(),
                 }
                 for(let i = 0; i < games.length; i++){
-                    const element = games[i];
+                    const element = games[i]
                     if(element.name === product.name){
                         console.log("addToAccount: game already purchased", product.name)
                         console.log("addToAccount: updating game data")

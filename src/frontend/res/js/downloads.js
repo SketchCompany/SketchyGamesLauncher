@@ -172,7 +172,7 @@ function finishDownload(){
             $(".queue").prev().remove()
             $(".queue").remove()
             $("padding").append($(document.createElement("p")).html("Alle Downloads abgeschlossen!").css("text-align", "center"))
-            notifyCb("Fertig", "Alle Downloads wurden erfolgreich beendet. Klicke um sie dir in der Library anzusehen.", "note", 10000, function(){
+            notifyCb("Fertig", "Alle Downloads wurden erfolgreich beendet. Klicke, um sie dir in der Library anzusehen.", "note", 10000, function(){
                 openSite("/library")
             })
             notifyComputer("Downloads beendet", "Alle Downloads beendet. Du kannst jetzt die Spiele aus deiner Library starten.")

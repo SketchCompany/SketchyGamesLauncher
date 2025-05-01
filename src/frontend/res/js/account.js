@@ -48,7 +48,7 @@ $(document).ready(async function(){
             const res = await send("/api/account/update", {user: $("#username").val(), email: $("#email").val(), password: $("#password").val()}, true)
             console.log(res)
             if(res.status == 1){
-                notifyCb("Erfolgreich", res.data + " Klicke zum neuladen!", "success", 5000, function(){
+                notifyCb("Gespeichert", res.data + " Klicke zum neuladen!", "success", 5000, function(){
                     location.reload()
                 })
                 setTimeout(function(){
@@ -56,7 +56,7 @@ $(document).ready(async function(){
                 }, 5000)
             }
             else{
-                notify("Fehlgeschlagen", res.data, "error")
+                notify("Speichern fehlgeschlagen", res.data, "error")
             }
         }
         else{

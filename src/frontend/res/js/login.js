@@ -153,7 +153,7 @@ $("#submit").click(login)
 async function login(){
     if($("#submit").attr("disabled")) return
     if($("#usernameInvalid").hasClass("invalid") || $("#passwordInvalid").hasClass("invalid")){
-        notify("Fehlgeschlagen", "Deine Anmeldedaten sind ungültig. Überprüfe sie und probiers nochmal!", "error")
+        notify("Anmelden fehlgeschlagen", "Deine Anmeldedaten sind ungültig. Überprüfe sie und probiers nochmal!", "error")
         console.error("invalid login")
         return
     }
@@ -161,18 +161,23 @@ async function login(){
     $("#submit").html("").append($(document.createElement("span")).addClass(["spinner-grow", "spinner-grow-sm"]).attr("role", "status"))
     const userOrEmail = $("#username").val()
     const password = $("#password").val()
-    const res = await send("/api/account/login", {userOrEmail, password})
+    const res = await send("/api/account/login", {userOrEmail, password}, true)
     console.log(res)
-    if(!res.correct){
-        notify("Fehlgeschlagen", res.data, "error", 15000)
-        $("#submit").removeAttr("disabled")
-        $("#submit").html("<span class='bi bi-box-arrow-in-right'></span> Anmelden")
+    if(res.status == 1){
+        if(res.data.correct === false){
+            notify("Anmeldedaten falsch", res.data, "error", 15000)
+            $("#submit").removeAttr("disabled")
+            $("#submit").html("<span class='bi bi-box-arrow-in-right'></span> Anmelden")
+        }
+        else{
+            // notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 2000, function(){
+            //     openSite("/")
+            // }, true)
+            // setTimeout(() => openSite("/"), 2000)
+            openSite("/")
+        }
     }
     else{
-        // notifyCb("Erfolgreich", "Angemeldet als " + res.data.user + ". Lade Startseite...<br>Klicke um direkt zur Startseite zu kommen.", "success", 2000, function(){
-        //     openSite("/")
-        // }, true)
-        // setTimeout(() => openSite("/"), 2000)
-        openSite("/")
+        notify("Anmeldung fehlgeschlagen", res.data, "error", 15000)
     }
 }

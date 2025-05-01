@@ -50,10 +50,10 @@ async function libraryElementCtxMenu(i, element){
         console.log("start", filepath)
         const response = await send("/api/games/start", {filepath, name}, true)
         if(response.status == 1){
-            notify("Erfolgreich", response.data, "success")
+            notify("Spiel gestartet", response.data, "success")
         }
         else{
-            notify("Fehlgeschlagen", response.data, "error")
+            notify("Starten fehlgeschlagen", response.data, "error")
         }
     }
     else if(i == 1){
@@ -64,17 +64,17 @@ async function libraryElementCtxMenu(i, element){
         console.log("open folder", filepath)
         const response = await send("/api/games/open", {filepath}, true)
         if(response.status == 1){
-            notify("Erfolgreich", response.data, "success")
+            notify("Ordner wird geöffnet", response.data, "success")
         }
         else{
-            notify("Fehlgeschlagen", response.data, "error")
+            notify("Ordner öffnen fehlgeschlagen", response.data, "error")
         }
     }
     else if(i == 3){
         console.log("delete", filepath)
         const response = await send("/api/games/delete", {filepath, name}, true)
         if(response.status == 1){
-            notify("Erfolgreich", response.data, "success")
+            notify("Spiel deinstalliert", response.data, "success")
 
             const res = await get("/api/installs")
             $(".games").get(0).replaceChildren()
@@ -102,7 +102,7 @@ async function libraryElementCtxMenu(i, element){
             }
         }
         else{
-            notify("Fehlgeschlagen", response.data, "error")
+            notify("Deinstallieren fehlgeschlagen", response.data, "error")
         }
     }
 }
@@ -285,10 +285,10 @@ function setClick(i, element){
         else{
             const response = await send("/api/games/start", {filepath, name}, true)
             if(response.status == 1){
-                notify("Erfolgreich", response.data, "success")
+                notify("Spiel gestartet", response.data, "success")
             }
             else{
-                notify("Fehlgeschlagen", response.data, "error")
+                notify("Starten fehlgeschlagen", response.data, "error")
             }
         }
     })
@@ -349,12 +349,12 @@ async function addGame(){
             location.reload()
         }
         else{
-            notify("Fehlgeschlagen", product, "error")
+            notify("Hinzufügen fehlgeschlagen", product, "error")
         }
     }
     catch(err){
         console.log("addGame: error:", err)
-        notify("Fehlgeschlagen", err, "error")
+        notify("Hinzufügen fehlgeschlagen", err, "error")
     }
 }
 
@@ -421,11 +421,11 @@ async function checkForUpdates(){
             $("#filter-all").click()
         }
         else{
-            notify("Fehlgeschlagen", pullRes.data, "error")
+            notify("Suche fehlgeschlagen", pullRes.data, "error")
         }
     }
     catch(err){
         console.log("checkForUpdates: error:", err)
-        notify("Fehlgeschlagen", err, "error")
+        notify("Suche fehlgeschlagen", err, "error")
     }
 }

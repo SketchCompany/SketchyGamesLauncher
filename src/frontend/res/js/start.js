@@ -58,10 +58,10 @@ async function lastPlayedCtxMenu(i, element){
         console.log("start", filepath)
         const response = await send("/api/games/start", {filepath, name}, true)
         if(response.status == 1){
-            notify("Erfolgreich", response.data, "success")
+            notify("Spiel gestartet", response.data, "success")
         }
         else{
-            notify("Fehlgeschlagen", response.data, "error")
+            notify("Starten fehlgeschlagen", response.data, "error")
         }
     }
     else if(i == 1){

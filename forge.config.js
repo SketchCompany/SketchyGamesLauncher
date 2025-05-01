@@ -29,7 +29,7 @@ module.exports = {
         authors: "Sketch Company",
         description: "The official Sketchy Games Launcher of the Sketch Company.",
         noMsi: "false",
-        iconUrl: "https://sketchy-games.sketch-company.de/res?file=launcher.ico",
+        iconUrl: "https://sketch-company.de/res?f=launcher/icon.png",
         icon: "app.ico",
         title: "Sketchy Games Launcher",
         setupIcon: "appSetup.ico",
@@ -46,7 +46,7 @@ module.exports = {
           icon: "app.png",
           bin: "SketchyGamesLauncher",
           maintainer: "Sketch Company",
-          homepage: "https://sketchy-games.sketch-company.de"
+          homepage: "https://sketch-company.de"
         }
       },
     },
@@ -57,7 +57,7 @@ module.exports = {
           icon: "app.png",
           bin: "SketchyGamesLauncher",
           maintainer: "Sketch Company",
-          homepage: "https://sketchy-games.sketch-company.de"
+          homepage: "https://sketch-company.de"
         }
       },
     },

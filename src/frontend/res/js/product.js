@@ -204,7 +204,7 @@ async function download(){
             })
         }
         else{
-            notify("Fehlgeschlagen", "Es konnte keine Verbindung zum Server aufgebaut werden und die Download Größe des Produkts berechnet werden.", "error", 11000)
+            notify("Download fehlgeschlagen", "Es konnte keine Verbindung zum Server aufgebaut werden und die Download Größe des Produkts berechnet werden.", "error", 11000)
         }
     })
     
