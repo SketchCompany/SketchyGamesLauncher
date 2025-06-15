@@ -5,7 +5,18 @@ const TOKENS = require("./src/tokens")
 module.exports = {
   packagerConfig: {
     asar: true,
-    icon: "app"
+    icon: "app",
+    /*osxSign: {
+      identity: "Developer ID Application: ",
+      hardenedRuntime: true,
+      entitlements: "entitlements.mac.plist",
+      "entitlements-inherit": "entitlements.mac.plist",
+      "signature-flags": "library"
+    }, */
+  /*osxNotarize: {
+      appleId: "mtb.2008@icloud.com",
+      appleIdPassword: TOKENS.APPLE_ID_PASSWORD,
+    } */
   },
   publishers: [
     {
@@ -35,6 +46,7 @@ module.exports = {
         setupIcon: "appSetup.ico",
       },
     },
+    /*
     {
       name: '@electron-forge/maker-zip',
       platforms: ["darwin", "windows", "linux"],
@@ -60,11 +72,14 @@ module.exports = {
           homepage: "https://sketchy-games.sketch-company.de"
         }
       },
-    },
+    },*/
     {
       name: '@electron-forge/maker-dmg',
       config: {
-        icon: "app.icns"
+        format: "ULFO",
+        icon: "./app.icns",
+        overwrite: true,
+        debug: false,
       },
     },
   ],

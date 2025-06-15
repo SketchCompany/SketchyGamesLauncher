@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Aktiviert die Sandbox (notwendig für notarization & Sicherheit) -->
+  <key>com.apple.security.app-sandbox</key>
+  <true/>
+
+  <!-- Erlaubt ausgehende Netzwerkverbindungen (z. B. HTTP, WebSocket, TCP) -->
+  <key>com.apple.security.network.client</key>
+  <true/>
+
+  <!-- Zugriff auf vom Benutzer ausgewählte Dateien (z. B. per Dialog) -->
+  <key>com.apple.security.files.user-selected.read-write</key>
+  <true/>
+
+  <!-- Erlaubt Dateizugriff im App Container (standardmäßig) -->
+  <key>com.apple.security.files.all</key>
+  <false/> <!-- NICHT aktivieren, wenn du nur mit User-Dateien arbeitest -->
+</dict>
+</plist>
