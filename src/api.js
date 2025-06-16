@@ -16,6 +16,10 @@ router.get("/store", async (req, res) => {
     try{
         let response = await func.getAndCache("https://api.sketch-company.de/store", 30)
         const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
+
+        response = func.filterForPlatform(response)
+
+        console.log(req.path, "for platform filtered response:", response)
         
         switch(userData.role){
             case config.ROLES.user:
@@ -51,6 +55,7 @@ router.get("/store", async (req, res) => {
                 console.log(req.path, "filtered for default (user)")
                 break
         }
+        response.platform = process.platform
         res.json({
             status: 1,
             data: response

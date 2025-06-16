@@ -30,7 +30,7 @@ $(document).ready(async function(){
         $(".games").remove()
         $(".softwares").remove()
         $("padding").append($(document.createElement("p")).css("text-align", "center").html("Keine Spiele oder Softwares installiert."))
-        $("padding").append($(document.createElement("a")).attr("href", "#").css("text-align", "center").css("text-decoration", "underline").html("Du hast ein Spiel schon installiert? Dann füge es hinzu!")).click(addGame)
+        $("padding").append($(document.createElement("a")).attr("href", "#").css("text-align", "center").css("text-decoration", "underline").html("Du hast ein Spiel schon installiert? Dann füge es hinzu!").click(addGame))
     }
     $("#checkForUpdates").click(checkForUpdates)
     $("#addGame").click(addGame)

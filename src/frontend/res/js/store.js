@@ -1,4 +1,5 @@
 let store
+let platform
 $(document).ready(async function(){
     const connectionStatus = await get("/api/connection")
     
@@ -19,8 +20,9 @@ $(document).ready(async function(){
     }
 
     const res = await get("/api/store")
-    console.log(res)
+    console.log("store", res)
     store = res
+    platform = res.platform
     for (let i = 0; i < res.populars.length; i++) {
         const element = res.populars[i];
         const newElement = createPopularElement(element)
@@ -169,11 +171,15 @@ function createPopularElement(product){
     const headline = $(document.createElement("h1")).html(product.name)
     const contentDiv = $(document.createElement("div")).addClass("content").append(headline).append(description)
     const div = $(document.createElement("div")).addClass("popular").append(cover).append(contentDiv).click(() => {
-        if(!product.isTeaser) openSite("/store/" + product.name)
+        if(!product.isTeaser && !product.platform || product.platform == platform) openSite("/store/" + product.name)
     }).attr("name", product.name)
     if(product.isTeaser){
         div.attr("isTeaser", "true")
     }
+    if(product.platform && product.platform == platform){
+        div.attr("isSamePlatform", "true")
+    }
+    else div.attr("isSamePlatform", "false")
     return div
 }
 $("#popularsBtnLeft").click(function(){
@@ -287,7 +293,9 @@ function createCategorieElement(type, product){
     $(type).append(div)
 }
 function elementClicked(i, element){
-    //if($(element).attr("isTeaser")) return
+    if($(element).attr("isTeaser")) return
+
+    if(!$(element).attr("isSamePlatform")) return
 
     const name = $(element).attr("name")
     if(i == 0){
