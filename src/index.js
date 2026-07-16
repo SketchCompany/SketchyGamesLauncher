@@ -58,9 +58,17 @@ const createWindow = async () => {
         title: "Sketchy Games Launcher",
         titleBarStyle: "hidden",
         titleBarOverlay: {
-            color: "rgb(30,30,35)",
-            symbolColor: "springgreen",
+            color: "#0d0f16",
+            symbolColor: "#1cf58a",
             height: 25,
+        },
+        // The renderer is a plain web SPA that talks to the local Express server
+        // over HTTP only — it needs no Node access. These are Electron's secure
+        // defaults; set explicitly to document and guarantee the hardening.
+        webPreferences: {
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: true,
         },
     })
 
@@ -88,7 +96,11 @@ const createWindow = async () => {
     catch(err){
         console.error("createWindow: userData failed to read, decrypt and parse to JSON, user has to login before using the launcher:", err)
     }
-    if(!settings.loginOnStartup && userData.user && userData.email && userData.password){
+    // Login gate. Set SGL_SKIP_LOGIN=1 in the environment for local testing only —
+    // never enabled by default in a build.
+    const skipLogin = process.env.SGL_SKIP_LOGIN === "1"
+    const hasSession = userData && userData.user && userData.email && userData.password
+    if(skipLogin || (!settings.loginOnStartup && hasSession)){
         mainWindow.loadURL("http://localhost:" + config.PORT)
     }
     else mainWindow.loadURL("http://localhost:" + config.PORT + "/login")

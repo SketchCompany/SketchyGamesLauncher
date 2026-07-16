@@ -2,7 +2,6 @@
 src/installs/
 src/downloads/
 src/data/
-src/functions.js
 src/tokens.js
 
 # Logs
@@ -94,6 +93,7 @@ typings/
 
 # Vite
 .vite/
+src/frontend-dist/
 
 # Electron-Forge
 out/

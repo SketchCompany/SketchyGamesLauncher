@@ -1,0 +1,105 @@
+@import "./fonts.css";
+@import "./tokens.css";
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-0);
+    background-image: radial-gradient(ellipse 120% 80% at 50% -10%, var(--glow-soft) 0%, transparent 55%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    overflow-y: scroll;
+}
+
+#root {
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    margin: 0 0 0.4em;
+    color: var(--text-primary);
+}
+h1 { font-size: clamp(28px, 4vw, 48px); }
+h2 { font-size: clamp(22px, 3vw, 34px); }
+h3 { font-size: clamp(18px, 2.2vw, 24px); }
+
+p {
+    color: var(--text-secondary);
+    margin: 0 0 1em;
+}
+
+a {
+    color: var(--neon-green);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
+}
+a:hover { color: var(--neon-cyan); }
+
+img { max-width: 100%; display: block; }
+
+:focus-visible {
+    outline: 2px solid var(--neon-green);
+    outline-offset: 2px;
+}
+
+/* Eyebrow / pixel label — used sparingly for retro accent */
+.eyebrow {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    line-height: 1.6;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--neon-green);
+}
+
+.gradient-text {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.neon-text { color: var(--neon-green); text-shadow: 0 0 14px var(--glow-green); }
+.neon-text--magenta { color: var(--neon-magenta); text-shadow: 0 0 14px var(--glow-magenta); }
+.neon-text--cyan { color: var(--neon-cyan); text-shadow: 0 0 14px var(--glow-cyan); }
+
+/* Page content padding wrapper */
+.page {
+    padding: 2rem var(--padding) 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 12px; background-color: var(--bg-1); }
+::-webkit-scrollbar-thumb {
+    background-color: var(--bg-3);
+    border-radius: 6px;
+    border: 3px solid var(--bg-1);
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--neon-green); }
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}

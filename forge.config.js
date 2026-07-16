@@ -1,11 +1,30 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses')
 const { FuseV1Options, FuseVersion } = require('@electron/fuses')
-const TOKENS = require("./src/tokens")
+const secrets = require("./src/config/secrets")
+const { execSync } = require("child_process")
 
 module.exports = {
+  hooks: {
+    // Build the React/Vite renderer into src/frontend-dist before packaging so the
+    // packaged app always ships an up-to-date frontend.
+    generateAssets: async () => {
+      console.log("forge: building renderer (vite build)…")
+      execSync("npm run build:renderer", { stdio: "inherit" })
+    },
+  },
   packagerConfig: {
     asar: true,
     icon: "app",
+    // Keep secrets, local-only files and the renderer SOURCE out of the bundle
+    // (the built output in src/frontend-dist is what ships).
+    ignore: [
+      /^\/\.env(\..*)?$/,
+      /^\/src\/tokens\.js$/,
+      /^\/src\/config\/secrets\.js$/,
+      /^\/src\/renderer($|\/)/,
+      /^\/vite\.config\.js$/,
+      /^\/\.git($|\/)/,
+    ],
     /*osxSign: {
       identity: "Developer ID Application: ",
       hardenedRuntime: true,
@@ -14,8 +33,9 @@ module.exports = {
       "signature-flags": "library"
     }, */
   /*osxNotarize: {
-      appleId: "mtb.2008@icloud.com",
-      appleIdPassword: TOKENS.APPLE_ID_PASSWORD,
+      appleId: secrets.APPLE_ID,
+      appleIdPassword: secrets.APPLE_ID_PASSWORD,
+      teamId: secrets.APPLE_TEAM_ID,
     } */
   },
   publishers: [
@@ -28,7 +48,7 @@ module.exports = {
         },
         prerelease: false,
         draft: true,
-        authToken: TOKENS.GITHUB_PUBLISH_TOKEN
+        authToken: secrets.GITHUB_PUBLISH_TOKEN
       }
     }
   ],

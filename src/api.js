@@ -897,17 +897,27 @@ function resetDownloadState(){
 }
 router.post("/download", async (req, res) => {
     try{
-        // Validate the download descriptor before queuing it: the download
-        // pipeline streams `downloadUrl` and writes into `installationPath`.
+        // Descriptor (neu): { id, name(=id), title, downloadUrl(Web-Host), sha256 }. Der
+        // Installationspfad ist eine LOKALE Entscheidung des Launchers (nicht vom Server) und wird
+        // hier aus den Einstellungen/Defaults gesetzt. downloadUrl zeigt auf die authentifizierte
+        // Build-Route der Web-App (Bearer + Lizenz).
         const d = req.body || {}
-        if(!isNonEmptyString(d.name) || !isWebUrl(d.downloadUrl) || !isNonEmptyString(d.installationPath)){
+        const gameId = d.id || d.gameId
+        if(!isNonEmptyString(gameId) || !isWebUrl(d.downloadUrl)){
             console.error(req.path, "rejected invalid download descriptor")
             return res.json({ status: 0, data: "Ungültiger Download." })
         }
+        if(!isNonEmptyString(d.name)) d.name = gameId
+        if(!isNonEmptyString(d.installationPath)){
+            // Zielverzeichnis aus den Einstellungen, sonst der Default-Installationsordner.
+            let installBase = config.installs
+            try{ const s = JSON.parse(func.decrypt(await func.read(config.settingsFile))); if(isNonEmptyString(s.installationPath)) installBase = s.installationPath }catch(e){}
+            d.installationPath = installBase.endsWith("/") ? installBase : installBase + "/"
+            req.body.installationPath = d.installationPath
+        }
         // --- Lizenz-Gate: Download nur für Spiele, die der Nutzer besitzt. Kostenlose Titel
-        // werden hier automatisch beansprucht (claim). Der Store-Item liefert die Spiel-ID (Slug).
+        // werden hier automatisch beansprucht (claim).
         const token = session.getToken()
-        const gameId = d.id || d.gameId
         if(!token) return res.json({ status: 0, data: "Bitte melde dich an, um Spiele herunterzuladen." })
         if(gameId){
             try{
@@ -976,7 +986,19 @@ async function download(){
             }
             const currentDownload = downloadQueue[0]
             console.log("download:", "started download for", currentDownload.name)
-            https.get(currentDownload.downloadUrl, {sessionTimeout: 0, timeout: 0}, (response) => {
+            // Build-Auslieferung der Web-App ist authentifiziert (Bearer) + lizenzgeprüft → Token mitschicken.
+            const dlToken = session.getToken()
+            const dlHeaders = dlToken ? { Authorization: "Bearer " + dlToken } : {}
+            https.get(currentDownload.downloadUrl, {headers: dlHeaders, sessionTimeout: 0, timeout: 0}, (response) => {
+                // 401/403/404 → keine berechtigte Auslieferung; sauber abbrechen statt HTML/JSON als "zip" zu speichern.
+                if(response.statusCode && response.statusCode >= 400){
+                    console.error("download: server rejected build fetch, status", response.statusCode)
+                    response.resume()
+                    resetDownloadState()
+                    downloadQueue.splice(0, 1)
+                    func.showErrorBox("Download fehlgeschlagen", response.statusCode === 403 ? "Du besitzt dieses Spiel nicht (oder deine Sitzung ist abgelaufen)." : "Der Build konnte nicht geladen werden (Status " + response.statusCode + ").").catch(()=>{})
+                    return
+                }
                 currentDownloadResponse = response
                 const downloadPath = config.downloads + currentDownload.name + config.packageExt
                 const writeStream = fs.createWriteStream(downloadPath)

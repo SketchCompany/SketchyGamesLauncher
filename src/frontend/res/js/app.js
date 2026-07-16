@@ -754,8 +754,12 @@ async function notifyComputer(title, message){
  * @param {function} cb the callback of the notification that is called when the notification is clicked
  */
 async function addToNotificationsCenter(title, message, type, cb){
-    if(cb) await send("/api/notifications/add", {title, message, type, cb: cb.toString()})
-    else await send("/api/notifications/add", {title, message, type})
+    // Note: persisted notifications intentionally do NOT carry a serialized
+    // callback. Storing/eval-ing a function string was a remote-code-execution
+    // risk. Click actions for the live (toast) notification still work via its
+    // in-memory closure; the declarative action model arrives with the React
+    // migration. The `cb` argument is kept for call-site compatibility only.
+    await send("/api/notifications/add", {title, message, type})
     setNotifications()
 }
 
@@ -798,10 +802,8 @@ function createNotificationElement(notification, i){
         setNotifications()
     }))
     element.click(async function(){
-        if(notification.cb){
-            eval(notification.cb.replace("function()", "function tempFunction()")) // declare a tempFunction for the callback to be called and call it afterwards
-            tempFunction()
-        } 
+        // No eval of stored callbacks (see addToNotificationsCenter): clicking a
+        // persisted notification simply dismisses it.
         element.remove()
         await send("/api/notifications/remove", {i})
         setNotifications()
