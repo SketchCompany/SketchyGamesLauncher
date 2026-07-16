@@ -49,6 +49,11 @@ const base = __dirname + "/frontend/"
  */
 const resources = base + "res/"
 /**
+ * ```dist``` is the path of the built React SPA (Vite output). Express serves
+ * these static assets and uses an index.html SPA fallback for app routes.
+ */
+const dist = __dirname + "/frontend-dist/"
+/**
  * ```installs``` is the path, where the downloads get unpacked and installed to.
  */
 let installs = globalDir + "/installs/"
@@ -65,9 +70,11 @@ const data = globalDir + "/data/"
  */
 const ext = ".data"
 /**
- * ```appExt``` is the file extension for files that will be stared, when the user starts an application in the library.
+ * ```appExt``` is the file extension of the executable that gets started when the
+ * user launches an application in the library. Platform dependent: ```.exe``` on
+ * Windows, ```.app``` bundle on macOS, no extension on Linux.
  */
-const appExt = ".exe"
+const appExt = platform === "win32" ? ".exe" : platform === "darwin" ? ".app" : ""
 /**
  * ```imgFile``` is the file name for the image for the game when in offline mode.
  */
@@ -105,7 +112,7 @@ const settingsIntegrity = {
 }
 
 async function setup(){
-    return new Promise(async cb => {
+  try{
         console.log("setup: started")
 
         const func = require("./functions")
@@ -211,8 +218,10 @@ async function setup(){
         else if(status == 0) console.log("setup: no connection to the internet")
 
         console.log("setup: finished")
-        cb()
-    })
+  }
+  catch(err){
+        console.error("setup: failed:", err)
+  }
 }
 async function downloadImage(product){
     console.log("downloadImage: started for", product.resourcesUrl + "1.png")
@@ -228,25 +237,34 @@ async function downloadImage(product){
         })
     })
 }
-function checkForUpdates(){
-    return new Promise(async cb => {
+async function checkForUpdates(){
+  try{
         const func = require("./functions")
         const updates = []
-        
+
         // read installed games
         const installs = JSON.parse(await func.read(installsFile))
 
-        // get latest information from the store api
-        const storeProducts = await func.getAndCache("https://api.sketch-company.de/store", 60)
+        // get latest information from the store api (neuer GraphQL-Katalog, verlangt eine Session)
+        const session = require("./session")
+        const storeAdapter = require("./storeAdapter")
+        const token = session.getToken()
+        if(!token){
+            console.log("checkForUpdates: nicht angemeldet, Update-Prüfung übersprungen")
+            return updates
+        }
+        const storeProducts = await storeAdapter.getStore(token)
 
         // check installed games for updates
+        // Hinweis: der neue Katalog exportiert (noch) kein `version`-Feld — die Versionsprüfung
+        // greift daher erst, wenn Builds/Versionen im Katalog auftauchen (Follow-up).
         if(installs.games.length > 0){
             for (let i = 0; i < installs.games.length; i++) {
                 const element = installs.games[i];
                 console.log("checkForUpdates: checking", element.name)
                 for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
                     const onlineElement = storeProducts.games[i2];
-                    if(element.name == onlineElement.name && element.version != onlineElement.version){
+                    if((element.name == onlineElement.id || element.name == onlineElement.title) && element.version != onlineElement.version){
                         console.log("checkForUpdates: found update for", element.name)
                         console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
                         onlineElement.installationPath = element.installationPath
@@ -284,9 +302,12 @@ function checkForUpdates(){
             console.log("checkForUpdates: wrote updates to updatesFile")
         }
         else console.log("checkForUpdates: no updates found")
-
-        cb()
-    })
+        return updates
+  }
+  catch(err){
+        console.error("checkForUpdates: failed:", err)
+        return []
+  }
 }
 function loadSettings(){
     return new Promise(async cb => {
@@ -317,19 +338,28 @@ function loadSettings(){
         }
     })
 }
+// Kontodaten werden nicht mehr lokal in userFile gespiegelt (dort lag früher auch das Passwort).
+// Der Account wird bei Bedarf frisch über /account (Bearer-Token) geladen. Diese Funktion prüft
+// nur noch best-effort, ob die Session serverseitig noch lebt; ist sie es nicht, wird sie gelöscht.
 function updateAccountData(){
     return new Promise(async cb => {
         try{
             const func = require("./functions")
-            const raw = await func.read(userFile)
-            const oldUserData = JSON.parse(func.decrypt(raw))
-            const response = await func.send("https://api.sketch-company.de/u/find", {id: oldUserData.id})
-            await func.write(userFile, func.encrypt(JSON.stringify(response, null, 3)))
-            console.log("updateAccountUpdate: updated account", response.user, "successfully")
+            const session = require("./session")
+            const token = session.getToken()
+            const id = session.getUserId()
+            if(!token || !id) return cb()
+            await func.send("/v1/u/find", { id }, { token })
+            console.log("updateAccountData: Session ok")
             cb()
         }
         catch(err){
-            console.error("updateAccountUpdate:", err)
+            if(err && err.name === "ApiError" && err.status === 401){
+                require("./session").clearSession()
+                console.warn("updateAccountData: Session abgelaufen, lokal gelöscht")
+                return cb()
+            }
+            console.error("updateAccountData:", err)
             cb(err)
         }
     })
@@ -343,6 +373,7 @@ module.exports = {
     logFile,
     base,
     resources,
+    dist,
     installs,
     downloads,
     data,

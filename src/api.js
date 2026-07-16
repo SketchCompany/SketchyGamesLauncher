@@ -1,6 +1,5 @@
 const router = require("express").Router()
 const bodyParser = require("body-parser")
-const child_process = require("child_process")
 const func = require("./functions")
 const https = require("https")
 const fs = require("fs")
@@ -8,65 +7,78 @@ const unzipper = require("unzipper")
 // const nodemailer = require("nodemailer")
 // const smtpTransport = require("nodemailer-smtp-transport")
 const path = require("path")
+const crypto = require("crypto")
+const { shell } = require("electron")
 const config = require("./launcherConfig")
+const session = require("./session")
+const storeAdapter = require("./storeAdapter")
+const { apiUrl } = require("./apiBase")
 
 router.use(bodyParser.json())
 
+// --- security helpers -------------------------------------------------------
+/**
+ * Returns true if ```child``` resolves to a path strictly inside ```parent```.
+ * Used to make sure we never operate on paths outside of a product's own
+ * installation directory (defense against tampered registry / traversal).
+ */
+function isPathInside(child, parent){
+    if(!child || !parent) return false
+    const rel = path.relative(path.resolve(parent), path.resolve(child))
+    return rel.length > 0 && !rel.startsWith("..") && !path.isAbsolute(rel)
+}
+/**
+ * Cross-platform path equality (normalizes separators / `.` / `..` segments).
+ * Replaces the previous Windows-only backslash string comparisons.
+ */
+function samePath(a, b){
+    if(!a || !b) return false
+    return path.resolve(a) === path.resolve(b)
+}
+
+// --- lightweight input validation -------------------------------------------
+function isNonEmptyString(v){ return typeof v === "string" && v.length > 0 }
+function isIndexInRange(v, length){ return Number.isInteger(v) && v >= 0 && v < length }
+function isWebUrl(v){
+    try{ const u = new URL(v); return u.protocol === "http:" || u.protocol === "https:" }
+    catch(e){ return false }
+}
+/**
+ * Resolves a product from the trusted ```installsFile``` registry by ```name```
+ * and/or by matching its registered ```start``` path. Requests must never cause
+ * the launcher to execute or delete an arbitrary path supplied by the caller —
+ * only paths that are recorded in the registry are ever acted upon.
+ * @returns {Promise<{product: object|null, categorie?: string, installs: object}>}
+ */
+async function resolveRegisteredProduct({ name, filepath } = {}){
+    const installs = JSON.parse(await func.read(config.installsFile))
+    const all = [
+        ...installs.games.map(p => ({ p, c: "games" })),
+        ...installs.softwares.map(p => ({ p, c: "softwares" })),
+    ]
+    let match
+    if(name) match = all.find(x => x.p.name === name)
+    if(!match && filepath) match = all.find(x => x.p.start && path.resolve(x.p.start) === path.resolve(filepath))
+    if(!match) return { product: null, installs }
+    return { product: match.p, categorie: match.c, installs }
+}
+
+// Store-Katalog über die neue v1-GraphQL-API (siehe storeAdapter.js). Der Renderer erhält die
+// NEUE Form { categories:[{key,title,games}], games:[...] } mit Preis/Besitz — nicht mehr die
+// tote Legacy-Form (populars/suggestions/softwares mit level/platform). Der Store braucht jetzt
+// eine Session (die ganze API ist nicht mehr anonym). ACHTUNG: Store.jsx muss auf die neue Form
+// angepasst werden (Follow-up, siehe V1-MIGRATION.md).
 router.get("/store", async (req, res) => {
     try{
-        let response = await func.getAndCache("https://api.sketch-company.de/store", 30)
-        const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-
-        response = func.filterForPlatform(response)
-
-        console.log(req.path, "for platform filtered response:", response)
-        
-        switch(userData.role){
-            case config.ROLES.user:
-                response.populars = response.populars.filter(                               game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.suggestions = response.suggestions.suggestions.filter( game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.bestofweek = response.suggestions.bestofweek.filter(   game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.games = response.suggestions.games.filter(             game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.softwares = response.suggestions.softwares.filter(     game => !game.level || game.level == config.LEVELS.user)
-                response.games = response.games.filter(                                     game => !game.level || game.level == config.LEVELS.user)
-                response.softwares = response.softwares.filter(                             game => !game.level || game.level == config.LEVELS.user)
-                console.log(req.path, "filtered for user")
-                break
-            case config.ROLES.dev:
-                response.populars = response.populars.filter(                               game => game.level <= config.LEVELS.dev)
-                response.suggestions.suggestions = response.suggestions.suggestions.filter( game => game.level <= config.LEVELS.dev)
-                response.suggestions.bestofweek = response.suggestions.bestofweek.filter(   game => game.level <= config.LEVELS.dev)
-                response.suggestions.games = response.suggestions.games.filter(             game => game.level <= config.LEVELS.dev)
-                response.suggestions.softwares = response.suggestions.softwares.filter(     game => game.level <= config.LEVELS.dev)
-                response.games = response.games.filter(                                     game => game.level <= config.LEVELS.dev)
-                response.softwares = response.softwares.filter(                             game => game.level <= config.LEVELS.dev)
-                console.log(req.path, "filtered for dev")
-                break
-            case config.ROLES.admin: // just break because admin has full access
-                break
-            default:
-                response.populars = response.populars.filter(                               game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.suggestions = response.suggestions.suggestions.filter( game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.bestofweek = response.suggestions.bestofweek.filter(   game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.games = response.suggestions.games.filter(             game => !game.level || game.level == config.LEVELS.user)
-                response.suggestions.softwares = response.suggestions.softwares.filter(     game => !game.level || game.level == config.LEVELS.user)
-                response.games = response.games.filter(                                     game => !game.level || game.level == config.LEVELS.user)
-                response.softwares = response.softwares.filter(                             game => !game.level || game.level == config.LEVELS.user)
-                console.log(req.path, "filtered for default (user)")
-                break
-        }
-        response.platform = process.platform
-        res.json({
-            status: 1,
-            data: response
-        })
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Bitte melde dich an, um den Store zu sehen." })
+        const store = await storeAdapter.getStore(token)
+        res.json({ status: 1, data: { ...store, platform: process.platform } })
     }
     catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, data: "Sitzung abgelaufen. Bitte melde dich neu an." }) }
         console.error(req.path, err)
-        res.json({
-            status: 0,
-            data: err.toString()
-        })
+        res.json({ status: 0, data: err.toString() })
     }
 })
 router.get("/request-and-cache", async (req, res) => {
@@ -89,10 +101,17 @@ router.get("/request-and-cache", async (req, res) => {
 
 router.post("/browser", async (req, res) => {
     try{
-        const openBrowser = await import("open")
-        const asd = await openBrowser.default(req.body.url);
-        asd.unref()
-        console.log(req.path, "opened browser at " + req.body.url)
+        // Only allow opening web URLs in the external browser (not file:// or
+        // other schemes that shell.openExternal would otherwise honor).
+        let parsed
+        try{ parsed = new URL(req.body.url) }
+        catch(e){ parsed = null }
+        if(!parsed || (parsed.protocol !== "http:" && parsed.protocol !== "https:")){
+            console.error(req.path, "refused to open non-web url:", req.body.url)
+            return res.json({ status: 0, data: "Ungültige URL." })
+        }
+        await func.openExternal(parsed.href)
+        console.log(req.path, "opened browser at " + parsed.href)
         res.json({
             status: 1,
             data: "opened browser"
@@ -144,50 +163,28 @@ router.get("/close-for-update", (req, res) => {
 router.post("/settings/move", async (req, res) => {
     try{
         const installs = JSON.parse(await func.read(config.installsFile))
+        const { oldInstallationPath, newInstallationPath } = req.body
 
-        if(installs.games.length > 0){
-            for (let i = 0; i < installs.games.length; i++) {
-                const element = installs.games[i];
-                // check if the game was installed in the old installationPath and not anywhere else like a special location
-                if(!element.installationPath.endsWith("\\") && !element.installationPath.endsWith("/")) element.installationPath += "\\"
-                if(!req.body.oldInstallationPath.endsWith("\\") && !req.body.oldInstallationPath.endsWith("/")) req.body.oldInstallationPath += "\\"
-                console.log(req.path, "oldInstallationPath", req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"), "installationPath", element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"))
-                if(req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\") == element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\")){
-                    console.log(req.path, "found game with the same installation path as the old one, so it has to be moved to the newInstallation path", element)
-                    await func.move(path.dirname(element.start), req.body.newInstallationPath + "/" + element.name)
-                    console.log(req.path, "successfully moved", element.name, "to", req.body.newInstallationPath + "/" + element.name)
-                    element.start = req.body.newInstallationPath + "/" + element.name + "/" + element.name + config.appExt
-                    element.installationPath = req.body.newInstallationPath
-                    if(!element.installationPath.endsWith("/") && !element.installationPath.endsWith("\\")) element.installationPath += "\\"
+        // Move every product that was installed in the old installation path to
+        // the new one. Path comparison is done cross-platform via samePath().
+        async function moveCategory(list, label){
+            if(!list || list.length === 0){
+                console.log(req.path, "there are no", label, "installed to move")
+                return
+            }
+            for(const element of list){
+                if(samePath(element.installationPath, oldInstallationPath)){
+                    const targetDir = path.join(newInstallationPath, element.name)
+                    console.log(req.path, "moving", label, element.name, "to", targetDir)
+                    await func.move(path.dirname(element.start), targetDir)
+                    element.start = path.join(targetDir, element.name + config.appExt)
+                    element.installationPath = newInstallationPath.endsWith(path.sep) ? newInstallationPath : newInstallationPath + path.sep
                 }
             }
         }
-        else{
-            console.log(req.path, "there are no games installed to move")
-        }
 
-        if(installs.softwares.length > 0){
-            for (let i = 0; i < installs.softwares.length; i++) {
-                const element = installs.softwares[i];
-                // check if the software was installed in the old installationPath and not anywhere else like a special location
-                if(!element.installationPath.endsWith("\\") && !element.installationPath.endsWith("/")) element.installationPath += "\\"
-                if(!req.body.oldInstallationPath.endsWith("\\") && !req.body.oldInstallationPath.endsWith("/")) req.body.oldInstallationPath += "\\"
-                console.log(req.path, "oldInstallationPath", req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"), "installationPath", element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\"))
-                if(req.body.oldInstallationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\") == element.installationPath.replaceAll("/", "\\").replaceAll("\\\\", "\\").replaceAll("//", "\\")){
-                    console.log(req.path, "found software with the same installation path as the old one, so it has to be moved to the newInstallation path", element)
-                    await func.move(path.dirname(element.start), req.body.newInstallationPath + "/" + element.name)
-                    console.log(req.path, "successfully moved", element.name, "to", req.body.newInstallationPath + "/" + element.name)
-                    element.start = req.body.newInstallationPath + "/" + element.name + "/" + element.name + config.appExt
-                    element.installationPath = req.body.newInstallationPath
-                    if(!element.installationPath.endsWith("/") && !element.installationPath.endsWith("\\")) element.installationPath += "\\"
-                }
-            }
-        }
-        else{
-            console.log(req.path, "there are no softwares installed to move")
-        }
-
-        // nochmal überlegen wann die datein verschoben werden sollen, am besten nach dem speichern der einstellungen
+        await moveCategory(installs.games, "games")
+        await moveCategory(installs.softwares, "softwares")
 
         await func.write(config.installsFile, JSON.stringify(installs, null, 3))
 
@@ -257,64 +254,12 @@ router.get("/updates/clear", async (req, res) => {
 })
 router.get("/updates/pull", async (req, res) => {
     try{
-
         const status = await func.checkInternetConnection()
 
         if(status == 2){
-            const updates = []
-            
-            // read installed games
-            const installs = JSON.parse(await func.read(config.installsFile))
-
-            // get latest information from the store api
-            const storeProducts = await func.get("https://api.sketch-company.de/store")
-
-            // check installed games for updates
-            if(installs.games.length > 0){
-                for (let i = 0; i < installs.games.length; i++) {
-                    const element = installs.games[i];
-                    console.log(req.path, "checkForUpdates: checking", element.name)
-                    for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
-                        const onlineElement = storeProducts.games[i2];
-                        if(element.name == onlineElement.name && element.version != onlineElement.version){
-                            console.log(req.path, "checkForUpdates: found update for", element.name)
-                            console.log(req.path, "checkForUpdates: from", element.version, "to", onlineElement.version)
-                            onlineElement.installationPath = element.installationPath
-                            onlineElement.categorie = "games"
-                            updates.push(onlineElement)
-                            //console.log(req.path, "checkForUpdates: pushed to updatesFile", updates)
-                        }
-                    }
-                }
-            }
-            else console.log(req.path, "checkForUpdates: no games installed to check")
-
-            // check installed softwares for updates
-            if(installs.softwares.length > 0){
-                for (let i = 0; i < installs.softwares.length; i++) {
-                    const element = installs.softwares[i];
-                    console.log(req.path, "checkForUpdates: checking", element.name)
-                    for (let i2 = 0; i2 < storeProducts.softwares.length; i2++) {
-                        const onlineElement = storeProducts.softwares[i2];
-                        if(element.name == onlineElement.name && element.version != onlineElement.version){
-                            console.log(req.path, "checkForUpdates: found update for", element.name)
-                            console.log(req.path, "checkForUpdates: from", element.version, "to", onlineElement.version)
-                            onlineElement.installationPath = element.installationPath
-                            onlineElement.categorie = "softwares"
-                            updates.push(onlineElement)
-                            //console.log(req.path, "checkForUpdates: pushed to updatesFile", updates)
-                        }
-                    }
-                }
-            }
-            else console.log(req.path, "checkForUpdates: no softwares installed to check")
-
-            if(updates.length > 0){
-                await func.write(config.updatesFile, JSON.stringify({updates}, null, 3))
-                console.log(req.path, "checkForUpdates: wrote updates to updatesFile")
-            }
-            else console.log(req.path, "checkForUpdates: no updates found")
-
+            // Single source of truth for the update-check logic (shared with the
+            // startup check), instead of duplicating it here.
+            const updates = await config.checkForUpdates()
             res.json({
                 status: 1,
                 data: updates
@@ -331,7 +276,7 @@ router.get("/updates/pull", async (req, res) => {
                 status: 0,
                 data: "Keine Interneverbindung."
             })
-        }        
+        }
     }
     catch(err){
         console.error(req.path, err)
@@ -342,11 +287,20 @@ router.get("/updates/pull", async (req, res) => {
     }
 })
 router.get("/updates", async (req, res) => {
-    const updates = JSON.parse(await func.read(config.updatesFile))
-    res.json({
-        status: 1,
-        data: updates
-    })
+    try{
+        const updates = JSON.parse(await func.read(config.updatesFile))
+        res.json({
+            status: 1,
+            data: updates
+        })
+    }
+    catch(err){
+        console.error(req.path, err)
+        res.json({
+            status: 0,
+            data: err.toString()
+        })
+    }
 })
 
 const notifications = []
@@ -357,7 +311,10 @@ router.get("/notifications", async (req, res) => {
     })
 })
 router.post("/notifications/add", async (req, res) => {
-    notifications.push(req.body)
+    // Persist only presentational fields; never store a callback/function string
+    // (it used to be eval'd in the renderer -> remote-code-execution risk).
+    const { title, message, type, action } = req.body || {}
+    notifications.push({ title, message, type, ...(action ? { action } : {}) })
     res.json({
         status: 1,
         data: notifications
@@ -372,6 +329,9 @@ router.get("/notifications/removeAll", async (req, res) => {
 })
 router.post("/notifications/remove", async (req, res) => {
     if(req.body.i != undefined){
+        if(!isIndexInRange(req.body.i, notifications.length)){
+            return res.json({ status: 0, data: "Ungültiger Index." })
+        }
         notifications.splice(req.body.i, 1)
         res.json({
             status: 1,
@@ -411,6 +371,11 @@ router.get("/lastplayed", async (req, res) => {
 })
 router.post("/settings", async (req, res) => {
     try{
+        // Only persist a settings object whose shape matches the known schema.
+        if(!req.body || typeof req.body !== "object" || !func.checkForIntegrity(req.body, config.settingsIntegrity)){
+            console.error(req.path, "rejected settings with unexpected shape")
+            return res.json({ status: 0, data: "Ungültige Einstellungen." })
+        }
         await func.write(config.settingsFile, func.encrypt(JSON.stringify(req.body, null, 3)))
         console.log(req.path, "saved settings")
         res.json({
@@ -446,62 +411,38 @@ router.get("/settings", async (req, res) => {
 })
 router.post("/account/update", async (req, res) => {
     try{
-        const status = await func.checkInternetConnection()
-        if(status == 2){
-            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-
-            const accountApproved = await func.send("https://api.sketch-company.de/u/proof", {id: userData.id, user: req.body.user, email: req.body.email})
-
-            if(accountApproved){
-                const newUserData = {user: req.body.user, email: req.body.email, password: func.encrypt(req.body.password), id: userData.id}
-
-                const updateRes = await func.send("https://api.sketch-company.de/u/update", newUserData)
-                console.log(req.path, updateRes)
-
-                userData.user = newUserData.user
-                userData.email = newUserData.email
-                userData.password = newUserData.password
-
-                await func.write(config.userFile, func.encrypt(JSON.stringify(userData, null, 3)))
-
-                res.json({
-                    status: 1,
-                    data: "Änderungen gespeichert."
-                })
-            }
-            else{
-                res.json({
-                    status: 0,
-                    data: "Ein Benutzer mit diesen Daten existiert bereits. Ändere sie und versuch es nochmal."
-                })
-            }
-            
+        const token = session.getToken()
+        const id = session.getUserId()
+        if(!token || !id) return res.json({ status: 0, data: "Nicht angemeldet." })
+        if(await func.checkInternetConnection() != 2){
+            return res.json({ status: 0, data: "Keine Verbindung zum Server." })
         }
-        else if(status == 1){
-            res.json({
-                status: 0,
-                data: "Keine Verbindung zum Server."
-            })
+        // Eindeutigkeit prüfen, dann Profil aktualisieren (Bearer). Ein Passwortwechsel läuft NICHT
+        // mehr über /u/update (das schriebe den Wert verbatim) — dafür gibt es change-password.
+        const approved = await func.send("/v1/u/proof", { id, username: req.body.user, email: req.body.email }, { token })
+        if(!approved){
+            return res.json({ status: 0, data: "Ein Benutzer mit diesen Daten existiert bereits. Ändere sie und versuch es nochmal." })
         }
-        else res.json({
-            status: 0,
-            data: "Keine Internetverbindung."
-        })
+        await func.send("/v1/u/update", { id, username: req.body.user, email: req.body.email }, { token })
+        res.json({ status: 1, data: "Änderungen gespeichert." })
     }
     catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, data: "Sitzung abgelaufen. Bitte melde dich neu an." }) }
         console.error(req.path, err)
-        res.json({
-            status: 0,
-            data: err.toString()
-        })
+        res.json({ status: 0, data: err.toString() })
     }
 })
 router.get("/account/logout", async (req, res) => {
     try{
-        await func.remove(config.userFile)
+        const token = session.getToken()
+        // Session serverseitig sperren (best effort), dann lokal löschen.
+        if(token) await func.send("/v1/auth/logout", {}, { token }).catch(() => {})
+        session.clearSession()
+        // Legacy-Nutzerdatei (Passwort!) entfernen, falls noch vorhanden.
+        if(func.exists(config.userFile)) await func.remove(config.userFile).catch(() => {})
         res.json({
             status: 1,
-            data: "User File wurde entfernt"
+            data: "Abgemeldet"
         })
     }
     catch(err){
@@ -511,151 +452,119 @@ router.get("/account/logout", async (req, res) => {
             data: err.toString()
         })
     }})
-router.post("/account/signup", async (req, res) => {
+// Schritt 1 der Registrierung: Bestätigungscode an die E-Mail senden (v1 verlangt eine
+// verifizierte E-Mail VOR der Kontoerstellung). Der Renderer zeigt danach das Code-Eingabefeld.
+router.post("/account/verify", async (req, res) => {
     try{
-        const status = await func.checkInternetConnection()
-        if(status == 2){
-            req.body.password = func.encrypt(req.body.password)
-            const response = await func.send("https://api.sketch-company.de/u/signup", req.body)
-            if(!response.exists){
-                await func.write(config.userFile, func.encrypt(JSON.stringify(response.data, null, 3)))
-                res.json({
-                    status: 1,
-                    data: {exists: false, data: response}
-                })
-            }
-            else{
-                console.error(req.path, "user with this data already exists", req.body)
-                res.json({
-                    status: 1,
-                    data: {exists: true, data: "Ein Nutzer mit diesen Daten exestiert bereits. Bitter ändere den Benutzernamen oder die Email und probiers nochmal."}
-                })
-            }
+        if(await func.checkInternetConnection() != 2){
+            return res.json({ status: 0, data: "Um einen Account zu erstellen brauchst du eine Internetverbindung." })
         }
-        else if(status == 1){
-            console.error(req.path, "could not connect to sketch-company.de servers")
-            res.json({
-                status: 0,
-                data: {exists: false, data: "Sorry! Unsere Server sind möglicherweise offline, aufgrund von Wartungsarbeiten oder anderen Probleme. Probiers später nochmal."}
-            })
-        }
-        else if(status == 0){
-            res.json({
-                status: 0,
-                data: {exists: false, data: "Um einen Account zu erstellen brauchst du eine Internet Verbindung."}
-            })
-        }
+        await func.send("/v1/auth/verify", { username: req.body.user, email: req.body.email })
+        res.json({ status: 1, data: "E-Mail gesendet" })
     }
     catch(err){
+        if(err instanceof func.ApiError) return res.json({ status: 0, data: err.message })
         console.error(req.path, err)
-        res.json({
-            status: 0,
-            data: err.toString()
-        })
+        res.json({ status: 0, data: err.toString() })
     }
 })
+// Schritt 2: Konto mit dem E-Mail-Code anlegen. Klartext-Passwort über HTTPS (kein client-AES).
+// Bei Erfolg wird der zurückgegebene Session-Token gespeichert (kein Passwort mehr auf der Platte).
+router.post("/account/signup", async (req, res) => {
+    try{
+        if(await func.checkInternetConnection() != 2){
+            return res.json({ status: 0, data: { exists: false, data: "Um einen Account zu erstellen brauchst du eine Internetverbindung." } })
+        }
+        const signup = await func.send("/v1/auth/signup", { username: req.body.user, email: req.body.email, password: req.body.password, code: req.body.code, remember: true })
+        // /v1/auth/signup liefert { token, code }; userId wird aus dem Token abgeleitet.
+        session.saveSession({ token: signup.token })
+        const id = session.getUserId()
+        const account = id ? await func.send("/v1/u/find", { id }, { token: signup.token }).catch(() => null) : null
+        res.json({ status: 1, data: { exists: false, data: account || {} } })
+    }
+    catch(err){
+        if(err instanceof func.ApiError){
+            // 409 = existiert bereits (ALREADY_EXISTS), 403 = Code falsch/E-Mail nicht verifiziert.
+            if(err.status === 409) return res.json({ status: 1, data: { exists: true, data: "Ein Nutzer mit diesen Daten existiert bereits. Ändere den Benutzernamen oder die E-Mail und probiers nochmal." } })
+            return res.json({ status: 0, data: { exists: false, data: err.message } })
+        }
+        console.error(req.path, err)
+        res.json({ status: 0, data: err.toString() })
+    }
+})
+// Login gegen die v1-API (mehrstufig). Schritt 1: check-password. Ohne 2FA folgt direkt
+// login/email (Skip-Token) → Session-Token wird gespeichert. Mit 2FA antworten wir mit
+// { twoFactorRequired, challengeToken } — der Renderer fragt den TOTP-Code ab und ruft
+// /account/login/2fa. Das Passwort wird NIE mehr gespeichert (nur der Session-Token).
+async function finishLogin(res, tokenPayload){
+    // tokenPayload: { token, code, data } aus /v1/auth/login/email
+    const account = tokenPayload.data
+    session.saveSession({ token: tokenPayload.token, userId: account.id })
+    return res.json({ status: 1, data: { correct: true, data: account } })
+}
 router.post("/account/login", async (req, res) => {
     try{
         const status = await func.checkInternetConnection()
-        if(status == 2){
-            req.body.password = func.encrypt(req.body.password)
-            const response = await func.send("https://api.sketch-company.de/u/login", req.body)
-            if(response.correct){
-                await func.write(config.userFile, func.encrypt(JSON.stringify(response.data, null, 3)))
-                console.log(req.path, "successfully logged in as", response.data.user)
-                res.json({
-                    status: 1,
-                    data: {correct: true, data: response.data}
-                })
-            }
-            else{
-                console.error(req.path, "login data was not correct", response)
-                res.json({
-                    status: 1,
-                    data: {correct: false, data: "Deine Anmeldedaten sind falsch. Überprüfe deine Daten und probiers nochmal. Fehlermeldung: " + JSON.stringify(response)}
-                })
-            }
+        if(status != 2){
+            return res.json({ status: 0, data: { correct: false, data: status == 1 ? "Keine Verbindung zum Server. Bitte versuche es später erneut." : "Um dich einzuloggen brauchst du eine Internetverbindung." } })
         }
-        else if(status == 1){
-            console.error(req.path, "could not connect to sketch-company.de servers")
-            res.json({
-                status: 0,
-                data: {exists: false, data: "Sorry! Unsere Server sind möglicherweise offline, aufgrund von Wartungsarbeiten oder anderen Probleme. Probiers später nochmal."}
-            })
+        // Klartext-Passwort über HTTPS (kein client-seitiges AES mehr). Der Launcher-Schlüssel
+        // (X-Launcher-Key) hängt func.send automatisch an → Bot-Check-Ausnahme.
+        const check = await func.send("/v1/auth/check-password", { usernameOrEmail: req.body.userOrEmail, password: req.body.password })
+        if(!check || !check.correct){
+            return res.json({ status: 1, data: { correct: false, data: "Deine Anmeldedaten sind falsch. Überprüfe sie und probiers nochmal." } })
         }
-        else if(status == 0 && func.exists(config.userFile)){
-            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-            if(userData.user == req.body.userOrEmail && func.decrypt(userData.password) == req.body.password || userData.email == req.body.userOrEmail && func.decrypt(userData.password) == req.body.password){
-                console.log(req.path, "successfully logged in as", userData.user)
-                res.json({
-                    status: 1,
-                    data: {correct: true, data: userData}
-                })
-            }
-            else{
-                console.error(req.path, "login data was not correct", req.body)
-                res.json({
-                    status: 1,
-                    data: {correct: false, data: "Deine Anmeldedaten sind falsch. Überprüfe deine Daten und probiers nochmal."}
-                })
-            }
+        if(check.skip2FA){
+            const login = await func.send("/v1/auth/login/email", { singleUse2FASkipToken: check.singleUse2FASkipToken, remember: true })
+            return finishLogin(res, login)
         }
-        else{
-            console.error(req.path, "could not login, because of no internet connection")
-            res.json({
-                status: 0,
-                data: {correct: false, data: "Um dich einzuloggen brauchst du eine Internet Verbindung"}
-            })
-        }
-        
+        // 2FA nötig: Challenge-Token an den Renderer geben (TOTP-Abfrage), Login folgt in /account/login/2fa.
+        return res.json({ status: 1, data: { correct: true, twoFactorRequired: true, challengeToken: check.singleUse2FAChallengeToken } })
     }
     catch(err){
+        if(err instanceof func.ApiError){
+            if(err.status === 429) return res.json({ status: 0, data: { correct: false, data: "Zu viele Fehlversuche. Bitte warte einen Moment.", retryAfter: err.retryAfter } })
+            return res.json({ status: 1, data: { correct: false, data: err.message } })
+        }
         console.error(req.path, err)
-        res.json({
-            status: 0,
-            data: err.toString()
-        })
+        res.json({ status: 0, data: err.toString() })
+    }
+})
+// Schritt 2 bei aktivem 2FA: TOTP-Code + Challenge-Token → 2fa/verify → login/email.
+router.post("/account/login/2fa", async (req, res) => {
+    try{
+        const verified = await func.send("/v1/auth/2fa/verify", { challengeToken: req.body.challengeToken, token: req.body.code })
+        const login = await func.send("/v1/auth/login/email", { singleUse2FAToken: verified.singleUse2FAToken, remember: true })
+        return finishLogin(res, login)
+    }
+    catch(err){
+        if(err instanceof func.ApiError) return res.json({ status: 1, data: { correct: false, data: err.message } })
+        console.error(req.path, err)
+        res.json({ status: 0, data: err.toString() })
     }
 })
 router.get("/account", async (req, res) => {
     try{
-        if(func.exists(config.userFile)){
-            const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-            if(await func.checkInternetConnection() == 2){
-                const response = await func.send("https://api.sketch-company.de/u/find", {id: userData.id}, true)
-                await func.write(config.userFile, func.encrypt(JSON.stringify(response, null, 3)))
-                delete response.password // delete password before sending data to frontend for security reasons
-                if(response && typeof response == "object"){
-                    res.json({
-                        status: 1,
-                        data: response
-                    })
-                }
-                else res.json({
-                    status: 0,
-                    data: response
-                })
-            }
-            else{
-                res.json({
-                    status: 1,
-                    data: userData
-                })
-            }
+        const token = session.getToken()
+        const id = session.getUserId()
+        if(!token || !id){
+            return res.json({ status: 0, data: "Nicht angemeldet." })
         }
-        else{
-            res.json({
-                status: 0,
-                data: "Die Nutzerdaten konnten nicht gefunden werden."
-            })
+        if(await func.checkInternetConnection() == 2){
+            // Kontodaten frisch von der API (mit Bearer). /v1/u/find liefert das Profil ohne Passwort.
+            const response = await func.send("/v1/u/find", { id }, { token })
+            return res.json({ status: 1, data: response })
         }
+        // Offline: es gibt keine lokal gespeicherten Profildaten mehr (nur den Token). Minimalobjekt.
+        return res.json({ status: 1, data: { id } })
     }
     catch(err){
+        if(err instanceof func.ApiError && err.status === 401){
+            session.clearSession()
+            return res.json({ status: 0, data: "Sitzung abgelaufen. Bitte melde dich neu an." })
+        }
         console.error(req.path, err)
-        res.json({
-            status: 0,
-            data: err.toString()
-        })
+        res.json({ status: 0, data: err.toString() })
     }
 })
 router.post("/notify", async (req, res) => {
@@ -708,14 +617,26 @@ router.get("/connection", async (req, res) => {
 })
 router.post("/games/start", async (req, res) => {
     try{
-        const filepath = req.body.filepath
+        // Resolve the product from the trusted registry — never run an arbitrary
+        // path from the request body (would be remote-code-execution otherwise).
+        const { product } = await resolveRegisteredProduct({ name: req.body.name, filepath: req.body.filepath })
+        if(!product){
+            console.error(req.path, "ERROR: no registered product matched the request")
+            return res.json({ status: 0, data: "Das Programm zum starten konnte nicht gefunden werden." })
+        }
+        const filepath = product.start
+        // The executable must live inside the product's own installation directory.
+        if(!isPathInside(filepath, product.installationPath)){
+            console.error(req.path, "ERROR: refused to start path outside installation directory", filepath)
+            return res.json({ status: 0, data: "Der Startpfad ist ungültig." })
+        }
         if(func.exists(filepath)){
-            const program = child_process.spawn(filepath, {detached: true, cwd: path.dirname(filepath)})
+            const program = func.launchProgram(filepath)
             program.on("spawn", async function(){
                 const installs = JSON.parse(await func.read(config.installsFile))
                 for (let i = 0; i < installs.games.length; i++) {
                     const element = installs.games[i];
-                    if(element.name == req.body.name){
+                    if(element.name == product.name){
                         if(installs.other.length > 0){
                             installs.other[0] = element
                         }
@@ -727,7 +648,7 @@ router.post("/games/start", async (req, res) => {
                 }
                 for (let i = 0; i < installs.softwares.length; i++) {
                     const element = installs.softwares[i];
-                    if(element.name == req.body.name){
+                    if(element.name == product.name){
                         if(installs.other.length > 0){
                             installs.other[0] = element
                         }
@@ -777,22 +698,31 @@ router.post("/games/start", async (req, res) => {
     }
 })
 
-router.post("/games/open", (req, res) => {
+router.post("/games/open", async (req, res) => {
     try{
-        const filepath = path.dirname(req.body.filepath)
-        if(func.exists(filepath)){
-            const program = child_process.exec("start \"\" \"" + filepath + "\"", {detached: true})
-            program.on("error", function(err){
-                console.error(req.path, "ERROR:", err)
-            })
-            program.on("close", function(code){
-                console.log(req.path, "closed program with code", code)
-            })
+        // Only ever open a folder belonging to a registered product, and open it
+        // through Electron's shell (no command string -> no shell injection).
+        const { product } = await resolveRegisteredProduct({ name: req.body.name, filepath: req.body.filepath })
+        if(!product){
+            console.error(req.path, "ERROR: no registered product matched the request")
+            return res.json({ status: 0, data: "Das Verzeichnis konnte nicht gefunden werden." })
+        }
+        const folder = path.dirname(product.start)
+        if(!isPathInside(folder, product.installationPath) && path.resolve(folder) !== path.resolve(product.installationPath)){
+            console.error(req.path, "ERROR: refused to open path outside installation directory", folder)
+            return res.json({ status: 0, data: "Das Verzeichnis ist ungültig." })
+        }
+        if(func.exists(folder)){
+            const errorMessage = await shell.openPath(folder)
+            if(errorMessage){
+                console.error(req.path, "ERROR:", errorMessage)
+                return res.json({ status: 0, data: errorMessage })
+            }
+            console.log(req.path, "opened folder at", folder)
             res.json({
                 status: 1,
-                data: "Öffne Explorer bei " + filepath + "."
+                data: "Öffne Ordner bei " + folder + "."
             })
-            console.log(req.path, "opened folder in explorer at", filepath)
         }
         else{
             res.json({
@@ -806,40 +736,53 @@ router.post("/games/open", (req, res) => {
         console.error(req.path, err)
         res.json({
             status: 0,
-            body: err.toString()
+            data: err.toString()
         })
     }
 })
 
 router.post("/games/delete", async (req, res) => {
     try{
-        const filepath = req.body.filepath
-        if(func.exists(path.dirname(filepath))){
-            await func.remove(path.dirname(filepath))
+        // Resolve from the trusted registry; the directory we remove must be the
+        // product's own folder inside its installation path — never an arbitrary
+        // path from the request (would allow deleting any directory otherwise).
+        const resolved = await resolveRegisteredProduct({ name: req.body.name, filepath: req.body.filepath })
+        if(!resolved.product){
+            console.error(req.path, "ERROR: no registered product matched the request")
+            return res.json({ status: 0, data: "Das zu entfernende Programm konnte nicht gefunden werden." })
+        }
+        const folder = path.dirname(resolved.product.start)
+        if(!isPathInside(folder, resolved.product.installationPath)){
+            console.error(req.path, "ERROR: refused to delete path outside installation directory", folder)
+            return res.json({ status: 0, data: "Der zu entfernende Pfad ist ungültig." })
+        }
+        const name = resolved.product.name
+        if(func.exists(folder)){
+            await func.remove(folder)
             const installs = JSON.parse(await func.read(config.installsFile))
             for (let i = 0; i < installs.games.length; i++) {
                 const element = installs.games[i]
-                if(element.name == req.body.name){
+                if(element.name == name){
                     installs.games.splice(i, 1)
                     break
                 }
             }
             for (let i = 0; i < installs.softwares.length; i++) {
                 const element = installs.softwares[i]
-                if(element.name == req.body.name){
+                if(element.name == name){
                     installs.softwares.splice(i, 1)
                     break
                 }
             }
-            if(installs.other[0] && installs.other[0].name == req.body.name){
+            if(installs.other[0] && installs.other[0].name == name){
                 installs.other.splice(0, 1)
             }
             await func.write(config.installsFile, JSON.stringify(installs, null, 3))
             res.json({
                 status: 1,
-                data: "Entferne " + req.body.name + "."
+                data: "Entferne " + name + "."
             })
-            console.log(req.path, "deleted", filepath)
+            console.log(req.path, "deleted", folder)
         }
         else{
             res.json({
@@ -857,17 +800,14 @@ router.post("/games/delete", async (req, res) => {
         })
     }
 })
+// Hinweis: die Signup-E-Mail-Verifizierung läuft jetzt über /account/verify (→ /v1/auth/verify,
+// ohne Login). Dieser Endpunkt sendet transaktionale Mails und braucht daher eine Session.
 router.post("/email", async (req, res) => {
     try{
-        const status = await func.checkInternetConnection()
-        if(status == 2){
-            //req.body.from = "Sketchy Games Launcher"
-            if(!req.body.user && !req.body.email && func.exists(config.userFile)){
-                const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-                if(!req.body.user) req.body.user = userData.user
-                if(!req.body.email) req.body.email = userData.email
-            }
-            const response = await func.send("https://api.sketch-company.de/email", req.body)
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Nicht angemeldet." })
+        if(await func.checkInternetConnection() == 2){
+            const response = await func.send("/v1/email/send", req.body, { token })
             res.json({
                 status: 1,
                 data: response
@@ -946,9 +886,49 @@ let downloadTime = {
 let downloadSpeed = 0
 let downloadSize = 0
 let isDownloading = false
-const downloadQueue = []  
-router.post("/download", (req, res) => {
+const downloadQueue = []
+/** Resets the shared download progress/state back to idle. */
+function resetDownloadState(){
+    downloadProgress = 0
+    downloadSpeed = 0
+    downloadSize = 0
+    downloadTime = { hours: 0, minutes: 0, seconds: 0 }
+    isDownloading = false
+}
+router.post("/download", async (req, res) => {
     try{
+        // Validate the download descriptor before queuing it: the download
+        // pipeline streams `downloadUrl` and writes into `installationPath`.
+        const d = req.body || {}
+        if(!isNonEmptyString(d.name) || !isWebUrl(d.downloadUrl) || !isNonEmptyString(d.installationPath)){
+            console.error(req.path, "rejected invalid download descriptor")
+            return res.json({ status: 0, data: "Ungültiger Download." })
+        }
+        // --- Lizenz-Gate: Download nur für Spiele, die der Nutzer besitzt. Kostenlose Titel
+        // werden hier automatisch beansprucht (claim). Der Store-Item liefert die Spiel-ID (Slug).
+        const token = session.getToken()
+        const gameId = d.id || d.gameId
+        if(!token) return res.json({ status: 0, data: "Bitte melde dich an, um Spiele herunterzuladen." })
+        if(gameId){
+            try{
+                let owned = (await func.get("/v1/library/check/" + encodeURIComponent(gameId), { token }))?.owned
+                if(!owned){
+                    // Versuch, das Spiel zu beanspruchen (klappt nur, wenn es kostenlos ist).
+                    await func.send("/v1/library/claim", { gameId }, { token }).catch((e) => { if(!(e instanceof func.ApiError)) throw e; else throw e })
+                    owned = true
+                }
+                if(!owned) return res.json({ status: 0, data: "Du besitzt dieses Spiel nicht." })
+            }
+            catch(err){
+                if(err instanceof func.ApiError){
+                    if(err.status === 401){ session.clearSession(); return res.json({ status: 0, data: "Sitzung abgelaufen. Bitte melde dich neu an." }) }
+                    if(err.code === "PAYMENT_REQUIRED" || err.status === 402) return res.json({ status: 0, data: "Dieses Spiel ist kostenpflichtig — Kauf wird noch nicht unterstützt." })
+                    if(err.code === "ALREADY_OWNED") { /* schon in der Bibliothek → weiter */ }
+                    else return res.json({ status: 0, data: err.message })
+                }
+                else throw err
+            }
+        }
         downloadQueue.push(req.body)
         console.log(req.path, "pushed to downloadQueue", downloadQueue)
         if(!isDownloading) download()
@@ -1041,11 +1021,30 @@ async function download(){
                 })
 
                 writeStream.on("finish", async() => {
+                  try{
                     writeStream.close()
                     if(!currentDownloadResponse || !currentDownloadWriteStream) return
                     currentDownloadResponse = null
                     currentDownloadWriteStream = null
                     console.log("download:", "completed for", currentDownload.name)
+
+                    // Verify package integrity before we unpack and (auto-)run it.
+                    const expected = expectedChecksum(currentDownload)
+                    if(expected){
+                        const actual = await sha256File(downloadPath)
+                        if(actual.toLowerCase() !== expected.toLowerCase()){
+                            console.error("download: checksum mismatch for", currentDownload.name, "expected", expected, "got", actual)
+                            await func.remove(downloadPath)
+                            await func.showErrorBox("Download fehlgeschlagen", "Die Integritätsprüfung (SHA-256) für " + currentDownload.name + " ist fehlgeschlagen. Die Datei wurde aus Sicherheitsgründen verworfen.")
+                            resetDownloadState()
+                            downloadQueue.splice(0, 1)
+                            if(downloadQueue.length > 0 && !isDownloading) download()
+                            return
+                        }
+                        console.log("download: checksum verified for", currentDownload.name)
+                    }
+                    else console.warn("download: no checksum provided for", currentDownload.name, "- skipping integrity verification")
+
                     let createShortcut
                     if(currentDownload.createShortcut != undefined){
                         if(currentDownload.createShortcut) createShortcut = true
@@ -1076,6 +1075,17 @@ async function download(){
                     if(downloadQueue.length > 0 && !isDownloading){
                         download()
                     }
+                  }
+                  catch(err){
+                    // Unpacking failed (e.g. zip-slip rejected) — discard the
+                    // package, do not install or run anything, and continue queue.
+                    console.error("download: failed while finishing", currentDownload && currentDownload.name, err)
+                    try{ await func.remove(downloadPath) } catch(e){ /* best effort */ }
+                    await func.showErrorBox("Download fehlgeschlagen", "Das Paket konnte nicht sicher entpackt werden und wurde verworfen.")
+                    resetDownloadState()
+                    downloadQueue.splice(0, 1)
+                    if(downloadQueue.length > 0 && !isDownloading) download()
+                  }
                 })
             }).on("error", (err) => {
                 console.error(err)
@@ -1087,11 +1097,56 @@ async function download(){
         console.error("download:", err)
     }
 }
-async function unpackage(product, path, destination){
+/**
+ * Returns the expected SHA-256 of a product's package as provided by the store
+ * backend, or null when the backend did not supply one.
+ */
+function expectedChecksum(product){
+    return product.sha256 || product.checksum || product.hash || null
+}
+/**
+ * Computes the SHA-256 of a file by streaming it (no full read into memory).
+ */
+function sha256File(filePath){
+    return new Promise((resolve, reject) => {
+        const hash = crypto.createHash("sha256")
+        const stream = fs.createReadStream(filePath)
+        stream.on("data", chunk => hash.update(chunk))
+        stream.on("end", () => resolve(hash.digest("hex")))
+        stream.on("error", reject)
+    })
+}
+/**
+ * Extracts a zip into ```destination``` while rejecting any entry whose resolved
+ * path would land outside of ```destination``` (zip-slip protection). Replaces
+ * the previous blind ```directory.extract()``` call.
+ */
+async function safeExtract(zipPath, destination){
+    const directory = await unzipper.Open.file(zipPath)
+    const destRoot = path.resolve(destination)
+    for(const file of directory.files){
+        const targetPath = path.resolve(destRoot, file.path)
+        if(targetPath !== destRoot && !targetPath.startsWith(destRoot + path.sep)){
+            throw new Error("zip-slip: refused to extract entry outside destination: " + file.path)
+        }
+        if(file.type === "Directory"){
+            await fs.promises.mkdir(targetPath, { recursive: true })
+            continue
+        }
+        await fs.promises.mkdir(path.dirname(targetPath), { recursive: true })
+        await new Promise((resolve, reject) => {
+            file.stream()
+                .pipe(fs.createWriteStream(targetPath))
+                .on("finish", resolve)
+                .on("error", reject)
+        })
+    }
+}
+async function unpackage(product, zipPath, destination){
     console.log("unpackage:", "started unpacking for", product.name)
-    return new Promise(async cb => {
-        const directory = await unzipper.Open.file(path)
-        await directory.extract({ path: destination })
+    return new Promise(async (cb, reject) => {
+      try{
+        await safeExtract(zipPath, destination)
         product.size = await getDirectorySize(destination)
         product.start = destination + product.name + config.appExt
         console.log("unpackage:", "finished unpacking", product.name)
@@ -1105,8 +1160,13 @@ async function unpackage(product, path, destination){
         }
         installs[product.categorie].push(product)
         await func.write(config.installsFile, JSON.stringify(installs, null, 3))
-        await func.remove(path)
+        await func.remove(zipPath)
         cb(product)
+      }
+      catch(err){
+        console.error("unpackage:", err)
+        reject(err)
+      }
     })
 }
 async function getDirectorySize(path){
@@ -1135,46 +1195,19 @@ async function downloadImage(product){
         })
     })
 }
+// Besitz wird NICHT mehr durch Anhängen an account.games abgebildet, sondern durch die Lizenz
+// (beim Download beansprucht, siehe /download). Nach erfolgreichem Download wird hier nur noch der
+// Download-Zähler der API bedient (POST /v1/store/:id/download; verlangt Session + Lizenz — beides
+// liegt zu diesem Zeitpunkt vor). Fehler sind nicht kritisch (nur Statistik).
 function addToAccount(product){
     return new Promise(async cb => {
         try{
-            const status = await func.checkInternetConnection()
-            if(status == 2){
-                const userData = JSON.parse(func.decrypt(await func.read(config.userFile)))
-                const onlineUserData = await func.send("https://api.sketch-company.de/u/find", {id: userData.id})
-
-                if(!onlineUserData.games) onlineUserData.games = "[]"
-
-                const games = JSON.parse(onlineUserData.games)
-                const now = new Date()
-                const newGame = {
-                    product,
-                    name: product.name,
-                    file: product.name + ".zip",
-                    img: product.name + ".png",
-                    purchased: now.toLocaleString(),
-                    lastDownload: now.toLocaleString(),
-                }
-                for(let i = 0; i < games.length; i++){
-                    const element = games[i];
-                    if(element.name === product.name){
-                        console.log("addToAccount: game already purchased", product.name)
-                        console.log("addToAccount: updating game data")
-                        newGame.purchased = element.purchased
-                        console.log("addToAccount: element.purchased", element.purchased)
-                        games.splice(i, 1)
-                    }
-                }
-                games.push(newGame)
-                onlineUserData.games = JSON.stringify(games).toString()
-                
-                const updateResponse = await func.send("https://api.sketch-company.de/u/update", onlineUserData)
-                console.log("addToAccount: successfully added game to account")
-                cb()
+            const token = session.getToken()
+            const gameId = product && (product.id || product.gameId)
+            if(token && gameId && await func.checkInternetConnection() == 2){
+                await func.send("/v1/store/" + encodeURIComponent(gameId) + "/download", {}, { token }).catch((e) => console.warn("addToAccount: download count failed:", e.message))
             }
-            else{
-                cb()
-            }
+            cb()
         }
         catch(err){
             console.error("addToAccount:", err)
@@ -1370,6 +1403,9 @@ router.get("/download/resume", (req, res) => {
 })
 router.post("/downloads/unqueue", (req, res) => {
     try{
+        if(!isIndexInRange(req.body.index, downloadQueue.length)){
+            return res.json({ state: 0, data: "Ungültiger Index." })
+        }
         downloadQueue.splice(req.body.index, 1)
         res.json({
             state: 1,
@@ -1386,6 +1422,9 @@ router.post("/downloads/unqueue", (req, res) => {
 })
 router.post("/downloads/move", (req, res) => {
     try{
+        if(!isIndexInRange(req.body.index, downloadQueue.length) || !isIndexInRange(req.body.to, downloadQueue.length)){
+            return res.json({ state: 0, data: "Ungültiger Index." })
+        }
         downloadQueue.splice(req.body.to, 0, downloadQueue.splice(req.body.index, 1)[0])
         res.json({
             state: 1,
@@ -1418,12 +1457,24 @@ router.get("/installs", async (req, res) => {
 })
 router.get("/library/img/:name", async (req, res) => {
     try{
-        res.sendFile(req.query.installationPath + req.params.name + "/" + config.imgFile)
+        // Resolve the image path from the registry, not from the query string, so
+        // the caller cannot read arbitrary files off the disk via this endpoint.
+        const { product } = await resolveRegisteredProduct({ name: req.params.name })
+        if(!product){
+            console.error(req.path, "ERROR: no registered product matched", req.params.name)
+            return res.status(404).json({ status: 0, data: "Bild nicht gefunden." })
+        }
+        const imgPath = path.join(product.installationPath, product.name, config.imgFile)
+        if(!isPathInside(imgPath, product.installationPath)){
+            console.error(req.path, "ERROR: resolved image path escaped installation directory", imgPath)
+            return res.status(400).json({ status: 0, data: "Ungültiger Bildpfad." })
+        }
+        res.sendFile(imgPath)
     }
     catch(err){
         console.error(req.path, err)
         res.json({
-            state: 0,
+            status: 0,
             data: err.toString()
         })
     }
@@ -1439,45 +1490,29 @@ router.get("/library/add", async (req, res) => {
 
         console.log(req.path, "fileName", fileName)
 
-        const storeRes = await func.get("https://api.sketch-company.de/store")
+        // Neuer Katalog (GraphQL, { categories, games }): Spiele sind über `id` (Slug) bzw. `title`
+        // identifiziert. Der frühere `softwares`-Zweig entfällt (das Datenmodell kennt ihn nicht mehr).
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Bitte melde dich an." })
+        const storeRes = await storeAdapter.getStore(token)
 
-        const isGame = storeRes.games.some(game => game.name == fileName)
+        const match = storeRes.games.find(game => game.id == fileName || game.title == fileName)
+        const isGame = !!match
 
         console.log(req.path, "isGame", isGame)
-
-        const isSoftware = storeRes.softwares.some(game => game.name == fileName)
-
-        console.log(req.path, "isSoftware", isSoftware)
 
         let product = null
 
         if(isGame){
             console.log(req.path, "product to add is a game", fileName)
 
-            product = storeRes.games.find(game => game.name == fileName)
-
-            console.log(req.path, "product", product)
-
+            product = { ...match }
+            // Der lokale Install-Registry nutzt `name` als Schlüssel — auf die Spiel-ID abbilden.
+            product.name = match.id
             product.categorie = "games"
             product.size = await getDirectorySize(folderPath)
-            product.installationPath = path.dirname(folderPath) + "\\"
+            product.installationPath = path.dirname(folderPath) + path.sep
             product.start = filePath
-            product.patchNotes = getPatchNotes(product.patchNotes, 5)
-
-            console.log(req.path, "end result of product", product)
-        }
-        else if(isSoftware){
-            console.log(req.path, "product to add is a software", fileName)
-
-            product = storeRes.softwares.find(software => software.name == fileName)
-
-            console.log(req.path, "product", product)
-
-            product.categorie = "softwares"
-            product.size = await getDirectorySize(folderPath)
-            product.installationPath = folderPath
-            product.start = filePath
-            product.patchNotes = getPatchNotes(product.patchNotes, 5)
 
             console.log(req.path, "end result of product", product)
         }
