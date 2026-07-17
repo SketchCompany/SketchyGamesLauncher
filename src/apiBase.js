@@ -8,16 +8,14 @@
 
 // Runtime-Env laden (der Main-Prozess lädt .env sonst nicht — nur der Build tut das über
 // config/secrets.js). In der Entwicklung liefert das die SKETCHY_*-Variablen aus der Root-.env.
-// In gepackten Builds müssen SKETCHY_LAUNCHER_KEY/SKETCHY_WEB_BASE zur Build-/Laufzeit gesetzt sein.
+// In gepackten Builds muss SKETCHY_LAUNCHER_KEY zur Build-/Laufzeit gesetzt sein.
 try { require("dotenv").config() } catch (e) { /* dotenv optional in gepackten Builds */ }
 
 // Überschreibbar für lokale Entwicklung (z.B. SKETCHY_API_BASE=http://localhost:3500).
+// Die Spiel-Builds gehören jetzt der API: Katalog (/v1/launcher/builds), signierte Download-URL
+// (/v1/store/:id/download-url) und die öffentliche Auslieferung (/builds/...) laufen alle über
+// API_BASE. Es gibt keinen separaten Web-Host für Builds mehr.
 const API_BASE = (process.env.SKETCHY_API_BASE || "https://api.sketch-company.de").replace(/\/+$/, "")
-
-// Web-App (SketchCompanyReact). Dort liegen die Spiel-Builds: der Launcher-Katalog
-// (`/api/launcher/games`) und die authentifizierte Build-Auslieferung (`/api/download/games/:id`,
-// Bearer + Lizenzprüfung). Getrennt von API_BASE, weil es ein anderer Host ist.
-const WEB_BASE = (process.env.SKETCHY_WEB_BASE || "https://sketch-company.de").replace(/\/+$/, "")
 
 // Geteilter Launcher-Schlüssel (Bot-Check-Bypass). In der Produktion über die Build-Umgebung
 // gesetzt; ist er leer, muss die API LAUNCHER_SHARED_SECRET ebenfalls leer haben (Bypass aus).
@@ -42,10 +40,4 @@ function apiHeaders(opts = {}) {
 	return headers
 }
 
-/** Baut eine Web-App-URL (SketchCompanyReact) für einen relativen Pfad. */
-function webUrl(path) {
-	if (/^https?:\/\//i.test(path)) return path
-	return WEB_BASE + (path.startsWith("/") ? path : "/" + path)
-}
-
-module.exports = { API_BASE, WEB_BASE, LAUNCHER_KEY, apiUrl, webUrl, apiHeaders }
+module.exports = { API_BASE, LAUNCHER_KEY, apiUrl, apiHeaders }

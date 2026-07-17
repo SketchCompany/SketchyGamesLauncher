@@ -33,13 +33,14 @@ export default function Product() {
         : []).filter(Boolean)
     const images = gallery.length ? gallery : (coverFor(product) ? [coverFor(product)] : [])
     const price = effectivePrice(product)
-    const hasBuild = !!product.downloadUrl // vom storeAdapter angereichert (React /api/launcher/games)
+    const hasBuild = !!product.hasBuild // vom storeAdapter angereichert (API /v1/launcher/builds)
 
     async function download() {
         setBusy(true)
         try {
-            // Neuer Descriptor: ID + Web-Host-Download-URL + sha256; installationPath berechnet die BFF lokal.
-            await send("/api/download", { id: product.id, name: product.id, title: titleOf(product), downloadUrl: product.downloadUrl, sha256: product.sha256 })
+            // Descriptor: nur ID (+ sha256 zur Integritätsprüfung). Die BFF holt die signierte,
+            // lizenzgeprüfte Download-URL selbst (/v1/store/:id/download-url) und berechnet installationPath lokal.
+            await send("/api/download", { id: product.id, name: product.id, title: titleOf(product), sha256: product.sha256 })
             notify("Download gestartet", `${titleOf(product)} wird heruntergeladen.`, "success")
         } catch (err) {
             notify("Fehler", "Download konnte nicht gestartet werden: " + err, "error")

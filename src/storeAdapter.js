@@ -1,9 +1,9 @@
 // Store-Adapter: liest den Katalog über die v1-GraphQL-API (POST /v1/catalog/graphql, Titel/Preis/
-// Besitz/Thumbnail) und reichert ihn mit den Build-Infos der Web-App an (`GET WEB_BASE/api/launcher/
-// games` → downloadUrl/version/sha256/sizeBytes, gematcht per id). Liefert die neue Form
-// { categories, games } an den Renderer. Zugang jeweils mit der Session (Bearer); `owned` pro Nutzer.
+// Besitz/Thumbnail) und reichert ihn mit den Build-Infos der API an (`GET /v1/launcher/builds` →
+// version/sha256/sizeBytes, gematcht per id). Die eigentliche Download-URL kommt NICHT aus dem
+// Katalog, sondern wird pro Spiel lizenzgeprüft und kurzlebig signiert geholt (/v1/store/:id/
+// download-url) — siehe src/api.js download(). Liefert { categories, games }; `owned` pro Nutzer.
 const func = require("./functions")
-const { webUrl, apiHeaders } = require("./apiBase")
 
 const ITEM_FIELDS = `
 	id title thumbnail category description tagline accent
@@ -19,28 +19,22 @@ const STORE_QUERY = `query LauncherStore {
 }`
 
 /**
- * Holt die Build-Metadaten der Web-App (nur veröffentlichte Spiele MIT echtem Build).
- * Rückgabe: Map id → { downloadUrl(absolut), version, sha256, sizeBytes }. Bei Fehler leere Map
+ * Holt die Build-Metadaten der API (nur veröffentlichte Spiele MIT aktuellem Build).
+ * Rückgabe: Map id → { hasBuild, version, sha256, sizeBytes }. Bei Fehler leere Map
  * (der Store zeigt dann Spiele ohne Download-Button — "kein Build verfügbar").
  * @param {string} token
  * @returns {Promise<Map<string, object>>}
  */
 async function fetchBuilds(token) {
 	try {
-		const res = await fetch(webUrl("/api/launcher/games"), { headers: apiHeaders({ token, json: false }) })
-		if (!res.ok) return new Map()
-		const body = await res.json().catch(() => null)
-		const list = body && Array.isArray(body.games) ? body.games : []
+		// func.get entpackt das v1-Envelope → Array [{ id, buildId, version, sha256, sizeBytes, platform }].
+		const list = await func.get("/v1/launcher/builds", { token })
 		const map = new Map()
-		for (const b of list) {
-			if (!b || !b.id) continue
-			map.set(b.id, {
-				// downloadUrl kommt relativ ("/api/download/games/:id") → auf den Web-Host absolut machen.
-				downloadUrl: webUrl(b.downloadUrl || "/api/download/games/" + b.id),
-				version: b.version || null,
-				sha256: b.sha256 || b.checksum || b.hash || null,
-				sizeBytes: b.sizeBytes || null,
-			})
+		if (Array.isArray(list)) {
+			for (const b of list) {
+				if (!b || !b.id) continue
+				map.set(b.id, { hasBuild: true, version: b.version || null, sha256: b.sha256 || null, sizeBytes: b.sizeBytes || null })
+			}
 		}
 		return map
 	} catch (err) {
@@ -49,11 +43,12 @@ async function fetchBuilds(token) {
 	}
 }
 
-// Mischt die Build-Infos in ein Store-Item (nur wenn ein Build existiert).
+// Mischt die Build-Infos in ein Store-Item (nur wenn ein Build existiert). KEINE downloadUrl mehr —
+// die wird erst beim Download lizenzgeprüft/signiert geholt; hier nur hasBuild + Integritätsdaten.
 function enrich(item, builds) {
 	const b = builds.get(item.id)
 	if (!b) return item
-	return { ...item, downloadUrl: b.downloadUrl, version: b.version, sha256: b.sha256, sizeBytes: b.sizeBytes }
+	return { ...item, hasBuild: true, version: b.version, sha256: b.sha256, sizeBytes: b.sizeBytes }
 }
 
 /**

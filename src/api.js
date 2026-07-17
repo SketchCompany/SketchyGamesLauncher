@@ -39,10 +39,6 @@ function samePath(a, b){
 // --- lightweight input validation -------------------------------------------
 function isNonEmptyString(v){ return typeof v === "string" && v.length > 0 }
 function isIndexInRange(v, length){ return Number.isInteger(v) && v >= 0 && v < length }
-function isWebUrl(v){
-    try{ const u = new URL(v); return u.protocol === "http:" || u.protocol === "https:" }
-    catch(e){ return false }
-}
 /**
  * Resolves a product from the trusted ```installsFile``` registry by ```name```
  * and/or by matching its registered ```start``` path. Requests must never cause
@@ -897,13 +893,13 @@ function resetDownloadState(){
 }
 router.post("/download", async (req, res) => {
     try{
-        // Descriptor (neu): { id, name(=id), title, downloadUrl(Web-Host), sha256 }. Der
-        // Installationspfad ist eine LOKALE Entscheidung des Launchers (nicht vom Server) und wird
-        // hier aus den Einstellungen/Defaults gesetzt. downloadUrl zeigt auf die authentifizierte
-        // Build-Route der Web-App (Bearer + Lizenz).
+        // Descriptor (neu): { id, name(=id), title, sha256 }. Der Installationspfad ist eine LOKALE
+        // Entscheidung des Launchers (nicht vom Server). Der Client liefert KEINE Download-URL mehr —
+        // download() holt sie pro Spiel lizenzgeprüft + kurzlebig signiert von der API
+        // (/v1/store/:id/download-url).
         const d = req.body || {}
         const gameId = d.id || d.gameId
-        if(!isNonEmptyString(gameId) || !isWebUrl(d.downloadUrl)){
+        if(!isNonEmptyString(gameId)){
             console.error(req.path, "rejected invalid download descriptor")
             return res.json({ status: 0, data: "Ungültiger Download." })
         }
@@ -986,10 +982,28 @@ async function download(){
             }
             const currentDownload = downloadQueue[0]
             console.log("download:", "started download for", currentDownload.name)
-            // Build-Auslieferung der Web-App ist authentifiziert (Bearer) + lizenzgeprüft → Token mitschicken.
-            const dlToken = session.getToken()
-            const dlHeaders = dlToken ? { Authorization: "Bearer " + dlToken } : {}
-            https.get(currentDownload.downloadUrl, {headers: dlHeaders, sessionTimeout: 0, timeout: 0}, (response) => {
+            // Signierte, kurzlebige Download-URL pro Spiel lizenzgeprüft von der API holen. Die
+            // Auslieferung selbst (/builds/...) ist NUR signatur-gegated → KEIN Authorization-Header.
+            let buildUrl
+            try{
+                const dlToken = session.getToken()
+                const dl = await func.get("/v1/store/" + encodeURIComponent(currentDownload.id) + "/download-url", { token: dlToken })
+                buildUrl = apiUrl(dl.url) // relativ ("/builds/..") → API_BASE + Pfad; absolut (eigene CDN-Subdomain) → unverändert
+                if(!currentDownload.sha256 && dl.sha256) currentDownload.sha256 = dl.sha256
+            }
+            catch(err){
+                console.error("download: could not obtain signed url", err && err.message)
+                resetDownloadState()
+                downloadQueue.splice(0, 1)
+                const msg = (err && err.status === 401) ? "Sitzung abgelaufen. Bitte melde dich neu an."
+                    : (err && (err.status === 403 || err.code === "NO_LICENSE")) ? "Du besitzt dieses Spiel nicht."
+                    : (err && (err.status === 404 || err.code === "NO_BUILD")) ? "Für dieses Spiel ist noch kein Build verfügbar."
+                    : "Die Download-URL konnte nicht erstellt werden."
+                if(err && err.status === 401) session.clearSession()
+                func.showErrorBox("Download fehlgeschlagen", msg).catch(()=>{})
+                return
+            }
+            https.get(buildUrl, {sessionTimeout: 0, timeout: 0}, (response) => {
                 // 401/403/404 → keine berechtigte Auslieferung; sauber abbrechen statt HTML/JSON als "zip" zu speichern.
                 if(response.statusCode && response.statusCode >= 400){
                     console.error("download: server rejected build fetch, status", response.statusCode)
