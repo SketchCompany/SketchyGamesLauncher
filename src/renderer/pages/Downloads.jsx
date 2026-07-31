@@ -1,74 +1,114 @@
-import "./pages.css"
 import { useEffect, useRef, useState } from "react"
 import { get } from "../lib/api.js"
-import { Button, Card } from "../components/ui/index.jsx"
-import { Section, EmptyState, LoadingState } from "../components/common.jsx"
+import { Skeleton } from "../components/Skeletons.jsx"
+import ErrorState from "../components/ErrorState.jsx"
 
+/** Downloads: lokale Daten → Kopf rendert sofort; die Karte zeigt kurz ein Skeleton bis /api/downloads da ist. */
 export default function Downloads() {
-    const [queue, setQueue] = useState(null)
-    const [progress, setProgress] = useState(null)
-    const [paused, setPaused] = useState(false)
-    const [loading, setLoading] = useState(true)
-    const timer = useRef(null)
+	const [queue, setQueue] = useState([])
+	const [progress, setProgress] = useState(null)
+	const [paused, setPaused] = useState(false)
+	const [ready, setReady] = useState(false)
+	const [error, setError] = useState(null)
+	const timer = useRef(null)
 
-    const loadQueue = () => get("/api/downloads").then(d => setQueue(d?.downloadQueue || [])).catch(() => setQueue([]))
+	// Fehler getrennt von „leer" halten: bei Fehlschlag error setzen, bei Erfolg zurücksetzen.
+	const loadQueue = () => get("/api/downloads")
+		.then(d => { setQueue(d?.downloadQueue || []); setError(null) })
+		.catch(e => setError(e))
+		.finally(() => setReady(true))
 
-    useEffect(() => {
-        loadQueue().finally(() => setLoading(false))
-        get("/api/download/state").then(s => setPaused(!!s?.paused)).catch(() => {})
-        timer.current = setInterval(async () => {
-            try {
-                const p = await get("/api/download/progress")
-                setProgress(p)
-                if (p?.percentage >= 100 || p == null) loadQueue()
-            } catch { /* noop */ }
-        }, 1000)
-        return () => clearInterval(timer.current)
-    }, [])
+	useEffect(() => {
+		loadQueue()
+		get("/api/download/state").then(s => setPaused(!!s?.paused)).catch(() => {})
+		timer.current = setInterval(async () => {
+			try {
+				const p = await get("/api/download/progress")
+				setProgress(p)
+				if (p?.percentage >= 100 || p == null) loadQueue()
+			} catch { /* noop */ }
+		}, 1000)
+		return () => clearInterval(timer.current)
+	}, [])
 
-    async function toggle() {
-        try {
-            if (paused) { await get("/api/download/resume"); setPaused(false) }
-            else { await get("/api/download/pause"); setPaused(true) }
-        } catch { /* noop */ }
-    }
+	async function toggle() {
+		try {
+			if (paused) { await get("/api/download/resume"); setPaused(false) }
+			else { await get("/api/download/pause"); setPaused(true) }
+		} catch { /* noop */ }
+	}
+	async function cancel() {
+		try { await get("/api/download/cancel"); loadQueue() } catch { /* noop */ }
+	}
 
-    if (loading) return <div className="page"><LoadingState /></div>
+	const pct = Math.max(0, Math.min(100, Number(progress?.percentage) || 0))
+	const active = queue.length > 0
 
-    const pct = Math.max(0, Math.min(100, Number(progress?.percentage) || 0))
-    const active = queue && queue.length > 0
+	return (
+		<div className="page">
+			<h2 className="section-title mb-4">
+				<span className="bi bi-download" aria-hidden="true" /> Aktueller Download
+			</h2>
+			{!ready && !active ? (
+				<div className="hud-frame p-5" role="status" aria-label="Downloads werden geladen">
+					<div className="mb-3.5 flex items-center justify-between gap-3">
+						<div className="flex flex-col gap-2">
+							<Skeleton className="h-[1.1em] rounded-md" width="220px" />
+							<Skeleton className="h-[0.8em] rounded-md" width="140px" />
+						</div>
+					</div>
+					<Skeleton className="h-2.5 w-full rounded-full" />
+				</div>
+			) : error && !active ? (
+				<ErrorState error={error} onRetry={loadQueue} />
+			) : active ? (
+				<div className="hud-frame p-5">
+					<div className="mb-3.5 flex items-center justify-between gap-3">
+						<div>
+							<h3 className="m-0 font-display text-lg font-bold text-text-primary">{queue[0].title || queue[0].name}</h3>
+							<span className="text-sm text-text-muted">
+								{progress?.speed ? `${progress.speed} MB/s · ` : ""}{pct.toFixed(0)} %
+								{progress?.time && (progress.time.hours !== 0 || progress.time.minutes !== 0) ? ` · noch ${progress.time.hours}:${progress.time.minutes}:${progress.time.seconds}` : ""}
+							</span>
+						</div>
+						<div className="flex gap-2">
+							<button className="cta cta-secondary !px-4 !py-2 text-sm" onClick={toggle}>
+								<i className={`bi ${paused ? "bi-play-fill" : "bi-pause-fill"}`} aria-hidden="true" /> {paused ? "Fortsetzen" : "Pausieren"}
+							</button>
+							<button className="cta cta-danger !px-4 !py-2 text-sm" onClick={cancel}>
+								<i className="bi bi-x-lg" aria-hidden="true" /> Abbrechen
+							</button>
+						</div>
+					</div>
+					<div className="h-2.5 overflow-hidden rounded-full bg-bg-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+						<span className="block h-full rounded-full bg-neon-green transition-[width] duration-500" style={{ width: `${pct}%` }} />
+					</div>
+				</div>
+			) : (
+				<ErrorState
+					variant="empty"
+					icon="bi-cloud-check"
+					title="Keine aktiven Downloads"
+					message="Alles auf dem neuesten Stand. Neue Spiele findest du im Store."
+					action={{ label: "Zum Store", to: "/store" }}
+				/>
+			)}
 
-    return (
-        <div className="page">
-            <Section title="Aktueller Download">
-                {active ? (
-                    <Card pad>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                            <div>
-                                <h3 style={{ margin: 0, fontSize: 17 }}>{queue[0].name}</h3>
-                                <span style={{ color: "var(--text-muted)", fontSize: 13 }}>
-                                    {progress?.speed ? `${progress.speed} · ` : ""}{pct.toFixed(0)} %
-                                </span>
-                            </div>
-                            <Button size="sm" variant="ghost" onClick={toggle}>
-                                <i className={`bi ${paused ? "bi-play-fill" : "bi-pause-fill"}`} /> {paused ? "Fortsetzen" : "Pausieren"}
-                            </Button>
-                        </div>
-                        <div className="progress"><span style={{ width: `${pct}%` }} /></div>
-                    </Card>
-                ) : <EmptyState icon="bi-cloud-check" title="Keine aktiven Downloads" hint="Lade Spiele aus dem Store herunter." />}
-            </Section>
-
-            {active && queue.length > 1 && (
-                <Section title="Warteschlange">
-                    {queue.slice(1).map((q, i) => (
-                        <Card pad key={i} style={{ marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontWeight: 700 }}>{q.name}</span>
-                            <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{q.size || ""} {q.version ? `· v${q.version}` : ""}</span>
-                        </Card>
-                    ))}
-                </Section>
-            )}
-        </div>
-    )
+			{active && queue.length > 1 && (
+				<>
+					<h2 className="section-title mb-4 mt-8">
+						<span className="bi bi-list-ol" aria-hidden="true" /> Warteschlange
+					</h2>
+					<div className="flex flex-col gap-2.5">
+						{queue.slice(1).map((q, i) => (
+							<div key={i} className="hud-frame flex items-center justify-between px-4 py-3">
+								<span className="font-bold text-text-primary">{q.title || q.name}</span>
+								<span className="text-sm text-text-muted">{q.version ? `v${q.version}` : ""}</span>
+							</div>
+						))}
+					</div>
+				</>
+			)}
+		</div>
+	)
 }

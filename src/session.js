@@ -66,6 +66,63 @@ function isLoggedIn() {
 	return !!getToken()
 }
 
+/**
+ * true, wenn eine Session gespeichert UND (lokal erkennbar) noch nicht abgelaufen ist.
+ * Prüft rein lokal das JWT-`exp` (Sekunden) bzw. das gespeicherte `expiresAt` — kein Netzwerk,
+ * damit der Start schnell bleibt. Widerrufene, aber noch nicht abgelaufene Tokens werden hier
+ * NICHT erkannt (das fängt der erste API-Aufruf über die 401-Behandlung ab).
+ */
+function isSessionValid() {
+	const s = loadSession()
+	if (!s || !s.token) return false
+	const now = Date.now()
+	if (s.expiresAt) {
+		const exp = typeof s.expiresAt === "number" ? s.expiresAt : Date.parse(s.expiresAt)
+		if (!Number.isNaN(exp) && exp <= now) return false
+	}
+	const exp = decodeToken(s.token)?.exp
+	if (typeof exp === "number" && exp * 1000 <= now) return false
+	return true
+}
+
+/**
+ * Fragt den Server, ob die gespeicherte Sitzung noch lebt — die EINZIGE netzberührende Funktion
+ * hier; `isSessionValid()` bleibt der schnelle lokale Check für den Start.
+ *
+ * Nötig, weil eine serverseitig beendete Sitzung (Abmelden auf der Website, Passwortwechsel) lokal
+ * nicht zu erkennen ist: das JWT bleibt bis `exp` formal gültig. Bibliothek und Spielstart sind
+ * bewusst token-frei, es gibt also keinen API-Aufruf, der den Widerruf sonst auffliegen ließe.
+ *
+ * Dreiwertig, und das ist der Kern: „ungültig" und „konnte nicht prüfen" dürfen nicht dasselbe
+ * auslösen, sonst wirft ein Serverausfall alle Nutzer raus.
+ * @returns {Promise<boolean|null>} true = gültig, false = beendet (Session wurde gelöscht),
+ *   null = keine Aussage möglich (offline, Server nicht erreichbar, Serverfehler) → nichts tun.
+ */
+async function verifyRemote() {
+	const token = getToken()
+	if (!token) return false
+	if (!isSessionValid()) { clearSession(); return false } // lokal schon abgelaufen
+	const func = require("./functions")
+	try {
+		if (await func.checkInternetConnection() != 2) return null
+	} catch {
+		return null
+	}
+	try {
+		await func.send("/v1/auth/session/get", {}, { token })
+		return true
+	} catch (err) {
+		if (err instanceof func.ApiError && err.status === 401) {
+			console.log("verifyRemote: Sitzung wurde serverseitig beendet")
+			clearSession()
+			return false
+		}
+		// Alles andere (Netzabbruch, 5xx, Rate-Limit) ist KEIN Beweis für einen Widerruf.
+		console.warn("verifyRemote: konnte nicht prüfen:", err && err.message)
+		return null
+	}
+}
+
 /** Meldet ab: löscht die Session-Datei. */
 function clearSession() {
 	try {
@@ -75,4 +132,4 @@ function clearSession() {
 	}
 }
 
-module.exports = { saveSession, loadSession, getToken, getUserId, decodeToken, isLoggedIn, clearSession, sessionFile }
+module.exports = { saveSession, loadSession, getToken, getUserId, decodeToken, isLoggedIn, isSessionValid, verifyRemote, clearSession, sessionFile }

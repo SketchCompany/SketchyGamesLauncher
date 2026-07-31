@@ -1,0 +1,738 @@
+/* ============================================================
+   Store-Seite – Steam-inspiriertes Layout (Retro-Arcade-Neon)
+   ============================================================ */
+
+.store-page {
+	max-width: 1280px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 54px;
+}
+
+/* Suchfeld über dem Hero – leitet an /suche weiter */
+.store-search {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 4px 4px 14px;
+	margin-bottom: -44px; /* Abstand zum Hero/den Bildern darunter verkleinern */
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--surface);
+}
+.store-search:focus-within {
+	border-color: var(--border-strong);
+	box-shadow: none;
+}
+.store-search__icon {
+	font-size: 17px;
+	color: var(--neon-cyan);
+}
+.store-search input {
+	flex: 1;
+	min-width: 0;
+	border: none;
+	background: transparent;
+	padding: 9px 0;
+	font-size: 15px;
+	color: var(--text-primary);
+}
+.store-search input:focus {
+	outline: none;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+}
+.store-search__btn {
+	flex: none;
+	white-space: nowrap;
+	padding: 8px 16px;
+	font-size: 14px;
+}
+.store-search__wishlist {
+	flex: none;
+	white-space: nowrap;
+	padding: 8px 16px;
+	font-size: 14px;
+	text-decoration: none;
+}
+/* Refresh-Knopf in der Suchleiste — gleiche Größe wie die anderen Bar-Controls. */
+.store-search__refresh {
+	flex: none;
+	white-space: nowrap;
+	padding: 8px 16px;
+	font-size: 14px;
+}
+/* Auf schmalen Screens wandert die Wunschliste unter die Suchleiste. */
+@media (max-width: 560px) {
+	.store-search {
+		flex-wrap: wrap;
+	}
+	.store-search input {
+		flex: 1 1 100%;
+		order: -1;
+	}
+}
+
+/* .section-title liegt jetzt global in app/globals.css (auch von der Detailseite genutzt). */
+
+/* Genre-Chip (kleiner als category-chip, neon-getönt) */
+.store-tag {
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.2px;
+	padding: 2px 7px;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--surface-2);
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+
+/* Demo-Hinweis */
+.store-demo-note {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 16px 20px;
+	background: var(--surface);
+}
+.store-demo-note .bi {
+	font-size: 24px;
+	color: var(--neon-amber);
+	flex-shrink: 0;
+}
+.store-demo-note p {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.6;
+	color: var(--text-secondary);
+}
+.store-demo-note strong {
+	color: var(--neon-amber);
+	font-family: var(--font-pixel);
+	font-size: 11px;
+	margin-right: 4px;
+}
+
+/* ---------- Featured-Hero ---------- */
+.featured-hero {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.featured-hero__main {
+	position: relative;
+	border-radius: var(--radius-lg);
+	/* sichtbar lassen, damit die außenliegenden Pfeile in den Seitenrand ragen können;
+	   das Runden des Bildes übernimmt jetzt die Stage */
+	overflow: visible;
+	border: 1px solid var(--border);
+	box-shadow: var(--elevation);
+}
+/* Karussell: ein Viewport klippt, der Track schiebt alle Slides horizontal */
+.featured-hero__viewport {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	background: var(--bg-2);
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+}
+.featured-hero__track {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+	will-change: transform;
+}
+.featured-hero__slide {
+	position: relative;
+	flex: 0 0 100%;
+	height: 100%;
+	overflow: hidden;
+}
+/* Fortschrittsanzeige bis zum nächsten Auto-Wechsel */
+@keyframes heroProgress {
+	from {
+		transform: scaleX(0);
+	}
+	to {
+		transform: scaleX(1);
+	}
+}
+.featured-hero__progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 4px;
+	background: rgba(255, 255, 255, 0.18);
+	z-index: 5;
+}
+.featured-hero__progress-fill {
+	height: 100%;
+	transform-origin: left center;
+	/* Dezent statt Neon: hellgrau, leicht transparent, kein Glow. */
+	background: rgba(255, 255, 255, 0.5);
+	box-shadow: none;
+	animation: heroProgress linear forwards;
+}
+.featured-hero__thumb-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 3px;
+	transform-origin: left center;
+	background: rgba(255, 255, 255, 0.5);
+	animation: heroProgress linear forwards;
+	z-index: 2;
+}
+.featured-hero__shade {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, rgba(7, 8, 12, 0.92) 0%, rgba(7, 8, 12, 0.6) 45%, rgba(7, 8, 12, 0.08) 100%);
+}
+.featured-hero__caption {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	max-width: 560px;
+	padding: 32px 36px;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	/* Hero liegt immer auf dunklem Bild + Shade ⇒ Text grundsätzlich weiß (auch im Light-Mode) */
+	color: #fff;
+}
+.featured-hero__eyebrow {
+	margin: 0;
+	font-family: var(--font-pixel);
+	font-size: 10px;
+	letter-spacing: 1px;
+	color: var(--neon-cyan);
+	text-transform: uppercase;
+}
+.featured-hero__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: clamp(28px, 4.6vw, 52px);
+	line-height: 1.02;
+	color: #fff;
+	text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+.featured-hero__tagline {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.55;
+	color: #fff;
+	opacity: 0.92;
+}
+.featured-hero__tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.featured-hero__actions {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-top: 6px;
+}
+.featured-hero__cta {
+	white-space: nowrap;
+}
+.featured-hero__arrow {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 56px;
+	height: 56px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: var(--surface);
+	border: 1px solid var(--border-strong);
+	color: var(--text-primary);
+	font-size: 22px;
+	box-shadow: none;
+	transition:
+		color var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		background var(--dur) var(--ease),
+		transform var(--dur) var(--ease);
+	z-index: 4;
+}
+.featured-hero__arrow .bi {
+	line-height: 1;
+}
+.featured-hero__arrow:hover {
+	color: var(--neon-green);
+	border-color: var(--border-strong);
+	background: var(--surface-2);
+	box-shadow: none;
+	transform: translateY(-50%) scale(var(--hover-scale));
+}
+/* außerhalb des Hero-Panels, mit etwas Abstand im Seitenrand */
+.featured-hero__arrow--left {
+	left: -68px;
+}
+.featured-hero__arrow--right {
+	right: -68px;
+}
+
+/* Thumbnail-Leiste */
+.featured-hero__rail {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: 10px;
+}
+.featured-hero__thumb {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--radius);
+	overflow: hidden;
+	border: 2px solid var(--border);
+	background: var(--bg-2);
+	padding: 0;
+	cursor: pointer;
+	transition:
+		border-color var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease),
+		transform var(--dur) var(--ease);
+}
+.featured-hero__thumb:hover {
+	transform: translateY(var(--lift-card));
+	border-color: var(--border-strong);
+}
+.featured-hero__thumb.active {
+	border-color: rgba(255, 255, 255, 0.4);
+}
+.featured-hero__thumb-label {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	padding: 14px 8px 5px 8px;
+	font-size: 11px;
+	font-weight: 700;
+	color: #fff;
+	text-align: left;
+	background: linear-gradient(transparent, rgba(7, 8, 12, 0.85));
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ---------- Promo-Banner ---------- */
+.promo-banner {
+	display: grid;
+	grid-template-columns: minmax(260px, 1fr) 2fr;
+	gap: 28px;
+	align-items: center;
+	padding: 28px 32px;
+	background: linear-gradient(120deg, color-mix(in srgb, var(--neon-magenta) 14%, var(--surface)) 0%, var(--surface) 60%);
+	border-color: var(--border-strong);
+}
+.promo-banner__eyebrow {
+	margin: 0 0 8px 0;
+	font-size: 11px;
+	color: var(--neon-magenta);
+	text-transform: uppercase;
+}
+.promo-banner__headline {
+	margin: 0 0 8px 0;
+	font-family: var(--font-display);
+	font-size: clamp(20px, 2.6vw, 28px);
+	line-height: 1.1;
+	color: var(--text-primary);
+}
+.promo-banner__sub {
+	margin: 0 0 18px 0;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--text-secondary);
+}
+.promo-banner__cards {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 14px;
+}
+.promo-card {
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: var(--bg-2);
+	border: 1px solid var(--border);
+	transition:
+		transform var(--dur) var(--ease),
+		border-color var(--dur) var(--ease);
+}
+.promo-card:hover {
+	transform: translateY(var(--lift-card));
+	border-color: var(--neon-green);
+}
+.promo-card__cover {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	background: var(--bg-3);
+}
+.promo-card__flag {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	font-family: var(--font-pixel);
+	font-size: 8px;
+	padding: 4px 6px;
+	border-radius: 3px;
+	background: var(--neon-green);
+	color: #06140d;
+	text-transform: uppercase;
+}
+.promo-card__flag--soon {
+	background: var(--neon-amber);
+	color: #1a1206;
+}
+.promo-card__info {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 12px;
+}
+.promo-card__title {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Game-Reihe, Store-Card und Hover-Vorschau sind in die geteilte
+   components/games/store-cards.css ausgelagert (von den Komponenten importiert),
+   damit sie auch außerhalb des Store-Listings laden (z. B. „Ähnliche Spiele"
+   auf der Spiel-Detailseite). */
+
+/* ---------- Tab-Liste mit Vorschau-Sidebar ---------- */
+.store-tabs__bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	border-bottom: 1px solid var(--border);
+	margin-bottom: 20px;
+}
+.store-tabs__tab {
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	padding: 10px 14px;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--text-secondary);
+	cursor: pointer;
+	transition:
+		color var(--dur-btn) var(--ease),
+		border-color var(--dur-btn) var(--ease);
+}
+.store-tabs__tab:hover {
+	color: var(--text-primary);
+	/* Kein Neon-Glow auf den Tabs – globalen button:hover-Effekt zurücksetzen. */
+	border-color: transparent;
+	box-shadow: none;
+}
+.store-tabs__tab.active {
+	color: var(--neon-green);
+	border-bottom-color: var(--neon-green);
+}
+.store-tabs__body {
+	display: grid;
+	grid-template-columns: 1fr 320px;
+	gap: 20px;
+	align-items: start;
+}
+.store-tabs__list-wrap {
+	min-width: 0;
+}
+.store-tabs__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.store-tabs__more {
+	width: 100%;
+	margin-top: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 13px 16px;
+	border-radius: var(--radius);
+	background: var(--surface);
+	border: 1px dashed var(--border-strong);
+	color: var(--text-secondary);
+	font-weight: 700;
+	font-size: 14px;
+	cursor: pointer;
+	transition:
+		background var(--dur-btn) var(--ease),
+		border-color var(--dur-btn) var(--ease),
+		color var(--dur-btn) var(--ease);
+}
+.store-tabs__more:hover {
+	background: var(--surface-2);
+	border-color: var(--neon-green);
+	color: var(--neon-green);
+}
+.store-tabs__more .bi {
+	font-size: 17px;
+}
+.store-tabs__more-count {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+.store-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 10px;
+	border-radius: var(--radius);
+	background: var(--surface);
+	border: 1px solid transparent;
+	cursor: pointer;
+	transition:
+		background var(--dur-btn) var(--ease),
+		border-color var(--dur-btn) var(--ease);
+}
+.store-row:hover,
+.store-row.active {
+	background: var(--surface-2);
+	border-color: var(--border-strong);
+}
+.store-row__cover {
+	position: relative;
+	width: 120px;
+	flex-shrink: 0;
+	aspect-ratio: 16 / 9;
+	border-radius: 4px;
+	overflow: hidden;
+	background: var(--bg-3);
+}
+.store-row__main {
+	flex: 1;
+	min-width: 0;
+}
+.store-row__title {
+	margin: 0 0 3px 0;
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.store-row__sub {
+	margin: 0;
+	font-size: 12px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.store-row__date {
+	margin: 4px 0 0 0;
+	font-size: 11px;
+	color: var(--text-secondary);
+}
+/* Rechte Spalte der Zeile: Wunschlisten-Stern links, dann das Preis-/Status-Flag. Das Flag hat
+   eine feste Mindestbreite, damit der Stern in allen Zeilen auf derselben X-Position sitzt. */
+.store-row__side {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.store-row__star.wishlist-btn--icon {
+	width: 38px;
+	height: 38px;
+	font-size: 16px;
+}
+.store-row__flag {
+	display: inline-flex;
+	justify-content: flex-start;
+	min-width: 62px;
+}
+/* Tab-Sidebar: gleiches optisches Panel wie das schwebende Fenster
+   (.store-preview-panel), nur sticky statt fixed positioniert. */
+.store-tabs__preview {
+	position: sticky;
+	top: 84px;
+}
+
+/* ---------- Kategorie-Kacheln ---------- */
+.category-browse__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+	gap: 14px;
+}
+.category-tile {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	gap: 4px;
+	min-height: 112px;
+	padding: 16px;
+	border-radius: var(--radius);
+	overflow: hidden;
+	color: #07080c;
+	background-image: linear-gradient(135deg, var(--ph-a, var(--neon-green)) 0%, var(--ph-b, var(--neon-cyan)) 100%);
+	cursor: pointer;
+	text-decoration: none;
+	transition:
+		transform var(--dur) var(--ease),
+		box-shadow var(--dur) var(--ease),
+		color 0.45s var(--ease);
+}
+.category-tile:hover,
+.category-tile:focus-visible {
+	transform: translateY(var(--lift-card));
+	box-shadow: var(--elevation);
+	color: #fff;
+}
+.category-tile:focus-visible {
+	outline: 2px solid var(--text-primary);
+	outline-offset: 2px;
+}
+.category-tile__icon {
+	position: absolute;
+	top: 12px;
+	right: 14px;
+	font-size: 30px;
+	opacity: 0.65;
+}
+.category-tile__name {
+	font-family: var(--font-display);
+	font-size: 19px;
+	font-weight: 800;
+}
+.category-tile__count {
+	font-size: 12px;
+	font-weight: 700;
+	opacity: 0.8;
+}
+/* Light-Mode: weiße Schrift auf den dunklen Kategorie-Kacheln */
+[data-theme="light"] .category-tile {
+	color: #fff;
+}
+@media (prefers-color-scheme: light) {
+	:root:not([data-theme="dark"]):not([data-theme="light"]) .category-tile {
+		color: #fff;
+	}
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+	.store-page {
+		gap: 40px;
+	}
+	.promo-banner {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+	.featured-hero__caption {
+		max-width: 100%;
+	}
+	.store-tabs__body {
+		grid-template-columns: 1fr;
+	}
+	.store-tabs__preview {
+		position: static;
+	}
+	/* Seitenrand zu schmal für außenliegende Pfeile ⇒ ausblenden (Swipe/Scroll + Thumbnail-Leiste bleiben) */
+	.row-nav,
+	.featured-hero__arrow {
+		display: none;
+	}
+}
+@media (max-width: 560px) {
+	.featured-hero__rail {
+		grid-auto-columns: 46%;
+		grid-auto-flow: column;
+		overflow-x: auto;
+	}
+	.featured-hero__caption {
+		padding: 20px;
+	}
+	.promo-banner__cards {
+		grid-template-columns: 1fr;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.featured-hero__track {
+		transition: none;
+	}
+}
+
+/* ============================================================
+   Karten-Links → Spielseite (/games/[id]). Link-Defaults zurücksetzen,
+   bestehende Karten-Layouts/Hover bleiben unverändert.
+   ============================================================ */
+/* .store-card-link-Reset liegt in der geteilten components/games/store-cards.css. */
+.promo-card-link {
+	display: block;
+	text-decoration: none;
+	color: inherit;
+}
+.featured-hero__title-link {
+	color: inherit;
+	text-decoration: none;
+	transition: color var(--dur-btn) var(--ease);
+}
+.featured-hero__title-link:hover {
+	color: var(--neon-green);
+}
+/* store-row: Der Link enthält Cover + Haupttext und wächst; die Seite (Stern + Flag) ist ein
+   Geschwister der <li>, damit der Stern-Button nicht (ungültig) im <a> steckt. */
+.store-row__link {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex: 1;
+	min-width: 0;
+	text-decoration: none;
+	color: inherit;
+}
+
+/* Freundlicher Zustand, wenn der Store keine Spiele liefert (API + DB nicht erreichbar
+   oder noch leerer Katalog) – statt leerer Sektionen oder eines Crashes. */
+.store-unavailable {
+	max-width: 720px;
+	margin: 48px auto;
+	padding: 40px 28px;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+/* Nur das große Status-Icon (direktes Kind) — NICHT Icons in Buttons/Aktionen darunter. */
+.store-unavailable > .bi {
+	font-size: 40px;
+	color: var(--neon-amber);
+}
+.store-unavailable h2 {
+	margin: 0;
+}
+.store-unavailable p {
+	margin: 0;
+	max-width: 52ch;
+	color: var(--text-secondary);
+}

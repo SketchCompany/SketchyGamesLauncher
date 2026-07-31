@@ -1,0 +1,343 @@
+/* ============================================================
+   Geteilte Styles der Store-Komponenten (GameRow / StoreCard /
+   StoreCardPreview / StorePreviewBody). Bewusst NICHT in einer
+   seiten-spezifischen page.css, damit sie überall mitladen, wo die
+   Komponenten gerendert werden (Store-Listing, Spiel-Detailseite mit
+   „Ähnliche Spiele", …). Wird von den Komponenten direkt importiert.
+   ============================================================ */
+
+/* ---------- Game-Reihe (horizontaler Scroller) ---------- */
+.game-row__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+.game-row__more {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--text-secondary);
+	white-space: nowrap;
+}
+.game-row__more:hover {
+	color: var(--neon-green);
+}
+.game-row__viewport {
+	position: relative;
+}
+.game-row__track {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: clamp(200px, 44vw, 244px);
+	justify-content: start;
+	gap: 16px;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	/* Vertikaler Innenabstand, damit der Hover-Lift + Schatten der Karten
+	   nicht vom (durch overflow-x erzwungenen) overflow-y abgeschnitten wird.
+	   Negative Margins gleichen den Abstand aus, sodass das Layout unverändert bleibt. */
+	padding-top: 24px;
+	padding-bottom: 36px;
+	margin-top: -24px;
+	margin-bottom: -30px;
+	scrollbar-width: thin;
+}
+.game-row__item {
+	scroll-snap-align: start;
+	/* Flex-Container, damit die Karte die (gestreckte) Zellenhöhe voll ausfüllt ⇒
+	   einheitliche Kartenhöhe, auch wenn Tags in eine zweite Zeile umbrechen. */
+	display: flex;
+}
+.game-row__item .store-card-link {
+	width: 100%;
+}
+.row-nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 50px;
+	height: 50px;
+	display: grid;
+	place-items: center;
+	z-index: 4;
+	border-radius: 50%;
+	background: var(--surface);
+	border: 1px solid var(--border-strong);
+	color: var(--text-primary);
+	font-size: 20px;
+	box-shadow: none;
+	transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.row-nav:hover {
+	color: var(--neon-green);
+	border-color: var(--border-strong);
+	background: var(--surface-2);
+	box-shadow: none;
+	transform: translateY(-50%) scale(var(--hover-scale));
+}
+/* außerhalb der Karten, mit etwas Abstand im Seitenrand */
+.row-nav--left {
+	left: -58px;
+}
+.row-nav--right {
+	right: -58px;
+}
+
+/* ---------- Store-Card ---------- */
+.store-card {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100%;
+	transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.store-card:hover {
+	transform: translateY(var(--lift-card));
+	border-color: var(--border-strong);
+	box-shadow: var(--elevation);
+}
+.store-cover {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	background: var(--bg-2);
+}
+.store-cover img {
+	transition: transform var(--dur-slow) var(--ease);
+}
+.store-card:hover .store-cover img {
+	transform: scale(1.06);
+}
+.store-card__info {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px 14px 14px 14px;
+	flex: 1;
+}
+/* Kategorie-Eyebrow über dem Titel – in der Akzentfarbe des Spiels. */
+.store-card__cat {
+	font-size: 10px;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--neon-green);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.store-card__cat--magenta {
+	color: var(--neon-magenta);
+}
+.store-card__cat--cyan {
+	color: var(--neon-cyan);
+}
+.store-card__cat--amber {
+	color: var(--neon-amber);
+}
+.store-card__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 800;
+	font-size: 16px;
+	line-height: 1.25;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.store-card__dev {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.store-card__dev .bi {
+	font-size: 13px;
+	flex-shrink: 0;
+}
+.store-card__footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	margin-top: auto;
+	padding-top: 12px;
+}
+
+/* Karten-Link → Spielseite: Link-Defaults zurücksetzen. */
+.store-card-link {
+	display: block;
+	text-decoration: none;
+	color: inherit;
+}
+
+/* ---------- Hover-Vorschau (Steam-artig, per Portal im <body>) ---------- */
+/* Gemeinsamer optischer Rahmen beider Detail-Fenster (schwebend + Tab-Sidebar),
+   damit sie identisch aussehen. Solider, deckender Hintergrund – das Fenster
+   schwebt über beliebigem Inhalt, daher nicht das fast transparente --surface. */
+.store-preview-panel {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: var(--radius);
+	border: 1px solid var(--border-strong);
+	background: var(--bg-2);
+	box-shadow: var(--elevation);
+}
+.store-preview {
+	position: fixed;
+	z-index: 1000;
+	opacity: 0;
+	transform: translateY(8px) scale(0.97);
+	transform-origin: top left;
+	/* Basiszustand = Ausblenden: schnell. */
+	transition: opacity 0.16s ease, transform 0.16s ease;
+	pointer-events: auto;
+}
+/* Überbrückt die Lücke zur Karte: unsichtbare Hit-Area links/rechts, damit der
+   Weg von der Karte zum Fenster nicht durch „leeren" Raum führt und es offen bleibt. */
+.store-preview::before {
+	content: "";
+	position: absolute;
+	inset: 0 -14px;
+	z-index: -1;
+}
+.store-preview--visible {
+	opacity: 1;
+	transform: translateY(0) scale(1);
+	/* Sichtbarer Zustand = Einblenden: langsam & smooth. */
+	transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.store-preview__media {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	background: var(--bg-2);
+}
+.store-preview__media img {
+	transition: opacity 0.5s var(--ease);
+}
+.store-preview__ph {
+	position: absolute;
+	inset: 0;
+}
+.store-preview__body {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 12px 14px 14px 14px;
+}
+.store-preview__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 8px;
+}
+.store-preview__title {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 800;
+	font-size: 18px;
+	line-height: 1.2;
+	color: var(--text-primary);
+}
+.store-preview__rating {
+	flex-shrink: 0;
+	font-size: 13px;
+	font-weight: 800;
+	color: var(--neon-green);
+	white-space: nowrap;
+}
+.store-preview__dev {
+	margin: 0;
+	font-size: 13px;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+	color: var(--neon-green);
+	text-shadow: 0 0 12px color-mix(in srgb, var(--neon-green) 45%, transparent);
+}
+.store-preview__dev--link {
+	display: inline-block;
+	width: fit-content;
+	text-decoration: none;
+	cursor: pointer;
+	transition: filter var(--dur) var(--ease);
+}
+.store-preview__dev--link:hover {
+	text-decoration: underline;
+	filter: brightness(1.15);
+}
+.store-preview__desc {
+	margin: 2px 0 0 0;
+	font-size: 13px;
+	line-height: 1.45;
+	color: var(--text-secondary);
+	display: -webkit-box;
+	-webkit-line-clamp: 6;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+.store-preview__meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-top: 1px;
+}
+.store-preview__tags {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.store-preview__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 3px;
+}
+.store-preview__cta {
+	padding: 9px 18px;
+	font-size: 14px;
+}
+/* Zeile 1: „Spiel ansehen" wächst, Stern rechts daneben. */
+.store-preview__actions .store-preview__cta--primary {
+	flex: 1 1 auto;
+}
+.store-preview__actions .wishlist-btn--icon {
+	flex: 0 0 44px;
+}
+/* Zeile 2: „Zum Entwickler" volle Breite. */
+.store-preview__actions .store-preview__cta--dev {
+	flex: 1 1 100%;
+	width: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+	.store-preview,
+	.store-preview--visible {
+		transition: none;
+		transform: none;
+	}
+	.store-preview__media img {
+		transition: none;
+	}
+}
+
+/* Außenliegende Scroll-Pfeile auf schmalen Viewports ausblenden (wie im Store-Listing). */
+@media (max-width: 900px) {
+	.row-nav {
+		display: none;
+	}
+}

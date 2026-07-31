@@ -1,0 +1,131 @@
+/* ---------- Discord-artige Einstellungen: Kategorie-Leiste links, Inhalt rechts ---------- */
+.settings-shell {
+	display: flex;
+	gap: 22px;
+	align-items: flex-start;
+}
+.settings-rail {
+	flex: 0 0 240px;
+	position: sticky;
+	top: calc(var(--header-h) + 20px);
+	padding: 14px;
+}
+.settings-rail__title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 4px 6px 12px;
+	font-family: var(--font-pixel);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--neon-green);
+}
+.settings-rail__nav {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.settings-rail__item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 12px;
+	border-radius: var(--radius);
+	border: none;
+	background: none;
+	text-align: left;
+	font: inherit;
+	font-weight: 700;
+	font-size: 14px;
+	color: var(--text-secondary);
+	cursor: pointer;
+	transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.settings-rail__item > .bi {
+	font-size: 16px;
+	width: 18px;
+	text-align: center;
+}
+.settings-rail__item:hover {
+	background: var(--surface-2);
+	color: var(--text-primary);
+}
+.settings-rail__item.is-active {
+	background: color-mix(in srgb, var(--neon-green) 12%, transparent);
+	color: var(--neon-green);
+	box-shadow: inset 2px 0 0 var(--neon-green);
+}
+.settings-content {
+	flex: 1;
+	min-width: 0;
+	max-width: 640px;
+}
+.settings-section {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.settings-section__head {
+	margin-bottom: 4px;
+}
+.settings-section__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 22px;
+	font-weight: 800;
+	color: var(--text-primary);
+}
+.settings-section__sub {
+	margin: 4px 0 0;
+	font-size: 14px;
+	color: var(--text-muted);
+}
+
+/* Unter-Gruppe innerhalb einer Kategorie: kleinere Zwischen-Überschrift + Untertitel,
+   darunter die zugehörigen Einstellungen. */
+.settings-group {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+/* Deutlich mehr Luft zwischen aufeinanderfolgenden Unterkategorien (ihre Überschriften). */
+.settings-group:not(:first-of-type) {
+	margin-top: 18px;
+}
+.settings-group__head {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding-bottom: 4px;
+	border-bottom: 1px solid var(--border);
+}
+.settings-group__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 15px;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+.settings-group__sub {
+	margin: 0;
+	font-size: 12.5px;
+	color: var(--text-muted);
+}
+
+@media (max-width: 780px) {
+	.settings-shell {
+		flex-direction: column;
+	}
+	.settings-rail {
+		position: static;
+		flex-basis: auto;
+		width: 100%;
+	}
+	.settings-rail__nav {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+}

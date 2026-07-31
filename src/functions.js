@@ -7,7 +7,6 @@ const createDesktopShortcut = require('create-desktop-shortcuts')
 const markdown = require("markdown").markdown;
 const NodeCache = require( "node-cache" )
 const sessionCache = new NodeCache({stdTTL: 10, checkperiod: 30})
-// const dialog = require('node-file-dialog')
 
 function getRepository(){
     return new Promise(async cb => {
@@ -49,103 +48,68 @@ function getRepository(){
 }
 
 /**
- * used to check a JSON object for integrity by comparing it with the JSON ```objectToCompare```
- * @param {JSON} objectToCheck the JSON object to compare the keys from with the ```objectToCompare```
- * @param {JSON} objectToCompare the JSON object with the only keys in the ```objectToCheck```
- * @returns true or false wether the JSON objects are equal or not
- */
-function checkForIntegrity(objectToCheck, objectToCompare){
-    const keys = Object.keys(objectToCheck)
-    const neededKeys = Object.keys(objectToCompare)
-    console.log("checkForIntegrity: given keys", keys, "needed keys", neededKeys)
-    if(arraysEquaul(keys, neededKeys)) return true
-    else return false
-}
-function arraysEquaul(a, b){
-    if (a === b) return true
-    if (a == null || b == null) return false
-    if (a.length !== b.length) return false
-
-    // If you don't care about the order of the elements inside
-    // the array, you should sort both arrays here.
-    // Please note that calling sort on an array will modify that array.
-    // you might want to clone your array first.
-
-    const aSorted = Array.from(a)
-    const bSorted = Array.from(b)
-
-    for (let i = 0; i < aSorted.length; ++i) {
-        if (aSorted[i] !== bSorted[i]) return false
-    }
-    return true
-}
-/**
- * Creates a shortcut for the given application. Platform dependent. On macOS and
- * Linux desktop-shortcut creation is not implemented yet (logged, no-op) — this
- * replaces the previous unconditional PowerShell call which threw on non-Windows.
- * @param {string} name for the shortcut
- * @param {string} filePath to the executable which will be launched
- * @param {string} icon path to the icon of the shortcut
+ * Erstellt eine Desktop-Verknüpfung für ein installiertes Spiel — plattformübergreifend über
+ * `create-desktop-shortcuts` (Windows .lnk, Linux .desktop, macOS-Alias). Ersetzt den früheren
+ * rohen PowerShell-Aufruf, der Name/Pfad UNESCAPED interpolierte (Injection) und in ein literales
+ * `%userprofile%\Start Menu\...Startup`-Verzeichnis schrieb (Autostart statt Desktop + nicht
+ * expandierter Pfad). Fehler sind nie fatal — eine Installation darf daran nie scheitern.
+ * @param {string} name Anzeigename der Verknüpfung
+ * @param {string} filePath Pfad zur Executable / zum .app-Bundle
+ * @param {string} [icon] optionaler Icon-Pfad (Windows: .ico) — wird nur genutzt, wenn passend
  */
 async function createShortcut(name, filePath, icon){
     try{
-        if(process.platform !== "win32"){
-            console.log("createShortcut: not implemented on", process.platform, "- skipping")
-            return
-        }
-        const shortcutCmd = child_process.spawn("powershell", ["$s=(New-Object -COM WScript.Shell).CreateShortcut('%userprofile%\\Start Menu\\Programs\\Startup\\" + name + ".lnk');$s.TargetPath='" + filePath + "';$s.Save()"])
-
-        shortcutCmd.on("spawn", () => {
-            console.log("createShortcut: spawned cmd")
+        const win = { filePath, name }
+        if(typeof icon === "string" && icon.toLowerCase().endsWith(".ico")) win.icon = icon
+        const ok = createDesktopShortcut({
+            windows: win,
+            linux: { filePath, name },
+            osx: { filePath, name },
         })
-
-        shortcutCmd.on("message", (message) => {
-            console.log("createShortcut: message:", message)
-        })
-
-        shortcutCmd.on("error", (error) => {
-            console.log("createShortcut: error:", error)
-        })
-
-        shortcutCmd.on("close", (code) => {
-            console.log("createShortcut: close:", code)
-        })
+        if(!ok) console.warn("createShortcut: creation reported failure for", name)
     }
     catch(err){
         console.error("createShortcut:", err)
     }
 }
 /**
+ * Baut die Optionen für eine OS-Benachrichtigung. Icon: dasselbe ```img/app.png``` wie Fenster und
+ * Tray (index.js) — vorher lagen hier abweichende Bilder (icon-scaled.png/icon.png).
+ * Unter macOS wird ```icon``` bewusst WEGGELASSEN: das System zeigt dort ohnehin das App-Icon des
+ * Bundles an, ein gesetztes ```icon``` erscheint ZUSÄTZLICH als zweites Bild in der Mitteilung.
+ * Windows/Linux haben kein automatisches App-Icon, dort wird app.png gesetzt.
+ * @param {string} title
+ * @param {string} body
+ */
+function notificationOptions(title, body){
+    const config = require("./launcherConfig")
+    const options = { title: "Sketchy Games Launcher", subtitle: title, body }
+    if(process.platform !== "darwin") options.icon = config.resources + "img/app.png"
+    return options
+}
+/**
  * used to send a notification with a ```title``` and ```message```
- * @param {string} title the title of the notification 
- * @param {string} message the message of the notification 
+ * @param {string} title the title of the notification
+ * @param {string} message the message of the notification
  */
 async function sendNotification(title, message){
     const config = require("./launcherConfig")
     try{
         const settings = JSON.parse(decrypt(await read(config.settingsFile)))
         if(settings.desktopNotifications) {
-            new electron.Notification({
-                title: "Sketchy Games Launcher",
-                subtitle: title,
-                body: message,
-                icon: config.resources + "img/icon-scaled.png",
-            }).addListener("click", function(e) {
+            new electron.Notification(notificationOptions(title, message))
+            .addListener("click", function(e) {
                 open()
             }).show()
         }
     }
     catch(err){
         console.error("sendNotification:", err)
-        new electron.Notification({
-            title: "Sketchy Games Launcher",
-            subtitle: title,
-            body: message + " Error: " + err.toString(),
-            icon: config.resources + "img/icon.png",
-        }).addListener("click", function(e) {
+        new electron.Notification(notificationOptions(title, message + " Error: " + err.toString()))
+        .addListener("click", function(e) {
             open()
         }).show()
-    }    
+    }
 }
 /**
  * used to load an ```url``` into the current window. The ```url``` has to start with a ```/``` slash
@@ -163,15 +127,29 @@ function redirect(url){
  * used to move the window to the ```top``` and ```focus``` it
  */
 function open(){
-    electron.BrowserWindow.getAllWindows()[0].setMovable(true)
-    electron.BrowserWindow.getAllWindows()[0].moveTop()
+    const win = electron.BrowserWindow.getAllWindows()[0]
+    if(!win) return
+    win.setMovable(true)
+    win.show()   // aus dem Tray/Hintergrund zurückholen
+    win.focus()
+    win.moveTop()
 }
 /**
- * used to ```close``` the current focused window
+ * Launcher ins Tray/den Hintergrund verstecken (NICHT beenden) + einmalige Systemnachricht.
+ * Prozess + Express-Server + Playtime-Tracking laufen weiter (Steam-artiger Hintergrundbetrieb).
  */
-function close(){
-    sendNotification("Closed Launcher", "The launcher got closed.")
-    electron.BrowserWindow.getAllWindows()[0].close()
+function hideToBackground(){
+    const win = electron.BrowserWindow.getAllWindows()[0]
+    if(win) win.hide()
+    sendNotification("Sketchy Games läuft weiter", "Der Launcher läuft im Hintergrund weiter. Beenden über das Tray-Symbol.")
+}
+/**
+ * Launcher WIRKLICH beenden — nur für die Auto-Update-Übernahme (/close-for-update), wo eine
+ * neue Instanz die alte ablöst. Setzt app.isQuitting, damit der close→hide-Handler nicht greift.
+ */
+function quitLauncher(){
+    electron.app.isQuitting = true
+    electron.app.quit()
 }
 /**
  * used to ```minimize``` the current focused window
@@ -192,17 +170,6 @@ function showDialog(properties, filters){
         const selected = await electron.dialog.showOpenDialog({properties, filters})
         if(!selected.canceled) cb(selected.filePaths)
         else cb([])
-
-        // let finalType
-        // if(!type) finalType = "directory"
-        // else finalType = type
-
-        // dialog({type: finalType}).then((value) => {
-        //     cb(value)
-        // }).catch((reason) => {
-        //     console.log("showDialog: could not get value from dialog for the reason:", reason)
-        //     cb([])
-        // })
     })
 }
 /**
@@ -292,12 +259,18 @@ function write(path, data){
     return fs.promises.writeFile(path, data)
 }
 /**
- * creates a directory at the given ```path```.
+ * creates a directory at the given ```path```, including missing parents.
+ *
+ * `recursive` ist hier nicht Bequemlichkeit, sondern der Erstlauf-Fall: `setupPaths()` legt
+ * `<globalDir>/installs/` an, aber `<globalDir>` selbst ("Sketchy Games Launcher") legt niemand an.
+ * Auf einem frischen Rechner warf das erste mkDir deshalb ENOENT, `setupPaths` brach im catch ab —
+ * und damit entstanden auch installs.data, settings.data und updates.data nie. Auf Rechnern, auf
+ * denen der Ordner schon lag, war der Fehler unsichtbar.
  * @param {string} path the path to create the directory
  * @returns {Promise<void>}
  */
 function mkDir(path){
-    return fs.promises.mkdir(path)
+    return fs.promises.mkdir(path, { recursive: true })
 }
 
 // NOTE: the helpers above now REJECT on failure (previously they resolved with
@@ -370,8 +343,9 @@ async function getAndCache(path, ttl = null, opts = {}){
  */
 async function send(path, data, opts = {}){
     const url = apiUrl(path)
-    const response = await fetch(url, { method: "post", body: JSON.stringify(data || {}), headers: apiHeaders({ token: opts.token }) })
-    console.log("send:", url)
+    const method = opts.method || "post"
+    const response = await fetch(url, { method, body: JSON.stringify(data || {}), headers: apiHeaders({ token: opts.token }) })
+    console.log("send:", method.toUpperCase(), url)
     return parseV1(response, url)
 }
 /**
@@ -386,6 +360,40 @@ async function graphql(query, variables = {}, opts = {}){
     if(!response.ok) throw new ApiError((body && body.errors && body.errors[0] && body.errors[0].message) || ("HTTP " + response.status), response.status)
     if(body && body.errors && body.errors.length) throw new ApiError(body.errors[0].message, response.status, "GRAPHQL")
     return body && body.data
+}
+/**
+ * Lädt das Cover eines installierten Spiels (```product.thumbnail```, API-relativ z.B.
+ * "/media/games/<id>.svg" oder absolut) in den Installationsordner — für die Offline-Anzeige
+ * in der Bibliothek. BEWUSST nicht-fatal: ein fehlendes/nicht ladbares Cover darf eine
+ * Installation nie scheitern lassen. Speichert unter "image.<ext>" (Endung aus der URL) und
+ * merkt sich den Dateinamen auf ```product.img``` für /api/library/img.
+ * @param {{ thumbnail?: string, installationPath: string, name: string, img?: string }} product
+ * @returns {Promise<void>} resolved immer (Fehler werden nur geloggt)
+ */
+async function downloadCoverImage(product){
+    try{
+        if(!product || typeof product.thumbnail !== "string" || !product.thumbnail.trim()){
+            console.log("downloadCoverImage: no thumbnail for", product && product.name, "- skipping")
+            return
+        }
+        const url = apiUrl(product.thumbnail)
+        const response = await fetch(url)
+        if(!response.ok){
+            console.warn("downloadCoverImage: fetch failed", url, response.status)
+            return
+        }
+        const ext = (path.extname(new URL(url).pathname) || ".png").toLowerCase()
+        const fileName = "image" + ext
+        const buffer = Buffer.from(await response.arrayBuffer())
+        // Läuft VOR dem Entpacken (damit product.img in der Registry landet) — Ordner ggf. anlegen.
+        await fs.promises.mkdir(product.installationPath + product.name, { recursive: true })
+        await fs.promises.writeFile(product.installationPath + product.name + "/" + fileName, buffer)
+        product.img = fileName
+        console.log("downloadCoverImage: saved", fileName, "for", product.name)
+    }
+    catch(err){
+        console.warn("downloadCoverImage: failed for", product && product.name, err && err.message)
+    }
 }
 const { getDataKey } = require("./dataKey")
 const algorithm = "aes-256-gcm"
@@ -431,44 +439,34 @@ function decrypt(data){
  */
 function checkInternetConnection(timeout){
     return new Promise(cb => {
+        // Erreicht der API-Ping den Host nicht, unterscheiden wir „Server down" (Internet da) von
+        // „wirklich offline" über die OS-Netzlage (electron.net.isOnline, wie navigator.onLine) —
+        // sonst würde der Nutzer fälschlich für seine Verbindung verantwortlich gemacht.
+        const onFail = () => {
+            let online = false
+            try{ online = electron.net.isOnline() }catch(e){ /* Fallback: unten 0 */ }
+            cb(online ? 1 : 0) // 1 = Internet, aber Server nicht erreichbar; 0 = offline
+        }
         try{
             if(!timeout) timeout = 3000
             fetch(apiUrl("/status"), {signal: AbortSignal.timeout(timeout)}).then(async (response) => {
                 let json = await response.json()
                 if(json.status == 1 && json.data == "connected"){
                     console.log("checkInternetConnection: connected")
-                    cb(2) // connected to internet and sever
-                } 
+                    cb(2) // connected to internet and server
+                }
                 else cb(1) // connected to internet but not server
-    
+
             }).catch((err) => {
                 console.log("checkInternetConnection: error on request:", err)
-                cb(0) // not connected to internet and server
+                onFail()
             })
         }
         catch(err){
             console.log("checkInternetConnection: error when starting request:", err)
-            cb(0) // not connected to internet and server
+            onFail()
         }
     })
-}
-
-function filterForPlatform(storeData){
-    try {
-        // storeData.populars = storeData.populars.filter(                               element => !element.platform || element.platform == process.platform)
-        storeData.suggestions.suggestions = storeData.suggestions.suggestions.filter( element => !element.platform || element.platform == process.platform)
-        storeData.suggestions.bestofweek = storeData.suggestions.bestofweek.filter(   element => !element.platform || element.platform == process.platform)
-        storeData.suggestions.games = storeData.suggestions.games.filter(             element => !element.platform || element.platform == process.platform)
-        storeData.suggestions.softwares = storeData.suggestions.softwares.filter(     element => !element.platform || element.platform == process.platform)
-        storeData.games = storeData.games.filter(                                     element => !element.platform || element.platform == process.platform)
-        storeData.softwares = storeData.softwares.filter(                             element => !element.platform || element.platform == process.platform)
-        console.log("filterForPlatform: filtered for", process.platform)
-        return storeData
-    } 
-    catch (err) {
-        console.error("filterForPlatform: error:", err)
-        return storeData
-    }
 }
 
 /**
@@ -481,10 +479,48 @@ function filterForPlatform(storeData){
  */
 function launchProgram(filepath){
     if(process.platform === "darwin"){
-        // `open` launches the .app bundle and returns immediately.
+        // Für echtes Playtime-Tracking die tatsächliche Bundle-Binary starten (statt `open`, das
+        // sofort zurückkehrt) — so feuert das close-Event beim echten Spielende. Bei Fehlschlag
+        // Fallback auf `open` (Start funktioniert weiter, nur ohne Zeitmessung).
+        if(filepath.endsWith(".app")){
+            const exe = resolveMacExecutable(filepath)
+            if(exe) return child_process.spawn(exe, { detached: true, cwd: path.dirname(exe) })
+        }
         return child_process.spawn("open", [filepath], { detached: true })
     }
     return child_process.spawn(filepath, { detached: true, cwd: path.dirname(filepath) })
+}
+/**
+ * Löst die ausführbare Binary innerhalb eines macOS-.app-Bundles auf (Contents/MacOS/<CFBundleExecutable>).
+ * Kein XML-Parser nötig — CFBundleExecutable wird per Regex aus Info.plist gelesen; Fallbacks: einzige
+ * bzw. erste Datei in Contents/MacOS/. Gibt null zurück, wenn nichts Passendes gefunden wird.
+ * @param {string} appPath Pfad zum .app-Bundle
+ * @returns {string|null}
+ */
+function resolveMacExecutable(appPath){
+    try{
+        const macosDir = path.join(appPath, "Contents", "MacOS")
+        if(!fs.existsSync(macosDir)) return null
+        let exec = null
+        try{
+            const plist = fs.readFileSync(path.join(appPath, "Contents", "Info.plist"), "utf8")
+            const m = plist.match(/<key>\s*CFBundleExecutable\s*<\/key>\s*<string>([^<]+)<\/string>/)
+            if(m) exec = m[1].trim()
+        }
+        catch{ /* keine/kaputte Info.plist → Fallback unten */ }
+        if(exec){
+            const p = path.join(macosDir, exec)
+            if(fs.existsSync(p)) return p
+        }
+        const entries = fs.readdirSync(macosDir).filter(e => !e.startsWith("."))
+        if(entries.length === 1) return path.join(macosDir, entries[0])
+        for(const e of entries){
+            const p = path.join(macosDir, e)
+            try{ if(fs.statSync(p).isFile()) return p }catch{ /* skip */ }
+        }
+        return null
+    }
+    catch{ return null }
 }
 /**
  * Opens a URL in the user's default browser via Electron's shell (replaces the
@@ -514,7 +550,8 @@ module.exports = {
     decrypt,
     checkInternetConnection,
     minimize,
-    close,
+    hideToBackground,
+    quitLauncher,
     sendNotification,
     createShortcut,
     launchProgram,
@@ -522,8 +559,7 @@ module.exports = {
     showDialog,
     showMessageBox,
     showErrorBox,
-    checkForIntegrity,
     redirect,
     getRepository,
-    filterForPlatform,
+    downloadCoverImage,
 }

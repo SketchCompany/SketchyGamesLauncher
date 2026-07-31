@@ -17,9 +17,17 @@ try { require("dotenv").config() } catch (e) { /* dotenv optional in gepackten B
 // API_BASE. Es gibt keinen separaten Web-Host für Builds mehr.
 const API_BASE = (process.env.SKETCHY_API_BASE || "https://api.sketch-company.de").replace(/\/+$/, "")
 
-// Geteilter Launcher-Schlüssel (Bot-Check-Bypass). In der Produktion über die Build-Umgebung
-// gesetzt; ist er leer, muss die API LAUNCHER_SHARED_SECRET ebenfalls leer haben (Bypass aus).
-const LAUNCHER_KEY = process.env.SKETCHY_LAUNCHER_KEY || ""
+// Geteilter Launcher-Schlüssel (Bot-Check-Bypass der Auth-Routen).
+//  - Entwicklung: aus der Laufzeit-.env (SKETCHY_LAUNCHER_KEY).
+//  - Gepackter Build: aus dem zur Build-Zeit generierten, git-ignorierten Modul
+//    src/config/launcherKey.js (leicht verschleiert, im ASAR gebündelt). Siehe forge.config.js.
+// HINWEIS: Ein in einem verteilten Client mitgelieferter Shared-Key ist prinzipiell extrahierbar —
+// die Verschleierung erhöht nur die Hürde. Robustere Alternative wäre Cloudflare Turnstile.
+function loadEmbeddedLauncherKey(){
+	try { return require("./config/launcherKey") || "" }
+	catch { return "" }
+}
+const LAUNCHER_KEY = process.env.SKETCHY_LAUNCHER_KEY || loadEmbeddedLauncherKey()
 
 /** Baut die vollständige URL für einen /v1-relativen (oder absoluten) Pfad. */
 function apiUrl(path) {

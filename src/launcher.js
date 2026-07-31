@@ -22,28 +22,28 @@ app.use((req, res, next) => {
 // Content-Security-Policy for the served SPA. The Vite production build emits only
 // external (self-hosted) scripts/styles/fonts, so we can keep this tight. Remote
 // https images are allowed for store cover art served from api.sketch-company.de.
+// In der lokalen Entwicklung läuft die API über http (SKETCHY_API_BASE=http://localhost:3500) —
+// genau dieser eine http-Origin wird dann zusätzlich für img-src freigegeben, sonst nichts.
+const { API_BASE } = require("./apiBase")
+const imgSrc = "img-src 'self' data: https:" + (API_BASE.startsWith("http:") ? " " + new URL(API_BASE).origin : "")
+const cspHeader = [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    imgSrc,
+    "font-src 'self'",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+].join("; ")
 app.use((req, res, next) => {
-    res.setHeader("Content-Security-Policy", [
-        "default-src 'self'",
-        "script-src 'self'",
-        "style-src 'self' 'unsafe-inline'",
-        "img-src 'self' data: https:",
-        "font-src 'self'",
-        "connect-src 'self'",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "frame-ancestors 'none'",
-    ].join("; "))
+    res.setHeader("Content-Security-Policy", cspHeader)
     res.setHeader("X-Content-Type-Options", "nosniff")
     next()
 })
 
 app.use("/api", api)
-
-// Server-side resources (cover images downloaded by the launcher, icons, etc.).
-app.get("/res", (req, res) => {
-    res.sendFile(config.resources + req.query.f)
-})
 
 // Static assets of the built SPA (JS/CSS/fonts under /assets and /fonts).
 app.use(express.static(config.dist))
@@ -56,12 +56,14 @@ app.get("*", (req, res) => {
     res.status(500).send("<h1>500</h1>Frontend build not found. Run `npm run build:renderer`.")
 })
 
-// start listening of the server
-app.listen(config.PORT, (err) => {
+// start listening of the server — NUR auf dem Loopback-Interface (127.0.0.1), damit der lokale
+// API-Server nicht aus dem LAN erreichbar ist (der UA-Token-Gate allein wäre kein ausreichender
+// Schutz gegen andere Geräte im Netzwerk).
+app.listen(config.PORT, "127.0.0.1", (err) => {
     if(err){
         console.error(err)
     }
     else{
-        console.log("Server listening on port " + config.PORT + ". Available at http://localhost:" + config.PORT)
+        console.log("Server listening on 127.0.0.1:" + config.PORT + ". Available at http://localhost:" + config.PORT)
     }
 })

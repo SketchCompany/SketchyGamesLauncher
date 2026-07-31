@@ -1,0 +1,232 @@
+/* web-shared.css — geteilte visuelle Bausteine, extrahiert aus SketchCompanyReact
+   app/globals.css (Buttons/CTAs, HUD-Rahmen, Badges, Neon-Platzhalter, Sektions-Titel).
+   Die Store-/Detail-/Such-Styles liegen 1:1 kopiert unter styles/web/. Basis-Tokens
+   kommen aus app.css. Der nackte button-Element-Style der Web-App wird bewusst NICHT
+   übernommen — Tailwinds Preflight + Utility-Klassen übernehmen das. */
+
+.btn,
+.cta {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 13px 26px;
+	border-radius: var(--radius);
+	font-family: var(--font-body);
+	font-weight: 800;
+	font-size: clamp(14px, 1.4vw, 16px);
+	letter-spacing: 0.01em;
+	border: 2px solid transparent;
+	cursor: pointer;
+	transition:
+		transform var(--dur-btn) var(--ease),
+		box-shadow var(--dur-btn) var(--ease),
+		background var(--dur-btn) var(--ease),
+		color var(--dur-btn) var(--ease),
+		border-color var(--dur-btn) var(--ease);
+	white-space: nowrap;
+}
+.btn:hover,
+.cta:hover {
+	text-decoration: none;
+	transform: translateY(var(--lift-btn));
+}
+/* Dezentes Press-Feedback — nutzt die bereits vorhandene transform-Transition (compositor-freundlich). */
+.btn:active,
+.cta:active {
+	transform: scale(0.97);
+}
+/* Spielstart: der Button bleibt eingesunken und leuchtet auf, während der Glas-Filter aus ihm
+   herauswächst (components/LaunchOverlay.jsx). Hover-Lift darf hier nicht dazwischenfunken. */
+.cta-launching,
+.cta-launching:hover {
+	transform: scale(0.97);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--neon-green) 55%, transparent), 0 0 22px var(--neon-green);
+	transition:
+		transform 0.12s ease-out,
+		box-shadow 0.12s ease-out;
+}
+.btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
+}
+.btn--primary,
+.cta-primary {
+	background: var(--btn-primary-bg);
+	color: var(--cta-primary-fg, #06140d);
+	box-shadow: var(--btn-shadow);
+}
+.btn--primary:hover,
+.cta-primary:hover {
+	background: var(--btn-primary-bg);
+	color: var(--cta-primary-fg-hover);
+	box-shadow: var(--btn-shadow-hover);
+}
+.btn--ghost,
+.cta-secondary {
+	background: var(--surface-2);
+	color: var(--text-primary);
+	border-color: var(--border-strong);
+	box-shadow: var(--btn-shadow);
+}
+.btn--ghost:hover,
+.cta-secondary:hover {
+	color: var(--text-primary);
+	border-color: var(--border-strong);
+	background: var(--surface);
+}
+.btn--magenta {
+	background: var(--neon-magenta);
+	color: #fff;
+	box-shadow: var(--btn-shadow);
+}
+.cta-danger {
+	background: transparent;
+	color: var(--error);
+	border-color: var(--error);
+}
+.cta-danger:hover {
+	background: var(--error);
+	color: #fff;
+	border-color: var(--error);
+}
+
+/* HUD-Rahmen (Karten/Panels) */
+.hud-frame {
+	position: relative;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--surface);
+}
+
+/* Gemeinsame Sektions-Überschrift (Store-Listing, Reihen, Spiel-Detailseite). */
+.section-title {
+	margin: 0;
+	font-size: clamp(18px, 2.4vw, 24px);
+	font-weight: 800;
+	color: var(--text-primary);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.section-title .bi {
+	color: var(--neon-green);
+	font-size: 0.9em;
+}
+
+/* Badges (Pixel-Font) */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-family: var(--font-pixel);
+	font-size: 9px;
+	line-height: 1;
+	padding: 6px 8px;
+	border-radius: 3px;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+.badge--demo {
+	background: var(--neon-amber);
+	color: #1a1206;
+}
+.badge--free {
+	background: var(--neon-green);
+	color: #06140d;
+}
+.badge--soon {
+	background: var(--neon-cyan);
+	color: #04161a;
+}
+.badge--archived {
+	background: var(--surface-2);
+	color: var(--text-secondary);
+	border: 1px solid var(--border-strong);
+}
+.badge--price {
+	background: var(--surface-2);
+	color: var(--text-primary);
+	border: 1px solid var(--border-strong);
+}
+.badge__discount {
+	color: var(--neon-green);
+}
+
+/* Archiviert-Hinweis (Detailseite) */
+.archived-note {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.75rem 1rem;
+	margin: 0.5rem 0 1rem;
+	border: 1px solid var(--border-strong);
+	border-left: 3px solid var(--neon-amber);
+	border-radius: var(--radius);
+	background: var(--surface);
+	color: var(--text-secondary);
+	font-size: 0.92rem;
+}
+.archived-note .bi {
+	color: var(--neon-amber);
+	font-size: 1.1rem;
+}
+.archived-note strong {
+	color: var(--text-primary);
+}
+
+/* Neon-Platzhalter für fehlende Cover */
+.game-thumb {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	overflow: hidden;
+	background: var(--bg-2);
+}
+.game-thumb--ph {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-image: linear-gradient(135deg, var(--ph-a, var(--neon-green)) 0%, var(--ph-b, var(--neon-cyan)) 100%), linear-gradient(rgba(0, 0, 0, 0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.18) 1px, transparent 1px);
+	background-size:
+		100% 100%,
+		12px 12px,
+		12px 12px;
+	background-blend-mode: normal, overlay, overlay;
+}
+.game-thumb--green {
+	--ph-a: var(--neon-green);
+	--ph-b: #0a6b3c;
+}
+.game-thumb--magenta {
+	--ph-a: var(--neon-magenta);
+	--ph-b: #4b1240;
+}
+.game-thumb--cyan {
+	--ph-a: var(--neon-cyan);
+	--ph-b: #0c4250;
+}
+.game-thumb--amber {
+	--ph-a: var(--neon-amber);
+	--ph-b: #5a3d05;
+}
+.game-thumb__glyph {
+	font-family: var(--font-pixel);
+	font-size: clamp(28px, 5vw, 46px);
+	color: rgba(7, 8, 12, 0.85);
+	text-shadow: 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.category-chip {
+	display: inline-block;
+	width: fit-content;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 4px 10px;
+	border-radius: 3px;
+	border: 1px solid var(--border);
+	color: var(--text-secondary);
+	background: var(--surface);
+}

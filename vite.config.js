@@ -1,5 +1,6 @@
 const { defineConfig } = require("vite")
 const react = require("@vitejs/plugin-react").default
+const tailwindcss = require("@tailwindcss/vite").default
 const path = require("path")
 
 // The renderer (React SPA) lives in src/renderer and builds into src/frontend-dist,
@@ -9,7 +10,16 @@ const path = require("path")
 module.exports = defineConfig({
     root: path.resolve(__dirname, "src/renderer"),
     base: "/",
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "src/renderer"),
+        },
+    },
+    // Launcher-Version zur Build-Zeit einbetten (im Auth-Header angezeigt).
+    define: {
+        __APP_VERSION__: JSON.stringify(require(path.resolve(__dirname, "package.json")).version),
+    },
     build: {
         outDir: path.resolve(__dirname, "src/frontend-dist"),
         emptyOutDir: true,

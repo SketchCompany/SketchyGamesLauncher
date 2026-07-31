@@ -1,25 +1,7 @@
 const {app} = require("electron")
-const https = require("https")
-const fs = require("fs")
 const path = require("path")
 const { platform } = require("process")
 
-/**
- * ```roles``` are the available roles for every user to find matching rules and make individuals have specific rights
- */
-const ROLES = {
-    admin: "Admin",
-    dev: "Dev",
-    user: "User"
-}
-/**
- * ```levels```
- */
-const LEVELS = {
-    admin: 100,
-    dev: 50,
-    user: 1
-}
 /**
  * ```requestToken``` used to set as cookie on the client and make sure the website is only accessible through electron.
  */
@@ -38,8 +20,10 @@ const globalDir = path.parse(app.getPath("userData")).dir + "/Sketchy Games Laun
 const defaultDir = app.isPackaged ? path.parse(app.getPath("exe")).dir : __dirname
 /**
  * ```logFile``` is the file name to the log file where all logs are saved.
+ * MUSS in einem beschreibbaren Verzeichnis liegen — NICHT neben der Executable: auf gepacktem
+ * macOS ist das .app-Bundle read-only. Deshalb im geteilten, beschreibbaren globalDir/data.
  */
-const logFile = defaultDir + "/launcher.log"
+const logFile = globalDir + "/data/launcher.log"
 /**
  * ```base``` is the path, used to access files in the frontend.
  */
@@ -59,8 +43,10 @@ const dist = __dirname + "/frontend-dist/"
 let installs = globalDir + "/installs/"
 /**
  * ```downloads``` is the path, where the downloads are downloaded first, before they get unpacked and install to the ```installs``` directory.
+ * Liegt im beschreibbaren globalDir (NICHT neben der Executable) — auf gepacktem macOS ist das
+ * .app-Bundle read-only, ein Download-Ordner daneben würde fehlschlagen.
  */
-const downloads = defaultDir + "/downloads/"
+const downloads = globalDir + "/downloads/"
 /**
  * ```data``` is the path, where all the important data gets saved to.
  */
@@ -92,6 +78,16 @@ const packageExt = ".zip"
  */
 const installsFile = data + "installs" + ext
 /**
+ * ```playtimesFile``` trackt die lokale Spielzeit je Spiel (Basis fürs 15-Min-Gate der Rezensionen).
+ * Reines JSON: { "<gameId>": { seconds, sessions, lastPlayed } }. Keine Sicherheitsgrenze.
+ */
+const playtimesFile = data + "playtimes" + ext
+/**
+ * ```notificationsFile``` speichert die persistenten Benachrichtigungen (Glocken-Fenster), damit
+ * sie einen Neustart überleben. Reines JSON: { notifications: [...] }. Keine Sicherheitsgrenze.
+ */
+const notificationsFile = data + "notifications" + ext
+/**
  * ```userFile``` is the path, where the user data is tracked.
  */
 const userFile = data + "user" + ext
@@ -109,133 +105,135 @@ const settingsIntegrity = {
     loginOnStartup: true,
     actionAfterGameStarted: 1,
     console: false,
+    // Offlinemodus: ohne Anmeldung nur installierte Spiele spielen; Online-Bereiche deaktiviert.
+    offlineMode: false,
+    // Zuletzt gesehene Launcher-Version. Weicht sie von der laufenden ab, hebt der
+    // Neuigkeiten-Feed die Versionshinweise als „gerade installiert" hervor (siehe /api/news).
+    lastSeenLauncherVersion: "",
+}
+/**
+ * Bringt ein (evtl. manipuliertes/veraltetes) Settings-Objekt auf die bekannte Form: NUR bekannte
+ * Keys werden übernommen (unbekannte wie das reine Anzeige-Feld `version` fallen weg — Manipulations-
+ * schutz), fehlende Keys mit Defaults gefüllt (zukunftssicher beim Ergänzen neuer Optionen, ohne die
+ * Nutzer-Einstellungen zu verwerfen). Nie werfen.
+ */
+function sanitizeSettings(obj){
+    const clean = {}
+    for(const key of Object.keys(settingsIntegrity)){
+        clean[key] = (obj && Object.prototype.hasOwnProperty.call(obj, key)) ? obj[key] : settingsIntegrity[key]
+    }
+    return clean
 }
 
-async function setup(){
+/**
+ * Schneller, rein lokaler Teil des Setups (einstellige Millisekunden, KEIN Netzwerk):
+ * Verzeichnisse + Datendateien anlegen und die Einstellungen laden (setzt u.a. den
+ * Installationspfad, den /download braucht). Läuft VOR der ersten Navigation des Fensters.
+ */
+async function setupPaths(){
   try{
-        console.log("setup: started")
-
+        console.log("setupPaths: started")
         const func = require("./functions")
-        console.log("setup: defaultDir", defaultDir)
-        console.log("setup: globalDir", globalDir)
+        console.log("setupPaths: defaultDir", defaultDir)
+        console.log("setupPaths: globalDir", globalDir)
 
-        // setup paths and files
         if(!func.exists(installs)) await func.mkDir(installs)
         if(!func.exists(downloads)) await func.mkDir(downloads)
         if(!func.exists(data)) await func.mkDir(data)
+        // Registry-Form: nur noch `games` + `other` (die frühere `softwares`-Kategorie ist
+        // entfernt; alte Dateien mit dem Schlüssel werden toleriert und ignoriert).
         if(!func.exists(installsFile)) await func.write(installsFile, JSON.stringify({
             games: [],
-            softwares: [],
             other: []
         }, null, 3))
-        if(!func.exists(userFile)) await func.write(userFile, func.encrypt(JSON.stringify({
-            id: "",
-            user: "",
-            email: "",
-            password: ""
-        }, null, 3)))
-        else{
-            // update existing account data to ensure the user is up to date
-            const status = await func.checkInternetConnection()
-            if(status == 2){
-                console.log("setup: updating account data")
-                //await updateAccountData()
-            }
-            else if(status == 1) console.log("setup: no connection to sketch-company.de servers")
-            else if(status == 0) console.log("setup: no connection to the internet")
-        }
         if(!func.exists(settingsFile)) await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity)))
-        else{
-            await loadSettings()
-        }
+        else await loadSettings()
         if(!func.exists(updatesFile)) await func.write(updatesFile, JSON.stringify({
             updates: []
         }, null, 3))
+        if(!func.exists(playtimesFile)) await func.write(playtimesFile, JSON.stringify({}, null, 3))
+        if(!func.exists(notificationsFile)) await func.write(notificationsFile, JSON.stringify({ notifications: [] }, null, 3))
+        console.log("setupPaths: finished")
+  }
+  catch(err){
+        console.error("setupPaths: failed:", err)
+  }
+}
 
-        // clean downloads folder
+/**
+ * Netzwerk-/wartungslastiger Teil des Setups — läuft NACH dem ersten Fensteraufbau im
+ * Hintergrund (setImmediate in index.js), damit der Start nie auf das Netz wartet:
+ * Verbindungsprüfung, Downloads-Ordner aufräumen (Resume-Zustand bleibt erhalten!),
+ * verwaiste Installationen entfernen, fehlende Cover nachladen, Update-Check und
+ * unterbrochene Downloads fortsetzen.
+ */
+async function setupBackground(){
+  try{
+        console.log("setupBackground: started")
+        const func = require("./functions")
+
+        const status = await func.checkInternetConnection()
+        const online = status == 2
+        if(status == 1) console.log("setupBackground: no connection to sketch-company.de servers")
+        else if(status == 0) console.log("setupBackground: no connection to the internet")
+
+        // Downloads-Ordner aufräumen — aber NUR Dateien ohne zugehörigen Resume-Zustand.
+        // Ein <name>.zip oder .sgl-part MIT <name>.state.json gehört zu einem unterbrochenen
+        // Download und wird von resumeInterrupted() weiterverwendet.
         const downloadFiles = await func.readDir(downloads)
-        if(downloadFiles.length > 0){
-            downloadFiles.forEach(async (file) => {
-                await func.remove(downloads + "/" + file)
-            })
-            console.log("setup: cleaned downloads folder")
+        const stateNames = new Set(downloadFiles.filter(f => f.endsWith(".state.json")).map(f => f.slice(0, -".state.json".length)))
+        for(const file of downloadFiles){
+            if(file.endsWith(".state.json")) continue
+            const base = file.endsWith(packageExt) ? file.slice(0, -packageExt.length) : null
+            if(base && stateNames.has(base)) continue
+            await func.remove(downloads + "/" + file).catch(() => {})
         }
 
-        // check if installs file is up to date and delete games or softwares if there is no .exe file and if needed download the cover image for each game and software
+        // Verwaiste Installationen entfernen + fehlende Cover nachladen.
         const installedProducts = JSON.parse(await func.read(installsFile))
-        if(installedProducts.games.length > 0){
-            for (let i = 0; i < installedProducts.games.length; i++) {
-                const element = installedProducts.games[i];
-                if(!func.exists(element.start)){
-                    console.log("setup: could not find .exe for", element.name, "deleting from installs file")
-                    if(func.exists(path.dirname(element.start))){
-                        await func.remove(path.dirname(element.start))
-                    }
-                    installedProducts.games.splice(i, 1)
+        if(!Array.isArray(installedProducts.games)) installedProducts.games = []
+        for (let i = installedProducts.games.length - 1; i >= 0; i--) {
+            const element = installedProducts.games[i];
+            if(!func.exists(element.start)){
+                console.log("setupBackground: could not find executable for", element.name, "deleting from installs file")
+                if(func.exists(path.dirname(element.start))){
+                    await func.remove(path.dirname(element.start))
                 }
-                else if(!func.exists(element.installationPath + "/" + element.name + "/image.png")){
-                    const status = await func.checkInternetConnection()
-                    if(status == 2){
-                        console.log("setup: could not find image.png for", element.name, "downloading new cover image from", element.resourcesUrl + "/1.png")
-                        console.log("setup:", element.installationPath + "/image.png")
-                        await downloadImage(element)
-                    }
-                    else console.log("setup: no internet or server connection to download the cover image for", element.name)
-
-                }
+                installedProducts.games.splice(i, 1)
             }
-        }
-        if(installedProducts.softwares.length > 0){
-            for (let i = 0; i < installedProducts.softwares.length; i++) {
-                const element = installedProducts.softwares[i];
-                if(!func.exists(element.start)){
-                    console.log("setup: could not find .exe for", element.name, "deleting from installs file")
-                    if(func.exists(path.dirname(element.start))){
-                        await func.remove(path.dirname(element.start))
-                    }
-                    installedProducts.softwares.splice(i, 1)
-                }
-                else if(!func.exists(element.installationPath + "/" + element.name + "/image.png")){
-                    const status = await func.checkInternetConnection()
-                    if(status == 2){
-                        console.log("setup: could not find image.png for", element.name, "downloading new cover image from", element.resourcesUrl + "/1.png")
-                        console.log("setup:", element.installationPath + "/image.png")
-                        await downloadImage(element)
-                    }
-                    else console.log("setup: no internet or server connection to download the cover image for", element.name)
-                }
+            else if(online && !func.exists(element.installationPath + "/" + element.name + "/" + (element.img || imgFile))){
+                console.log("setupBackground: could not find cover image for", element.name, "downloading from", element.thumbnail)
+                await func.downloadCoverImage(element)
             }
         }
         await func.write(installsFile, JSON.stringify(installedProducts, null, 3))
 
-        // check for updates
-        const status = await func.checkInternetConnection()
-        if(status == 2){
-            console.log("setup: checking for updates")
-            await checkForUpdates()
-        }
-        else if(status == 1) console.log("setup: no connection to sketch-company.de servers")
-        else if(status == 0) console.log("setup: no connection to the internet")
+        if(online){
+            // Lizenzen des angemeldeten Kontos spiegeln, BEVOR der Update-Check läuft — der
+            // filtert danach fremde Installationen heraus (siehe checkForUpdates).
+            const session = require("./session")
+            const token = session.getToken()
+            if(token) await require("./ownership").sync(token, session.getUserId())
 
-        console.log("setup: finished")
+            console.log("setupBackground: checking for updates")
+            await checkForUpdates()
+            // Unterbrochene Downloads (Crash/Netzabbruch/Beenden) fortsetzen.
+            await require("./downloadEngine").resumeInterrupted()
+            // Store-Cache vorwärmen: die Store-Seite rendert dann sofort (Skeleton nur bei Kaltstart).
+            if(token) await require("./storeAdapter").getStore(token).catch(() => {})
+        }
+
+        console.log("setupBackground: finished")
   }
   catch(err){
-        console.error("setup: failed:", err)
+        console.error("setupBackground: failed:", err)
   }
 }
-async function downloadImage(product){
-    console.log("downloadImage: started for", product.resourcesUrl + "1.png")
-    return new Promise(cb => {
-        https.get(product.resourcesUrl + "1.png", (response) => {
-            const writeStream = fs.createWriteStream(product.installationPath + product.name + "/" + imgFile)
-            response.pipe(writeStream)
-            writeStream.on("finish", function(){
-                writeStream.close()
-                console.log("downloadImage: finished for", product.resourcesUrl + "1.png")
-                cb()
-            })
-        })
-    })
+
+// Komposition für Alt-Aufrufer (nur index.js nutzt setup()); neuer Startpfad ruft beide getrennt.
+async function setup(){
+    await setupPaths()
+    await setupBackground()
 }
 async function checkForUpdates(){
   try{
@@ -244,8 +242,13 @@ async function checkForUpdates(){
 
         // read installed games
         const installs = JSON.parse(await func.read(installsFile))
+        if(!Array.isArray(installs.games) || installs.games.length === 0){
+            console.log("checkForUpdates: no games installed to check")
+            return updates
+        }
 
-        // get latest information from the store api (neuer GraphQL-Katalog, verlangt eine Session)
+        // Update-Quelle ist der Build-Katalog der API (/v1/launcher/builds: version/sha256 pro
+        // Spiel-Id, bereits plattformgefiltert) — der GraphQL-Katalog exportiert keine Version.
         const session = require("./session")
         const storeAdapter = require("./storeAdapter")
         const token = session.getToken()
@@ -253,53 +256,53 @@ async function checkForUpdates(){
             console.log("checkForUpdates: nicht angemeldet, Update-Prüfung übersprungen")
             return updates
         }
-        const storeProducts = await storeAdapter.getStore(token)
+        const builds = await storeAdapter.fetchBuilds(token)
+        // Nur eigene Spiele: für eine Installation ohne Lizenz des aktuellen Kontos darf weder ein
+        // updatesFile-Eintrag noch eine „Update verfügbar"-Meldung entstehen (sie würde die
+        // Bibliothek eines anderen Kontos verraten und ins Leere führen).
+        const ownership = require("./ownership")
 
-        // check installed games for updates
-        // Hinweis: der neue Katalog exportiert (noch) kein `version`-Feld — die Versionsprüfung
-        // greift daher erst, wenn Builds/Versionen im Katalog auftauchen (Follow-up).
-        if(installs.games.length > 0){
-            for (let i = 0; i < installs.games.length; i++) {
-                const element = installs.games[i];
-                console.log("checkForUpdates: checking", element.name)
-                for (let i2 = 0; i2 < storeProducts.games.length; i2++) {
-                    const onlineElement = storeProducts.games[i2];
-                    if((element.name == onlineElement.id || element.name == onlineElement.title) && element.version != onlineElement.version){
-                        console.log("checkForUpdates: found update for", element.name)
-                        console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
-                        onlineElement.installationPath = element.installationPath
-                        onlineElement.categorie = "games"
-                        updates.push(onlineElement)
-                        //console.log("checkForUpdates: pushed to updatesFile", updates)
-                    }
-                }
+        for (const element of installs.games) {
+            if(!ownership.owns(element.name)) continue
+            console.log("checkForUpdates: checking", element.name)
+            const build = builds.get(element.name)
+            // Installationen ohne aufgezeichnete Version (Alt-Installationen) werden übersprungen,
+            // damit keine falschen Updates gemeldet werden.
+            if(build && build.version && element.version && build.version !== element.version){
+                console.log("checkForUpdates: found update for", element.name, "from", element.version, "to", build.version)
+                updates.push({
+                    id: element.name,
+                    name: element.name,
+                    title: element.title || element.name,
+                    version: build.version,
+                    sha256: build.sha256,
+                    thumbnail: element.thumbnail,
+                    installationPath: element.installationPath,
+                    categorie: "games"
+                })
             }
         }
-        else console.log("checkForUpdates: no games installed to check")
 
-        // check installed softwares for updates
-        if(installs.softwares.length > 0){
-            for (let i = 0; i < installs.softwares.length; i++) {
-                const element = installs.softwares[i];
-                console.log("checkForUpdates: checking", element.name)
-                for (let i2 = 0; i2 < storeProducts.softwares.length; i2++) {
-                    const onlineElement = storeProducts.softwares[i2];
-                    if(element.name == onlineElement.name && element.version != onlineElement.version){
-                        console.log("checkForUpdates: found update for", element.name)
-                        console.log("checkForUpdates: from", element.version, "to", onlineElement.version)
-                        onlineElement.installationPath = element.installationPath
-                        onlineElement.categorie = "softwares"
-                        updates.push(onlineElement)
-                        //console.log("checkForUpdates: pushed to updatesFile", updates)
-                    }
-                }
-            }
-        }
-        else console.log("checkForUpdates: no softwares installed to check")
-
+        // IMMER schreiben (auch leer): updatesFile ist die Wahrheit für den „Aktualisieren"-Knopf
+        // der Produktseite. Würde nur bei Treffern geschrieben, bliebe ein erledigtes Update ewig
+        // stehen — vorher hat das niemand aufgeräumt (/api/updates/clear hat keinen Aufrufer).
+        await func.write(updatesFile, JSON.stringify({updates}, null, 3))
         if(updates.length > 0){
-            await func.write(updatesFile, JSON.stringify({updates}, null, 3))
             console.log("checkForUpdates: wrote updates to updatesFile")
+            // Persistente Benachrichtigung je verfügbarem Spiel-Update (idempotent per key).
+            try{
+                const notificationStore = require("./notificationStore")
+                for(const u of updates){
+                    await notificationStore.add({
+                        key: "update:" + u.id,
+                        type: "note",
+                        title: "Update verfügbar",
+                        message: `Für „${u.title || u.name}" ist ein Update verfügbar.`,
+                        actions: [{ kind: "navigate", to: "/store/" + encodeURIComponent(u.id), label: "Jetzt aktualisieren" }],
+                    }, { os: true })
+                }
+            }
+            catch(err){ console.error("checkForUpdates: notification failed:", err) }
         }
         else console.log("checkForUpdates: no updates found")
         return updates
@@ -314,15 +317,18 @@ function loadSettings(){
         try{
             const func = require("./functions")
             try{
-                const settings = JSON.parse(func.decrypt(await func.read(settingsFile)))
-                if(func.checkForIntegrity(settings, settingsIntegrity)){
-                    console.log("loadSettings: correct")
-                    installs = settings.installationPath
+                // Gespeicherte Werte auf die bekannte Form normalisieren (unbekannte Keys raus,
+                // fehlende mit Defaults auffüllen) statt bei Abweichung ALLES zurückzusetzen — so
+                // gehen beim Ergänzen neuer Optionen keine Nutzer-Einstellungen verloren.
+                const raw = JSON.parse(func.decrypt(await func.read(settingsFile)))
+                const settings = sanitizeSettings(raw)
+                installs = settings.installationPath
+                // Nur zurückschreiben, wenn sich durch die Normalisierung etwas geändert hat.
+                if(JSON.stringify(raw) !== JSON.stringify(settings)){
+                    await func.write(settingsFile, func.encrypt(JSON.stringify(settings, null, 3)))
+                    console.log("loadSettings: normalized settings file")
                 }
-                else{
-                    console.log("loadSettings: incorrect")
-                    await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity, null, 3))) // replace settings file with default settings
-                }
+                else console.log("loadSettings: correct")
             }
             catch(err){
                 await func.write(settingsFile, func.encrypt(JSON.stringify(settingsIntegrity, null, 3)))
@@ -338,36 +344,7 @@ function loadSettings(){
         }
     })
 }
-// Kontodaten werden nicht mehr lokal in userFile gespiegelt (dort lag früher auch das Passwort).
-// Der Account wird bei Bedarf frisch über /account (Bearer-Token) geladen. Diese Funktion prüft
-// nur noch best-effort, ob die Session serverseitig noch lebt; ist sie es nicht, wird sie gelöscht.
-function updateAccountData(){
-    return new Promise(async cb => {
-        try{
-            const func = require("./functions")
-            const session = require("./session")
-            const token = session.getToken()
-            const id = session.getUserId()
-            if(!token || !id) return cb()
-            await func.send("/v1/u/find", { id }, { token })
-            console.log("updateAccountData: Session ok")
-            cb()
-        }
-        catch(err){
-            if(err && err.name === "ApiError" && err.status === 401){
-                require("./session").clearSession()
-                console.warn("updateAccountData: Session abgelaufen, lokal gelöscht")
-                return cb()
-            }
-            console.error("updateAccountData:", err)
-            cb(err)
-        }
-    })
-}
-
 module.exports = {
-    ROLES,
-    LEVELS,
     requestToken,
     PORT,
     logFile,
@@ -382,10 +359,15 @@ module.exports = {
     imgFile,
     packageExt,
     installsFile,
+    playtimesFile,
+    notificationsFile,
     userFile,
     settingsFile,
     updatesFile,
     settingsIntegrity,
+    sanitizeSettings,
     setup,
+    setupPaths,
+    setupBackground,
     checkForUpdates,
 }

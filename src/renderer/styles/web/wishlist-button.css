@@ -1,0 +1,58 @@
+/* Wunschlisten-Stern. Neon-Gelb (amber) im aktiven Zustand, dezent im Ruhezustand. */
+.wishlist-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+	color: var(--text-secondary);
+	border-radius: 999px;
+	cursor: pointer;
+	transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.wishlist-btn:hover {
+	color: var(--neon-amber);
+	border-color: var(--neon-amber);
+}
+
+.wishlist-btn:active {
+	transform: scale(0.94);
+}
+
+.wishlist-btn.is-active {
+	color: var(--neon-amber);
+	border-color: color-mix(in srgb, var(--neon-amber) 60%, transparent);
+	background: color-mix(in srgb, var(--neon-amber) 12%, transparent);
+}
+
+.wishlist-btn.is-active .bi {
+	filter: drop-shadow(0 0 6px color-mix(in srgb, var(--neon-amber) 55%, transparent));
+}
+
+/* Reiner Icon-Button: quadratisches 44x44-Touch-Target. */
+.wishlist-btn--icon {
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	font-size: 18px;
+}
+
+/* Pill mit Text. */
+.wishlist-btn--pill {
+	min-height: 44px;
+	padding: 0 16px;
+	font-family: var(--font-body);
+	font-weight: 600;
+	font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wishlist-btn {
+		transition: none;
+	}
+	.wishlist-btn:active {
+		transform: none;
+	}
+}

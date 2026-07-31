@@ -1,0 +1,547 @@
+/* ---------- Suche-Seite ---------- */
+.search-explorer {
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+}
+
+/* Suchleiste + Wunschliste-Button in einer Reihe. */
+.search-topbar {
+	display: flex;
+	align-items: stretch;
+	gap: 12px;
+}
+.search-topbar > .search-bar {
+	flex: 1;
+	min-width: 0;
+}
+.search-wishlist {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	white-space: nowrap;
+	padding: 0 18px;
+	text-decoration: none;
+}
+@media (max-width: 560px) {
+	.search-topbar {
+		flex-direction: column;
+	}
+}
+
+/* Volltext-Suchleiste (voll breit oben) */
+.search-bar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 14px;
+	border-radius: var(--radius-lg);
+}
+.search-bar > .bi-search {
+	font-size: 20px;
+	color: var(--neon-cyan);
+}
+.search-bar input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	padding: 12px 0;
+	font-size: 17px;
+	color: var(--text-primary);
+}
+.search-bar input:focus {
+	outline: none;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+}
+/* Natives Such-✕ (WebKit) ausblenden – wir nutzen unseren eigenen Button. */
+.search-bar input[type="search"]::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	appearance: none;
+}
+.search-bar__clear {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 6px;
+	margin: -6px 0; /* Hitbox, ohne die Feldhöhe zu verändern */
+	border: none;
+	background: transparent;
+	color: var(--text-secondary);
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	transition: color var(--dur) var(--ease);
+}
+.search-bar__clear:hover {
+	color: var(--text-primary);
+}
+
+/* ---------- Zweispaltiges Layout: Seitenleiste + Ergebnisse ---------- */
+.search-layout {
+	display: grid;
+	grid-template-columns: 280px 1fr;
+	gap: 28px;
+	align-items: start;
+}
+
+.search-sidebar {
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+	padding: 18px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--surface);
+}
+.search-sidebar__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.search-sidebar__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 800;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+.search-sidebar__close {
+	display: none; /* nur im Handy-Drawer sichtbar */
+	border: none;
+	background: var(--surface-2);
+	color: var(--text-secondary);
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	cursor: pointer;
+}
+
+.filter-section {
+	display: flex;
+	flex-direction: column;
+}
+.search-filter__label {
+	font-family: var(--font-pixel);
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-secondary);
+	margin: 0 0 10px;
+}
+.search-filter__hint {
+	color: var(--neon-green);
+}
+/* Dropdown-Labels (Entwickler/Sortierung) ohne den globalen Extra-Abstand oben –
+   bündig wie die übrigen Filter-Sektionen. */
+.search-sidebar .form .label {
+	margin-top: 0;
+	margin-bottom: 6px;
+}
+
+/* Kategorie-Liste */
+.filter-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.filter-option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	width: 100%;
+	padding: 9px 12px;
+	border: none;
+	border-radius: var(--radius);
+	background: transparent;
+	color: var(--text-secondary);
+	font-size: 14px;
+	font-weight: 700;
+	text-align: left;
+	cursor: pointer;
+	transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.filter-option:hover {
+	color: var(--text-primary);
+	background: var(--surface-2);
+}
+.filter-option--active {
+	color: #07080c;
+	background: var(--neon-green);
+}
+.filter-option__count {
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--text-muted);
+}
+.filter-option:hover .filter-option__count {
+	color: var(--text-secondary);
+}
+.filter-option--active .filter-option__count {
+	color: #07080c;
+	opacity: 0.7;
+}
+
+/* Aufklappmenü „Weitere Kategorien" */
+.filter-toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 9px 12px;
+	margin-top: 2px;
+	border: none;
+	border-radius: var(--radius);
+	background: transparent;
+	color: var(--text-secondary);
+	font-size: 13px;
+	font-weight: 700;
+	text-align: left;
+	cursor: pointer;
+	transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.filter-toggle:hover {
+	color: var(--text-primary);
+	background: var(--surface-2);
+}
+.filter-toggle__chevron {
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: transform var(--dur) var(--ease);
+}
+.filter-toggle--open .filter-toggle__chevron {
+	transform: rotate(90deg);
+}
+
+/* Tag-Suchfeld */
+.tag-search {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 10px;
+	margin-bottom: 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--bg-0);
+}
+.tag-search:focus-within {
+	border-color: var(--neon-cyan);
+	box-shadow: 0 0 0 3px var(--glow-cyan);
+}
+.tag-search .bi-search {
+	color: var(--text-muted);
+	font-size: 14px;
+}
+.tag-search input {
+	flex: 1;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font-size: 14px;
+	padding: 0;
+}
+.tag-search input:focus {
+	outline: none;
+	border: none;
+	box-shadow: none;
+	background: transparent;
+}
+.tag-search button {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 6px;
+	margin: -6px 0; /* Hitbox, ohne die Feldhöhe zu verändern */
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+	transition: color var(--dur) var(--ease);
+}
+.tag-search button:hover {
+	color: var(--text-primary);
+}
+
+/* Tag-Gruppen (Akkordeon) */
+.tag-groups {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.tag-group__head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	padding: 9px 4px;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 700;
+	text-align: left;
+	cursor: pointer;
+}
+.tag-group__head:disabled {
+	cursor: default;
+}
+.tag-group__chevron {
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: transform var(--dur) var(--ease);
+}
+.tag-group--open .tag-group__chevron {
+	transform: rotate(90deg);
+}
+.tag-group__label {
+	flex: 1;
+}
+.tag-group__badge {
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--neon-cyan);
+	color: #07080c;
+	font-size: 11px;
+	font-weight: 800;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+.tag-group__body {
+	padding: 6px 4px 14px;
+}
+/* Tags als rechteckige Buttons, immer zwei nebeneinander */
+.tag-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.tag-option {
+	padding: 9px 12px;
+	border: none;
+	border-radius: var(--radius);
+	background: var(--surface-2);
+	color: var(--text-secondary);
+	font-size: 13px;
+	font-weight: 700;
+	text-align: left;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.tag-option:hover {
+	color: var(--text-primary);
+	background: var(--bg-3);
+}
+.tag-option--active {
+	color: #07080c;
+	background: var(--neon-cyan);
+}
+
+/* Chips (Tags) */
+.chip {
+	border: 1px solid var(--border);
+	background: var(--surface);
+	color: var(--text-secondary);
+	padding: 6px 12px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: color var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.chip:hover {
+	color: var(--text-primary);
+	border-color: var(--border-strong);
+	transform: translateY(var(--lift-btn));
+}
+.chip--active {
+	color: #07080c;
+	background: var(--neon-green);
+	border-color: var(--neon-green);
+	box-shadow: 0 0 0 3px var(--glow-green);
+}
+.chip--tag.chip--active {
+	background: var(--neon-cyan);
+	border-color: var(--neon-cyan);
+	box-shadow: 0 0 0 3px var(--glow-cyan);
+}
+
+.sidebar-reset {
+	justify-content: center;
+}
+
+/* ---------- Hauptbereich ---------- */
+.search-main {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.search-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+.filters-toggle {
+	display: none; /* nur Handy */
+	align-items: center;
+	gap: 8px;
+	padding: 9px 16px;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--surface);
+	color: var(--text-primary);
+	font-weight: 700;
+	cursor: pointer;
+}
+.filters-toggle__badge {
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--neon-green);
+	color: #07080c;
+	font-size: 11px;
+	font-weight: 800;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+.search-results__count {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 15px;
+}
+.search-results__count strong {
+	color: var(--text-primary);
+}
+
+/* Aktiv-Filter-Leiste */
+.active-filters {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+}
+.active-filter {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border: 1px solid var(--neon-cyan);
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--neon-cyan) 14%, transparent);
+	color: var(--text-primary);
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background var(--dur) var(--ease);
+}
+.active-filter:hover {
+	background: color-mix(in srgb, var(--neon-cyan) 26%, transparent);
+}
+.active-filter .bi {
+	font-size: 13px;
+	opacity: 0.8;
+}
+.active-filters__reset {
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 13px;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: underline;
+	padding: 6px 4px;
+}
+.active-filters__reset:hover {
+	color: var(--text-primary);
+}
+
+/* Ergebnis-Grid */
+.search-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 18px;
+}
+
+.search-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 14px;
+	text-align: center;
+	padding: 48px 24px;
+	border-radius: var(--radius-lg);
+}
+.search-empty > .bi {
+	font-size: 42px;
+	color: var(--text-muted);
+}
+.search-empty p {
+	margin: 0;
+	color: var(--text-secondary);
+	max-width: 42ch;
+}
+
+.search-backdrop {
+	display: none;
+}
+
+/* ---------- Responsive: Seitenleiste wird zum Drawer ---------- */
+@media (max-width: 900px) {
+	.search-layout {
+		grid-template-columns: 1fr;
+	}
+	.filters-toggle {
+		display: inline-flex;
+	}
+	.search-backdrop {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 540;
+		background: rgba(0, 0, 0, 0.55);
+	}
+	.search-sidebar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		width: min(320px, 86vw);
+		overflow-y: auto; /* Drawer ist an die Viewport-Höhe gebunden → bei Bedarf scrollbar */
+		z-index: 550;
+		border-radius: 0;
+		transform: translateX(-100%);
+		transition: transform var(--dur) var(--ease);
+	}
+	.search-sidebar--open {
+		transform: translateX(0);
+	}
+	.search-sidebar__close {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+@media (max-width: 700px) {
+	.search-grid {
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 12px;
+	}
+}

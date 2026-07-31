@@ -1,0 +1,20 @@
+.search-page {
+	padding: 32px var(--padding) 80px;
+	max-width: 1300px;
+	margin: 0 auto;
+}
+
+.search-page__head {
+	margin-bottom: 26px;
+}
+.search-page__title {
+	font-family: var(--font-display);
+	font-size: clamp(28px, 4vw, 44px);
+	font-weight: 800;
+	margin: 8px 0 6px;
+}
+.search-page__sub {
+	color: var(--text-secondary);
+	margin: 0;
+	font-size: 16px;
+}
