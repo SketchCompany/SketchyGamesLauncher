@@ -179,6 +179,74 @@ router.get("/playtime/:id", async (req, res) => {
     }
 })
 
+// --- Bezahlwege (Kauf + freiwillige Zahlung) ---
+//
+// Der Launcher bewegt selbst kein Geld: er holt eine Bezahl-URL und öffnet sie im SYSTEMBROWSER
+// (openExternal in functions.js). Nie im Electron-Fenster — dort verliert die Bezahlseite ihren
+// Origin-/CSP-Kontext, und die 3-D-Secure-Weiterleitungen der Banken brechen ab.
+//
+// Welche Bezahlwege überhaupt existieren, sagt die API über /v1/meta. Der Launcher rät das nicht:
+// ein Spenden-Knopf, den der Server mit 403 ablehnt, wäre schlimmer als gar keiner.
+router.get("/meta", async (req, res) => {
+    try{
+        const token = session.getToken()
+        const data = await func.get("/v1/meta", token ? { token } : {})
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        // Kein Netz ⇒ keine Bezahl-Oberfläche. Die sichere Richtung.
+        console.error(req.path, err)
+        res.json({ status: 1, data: { features: { payments: false, donations: false, subscriptions: false, playerSubscriptions: false } } })
+    }
+})
+// Nimmt DIESES Spiel freiwillige Zahlungen an, und in welchen Grenzen? (Fehler = nicht vorgesehen.)
+router.get("/store/:id/donation", async (req, res) => {
+    try{
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Nicht angemeldet." })
+        const data = await func.get("/v1/store/" + encodeURIComponent(req.params.id) + "/donation", { token })
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen." }) }
+        if(err instanceof func.ApiError) return res.json({ status: 0, data: err.message || "nicht verfügbar" })
+        console.error(req.path, err)
+        res.json({ status: 0, data: err.toString() })
+    }
+})
+// Freiwillige Zahlung starten. Der Betrag ist ein WUNSCH — geprüft und festgesetzt wird er in der API.
+router.post("/checkout/donation/:id", async (req, res) => {
+    try{
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Nicht angemeldet." })
+        const amountCents = Number(req.body && req.body.amountCents)
+        if(!Number.isInteger(amountCents) || amountCents < 1) return res.json({ status: 0, data: "Ungültiger Betrag." })
+        const data = await func.send("/v1/checkout/donation/" + encodeURIComponent(req.params.id), { amountCents }, { token })
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen." }) }
+        if(err instanceof func.ApiError) return res.json({ status: 0, data: err.message || err.toString() })
+        console.error(req.path, err)
+        res.json({ status: 0, data: err.toString() })
+    }
+})
+// Kauf starten. OHNE Betrag im Body: den Preis bestimmt ausschließlich die API.
+router.post("/checkout/game/:id", async (req, res) => {
+    try{
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Nicht angemeldet." })
+        const data = await func.send("/v1/checkout/game/" + encodeURIComponent(req.params.id), {}, { token })
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen." }) }
+        if(err instanceof func.ApiError) return res.json({ status: 0, data: err.message || err.toString() })
+        console.error(req.path, err)
+        res.json({ status: 0, data: err.toString() })
+    }
+})
+
 // --- Entwickler-/Studio-Profil (Detailseite /studio/:slug) ---
 // Relative Medienpfade gegen die API-Basis absolutisieren (Avatar/Banner/Section-Bilder), sonst
 // laden Cover/Banner nicht (SPA-Origin liefert sie nicht). Spiele über storeAdapter absolutisieren.

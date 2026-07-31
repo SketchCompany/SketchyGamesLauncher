@@ -1,0 +1,258 @@
+/* Spenden-Dialog (components/store/DonateModal.jsx) und die Preisanzeige der Produktseite.
+   Portiert aus der Web-App (components/games/donate-modal.css), damit beide Oberflächen gleich
+   aussehen — wer eine Schwelle oder Farbe ändert, muss BEIDE Dateien anfassen. */
+
+/* -------------------- Preisanzeige -------------------- */
+
+.price-tag {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 8px;
+	font-family: var(--font-display);
+	font-weight: 800;
+	letter-spacing: 0.3px;
+}
+
+.price-tag__value {
+	font-size: 18px;
+	color: var(--text-primary);
+}
+
+.price-tag--free {
+	font-size: 18px;
+	color: var(--text-primary);
+}
+
+.price-tag__base {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-muted, var(--text-secondary));
+	text-decoration: line-through;
+}
+
+.price-tag__discount {
+	padding: 2px 7px;
+	font-size: 12px;
+	font-weight: 800;
+	color: #04120a;
+	background: var(--accent-success, #3ddc84);
+	border-radius: 6px;
+}
+
+/* Der dezente Hinweis neben dem Preis — nicht laut, aber sichtbar. */
+.donate-hint {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0;
+	margin: 0;
+	font: inherit;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-secondary, var(--text-muted));
+	background: none;
+	border: 0;
+	border-bottom: 1px dotted currentColor;
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.donate-hint:hover {
+	color: var(--text-primary);
+}
+
+/* -------------------- Dialog -------------------- */
+
+.donate-modal__backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	background: rgb(0 0 0 / 60%);
+	backdrop-filter: blur(3px);
+	animation: donate-fade 0.15s ease;
+}
+
+@keyframes donate-fade {
+	from {
+		opacity: 0;
+	}
+}
+
+.donate-modal {
+	position: relative;
+	width: min(440px, 100%);
+	max-height: calc(100vh - 40px);
+	overflow-y: auto;
+	padding: 26px 26px 20px;
+	background: var(--surface-raised, var(--surface));
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+}
+
+.donate-modal__close {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	color: var(--text-secondary);
+	background: none;
+	border: 0;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+.donate-modal__close:hover {
+	color: var(--text-primary);
+	background: var(--surface);
+}
+
+.donate-modal__title {
+	margin: 0 0 8px;
+	padding-right: 32px;
+	font-family: var(--font-display);
+	font-size: 19px;
+	font-weight: 800;
+	color: var(--text-primary);
+}
+
+.donate-modal__lead {
+	margin: 0 0 18px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--text-secondary);
+}
+
+.donate-modal__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.donate-modal__chip {
+	padding: 8px 15px;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--text-secondary);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.donate-modal__chip:hover {
+	color: var(--text-primary);
+	border-color: var(--accent);
+}
+
+.donate-modal__chip--active {
+	color: var(--text-primary);
+	border-color: var(--accent);
+	box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.donate-modal__field {
+	display: block;
+	margin-bottom: 8px;
+}
+
+.donate-modal__label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	color: var(--text-secondary);
+}
+
+.donate-modal__input-wrap {
+	position: relative;
+	display: block;
+}
+
+.donate-modal__input {
+	width: 100%;
+	padding: 12px 38px 12px 14px;
+	font: inherit;
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--text-primary);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+}
+
+.donate-modal__input:focus {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px rgb(from var(--accent) r g b / 22%);
+}
+
+.donate-modal__currency {
+	position: absolute;
+	top: 50%;
+	right: 14px;
+	transform: translateY(-50%);
+	font-size: 15px;
+	font-weight: 700;
+	color: var(--text-secondary);
+	pointer-events: none;
+}
+
+.donate-modal__hint {
+	margin: 0 0 14px;
+	font-size: 12px;
+	color: var(--text-muted, var(--text-secondary));
+}
+
+.donate-modal__error {
+	margin: 0 0 14px;
+	padding: 9px 12px;
+	font-size: 13px;
+	color: var(--accent-danger, #ff6b8a);
+	background: rgb(255 107 138 / 10%);
+	border: 1px solid rgb(255 107 138 / 30%);
+	border-radius: 8px;
+}
+
+.donate-modal__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.donate-modal__pay,
+.donate-modal__skip {
+	flex: 1 1 auto;
+	justify-content: center;
+}
+
+.donate-modal__note {
+	margin: 16px 0 0;
+	font-size: 11px;
+	line-height: 1.5;
+	color: var(--text-muted, var(--text-secondary));
+}
+
+@media (max-width: 480px) {
+	.donate-modal {
+		padding: 22px 18px 18px;
+	}
+
+	.donate-modal__actions {
+		flex-direction: column;
+	}
+}

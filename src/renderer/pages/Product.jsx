@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom"
-import { get, send } from "../lib/api.js"
+import { get, send, openExternal } from "../lib/api.js"
 import { useStore } from "../lib/store.jsx"
 import { useNotify } from "../lib/notifications.jsx"
 import { useGameActions } from "../lib/gameActions.jsx"
 import GameGallery from "../components/store/GameGallery.jsx"
 import GameReviews from "../components/store/GameReviews.jsx"
 import ReviewForm from "../components/store/ReviewForm.jsx"
+import DonateModal from "../components/store/DonateModal.jsx"
 import GameRow from "../components/store/GameRow.jsx"
 import WishlistButton from "../components/store/WishlistButton.jsx"
 import CoverImage from "../components/CoverImage.jsx"
@@ -78,6 +79,11 @@ export default function Product() {
 	const [product, setProduct] = useState(state?.product || null)
 	const [missing, setMissing] = useState(false)
 	const [busy, setBusy] = useState(false)
+	// Bezahlwege: was die API freigeschaltet hat und ob DIESES Spiel Spenden annimmt. Beides wird
+	// gefragt, nicht geraten — ein Knopf, den der Server mit 403 ablehnt, wäre schlimmer als keiner.
+	const [donation, setDonation] = useState(null)
+	const [donateOpen, setDonateOpen] = useState(false)
+	const [checkoutBusy, setCheckoutBusy] = useState(false)
 	const [overview, setOverview] = useState(undefined) // { mine, total, positive, negative, sample } | undefined = lädt
 	const [overviewError, setOverviewError] = useState(null)
 	const [playtimeSec, setPlaytimeSec] = useState(0)   // lokale Spielzeit (15-Min-Gate)
@@ -140,6 +146,22 @@ export default function Product() {
 		return () => { alive = false }
 	}, [param, installed])
 
+	// Nimmt dieses Spiel freiwillige Zahlungen an? Erst die globalen Schalter (/api/meta), dann die
+	// Einstellung des Entwicklers am Spiel. Beide Fragen beantwortet die API — ist eine davon nein,
+	// wird nichts gerendert (kein verstecktes Element, es entsteht gar nicht erst).
+	useEffect(() => {
+		let alive = true
+		setDonation(null)
+		get("/api/meta")
+			.then(meta => {
+				if (!alive || !meta?.features?.donations) return null
+				return get(`/api/store/${encodeURIComponent(param)}/donation`)
+			})
+			.then(info => { if (alive && info?.enabled) setDonation(info) })
+			.catch(() => { /* Kein Spenden-Hinweis ist besser als ein kaputter. */ })
+		return () => { alive = false }
+	}, [param])
+
 	/**
 	 * Holen/Herunterladen. `allowUpdate` unterscheidet die beiden Wege über denselben Endpunkt:
 	 * ohne das Flag lädt ein bereits installiertes Spiel NICHT erneut (der Server antwortet
@@ -147,6 +169,25 @@ export default function Product() {
 	 * send() ist bewusst „weich" und wirft nicht bei status:0 — deshalb der rohe Envelope (true)
 	 * und die eigene Statusprüfung, sonst meldet auch eine Ablehnung „Download gestartet".
 	 */
+	/**
+	 * Kostenpflichtiges Spiel: ab zur Kasse. Der Preis kommt von dort, nicht von hier — der
+	 * Launcher schickt bewusst keinen Betrag mit.
+	 */
+	async function buy() {
+		if (checkoutBusy) return
+		setCheckoutBusy(true)
+		try {
+			const res = await send(`/api/checkout/game/${encodeURIComponent(product.id)}`, {}, true)
+			if (!res || res.status !== 1 || !res.data?.url) throw new Error(typeof res?.data === "string" ? res.data : "Der Kauf konnte nicht gestartet werden.")
+			await openExternal(res.data.url)
+			notify("Bezahlseite geöffnet", "Nach dem Kauf erscheint das Spiel in deiner Bibliothek.", "info")
+		} catch (err) {
+			notify("Fehler", String(err?.message || err), "error")
+		} finally {
+			setCheckoutBusy(false)
+		}
+	}
+
 	async function download(allowUpdate = false) {
 		setBusy(true)
 		try {
@@ -260,9 +301,16 @@ export default function Product() {
 				</button>
 			)}
 		</>
+	) : price > 0 && !game.owned ? (
+		// Kostenpflichtig und noch nicht gekauft: erst die Kasse. Das Herunterladen ist nach dem
+		// Kauf ohnehin gesperrt (die Download-URL verlangt eine Lizenz) — ein Knopf, der es
+		// trotzdem anbietet, führt nur in ein 403.
+		<button type="button" className="cta cta-primary game-detail__cta" onClick={buy} disabled={checkoutBusy}>
+			<span className="bi bi-bag" aria-hidden="true" /> {checkoutBusy ? "Öffnet…" : "Kaufen"}
+		</button>
 	) : game.hasBuild ? (
-		<button type="button" className="cta cta-primary game-detail__cta" onClick={() => download(false)} disabled={busy}>
-			<span className="bi bi-download" aria-hidden="true" /> {busy ? "Startet…" : game.owned ? "Herunterladen" : price > 0 ? "Kaufen & laden" : "Kostenlos laden"}
+		<button type="button" className="cta cta-primary game-detail__cta" onClick={() => (donation ? setDonateOpen(true) : download(false))} disabled={busy}>
+			<span className="bi bi-download" aria-hidden="true" /> {busy ? "Startet…" : game.owned ? "Herunterladen" : "Kostenlos laden"}
 		</button>
 	) : (
 		<button type="button" className="cta cta-secondary game-detail__cta" disabled>
@@ -294,11 +342,26 @@ export default function Product() {
 					</p>
 				</div>
 				<div className="game-detail__bar-buy">
-					<span className="game-detail__price">{price > 0 ? formatPrice(price) : "Kostenlos"}</span>
+					<span className="game-detail__price">
+						<span className="price-tag">
+							{price > 0 && game.currentDiscount ? <span className="price-tag__discount">−{game.currentDiscount}%</span> : null}
+							{price > 0 && game.currentDiscount && game.basePrice > price ? <s className="price-tag__base">{formatPrice(game.basePrice)}</s> : null}
+							<span className="price-tag__value">{price > 0 ? formatPrice(price) : "Kostenlos"}</span>
+						</span>
+						{/* Der Hinweis steht NEBEN der Preisanzeige — dort schaut hin, wer wissen will,
+						    was das Spiel kostet. Er erscheint nur, wenn wirklich gespendet werden kann. */}
+						{donation && (
+							<button type="button" className="donate-hint" onClick={() => setDonateOpen(true)}>
+								<span className="bi bi-heart" aria-hidden="true" /> Du kannst freiwillig zahlen
+							</button>
+						)}
+					</span>
 					<WishlistButton gameId={game.id} variant="pill" />
 					{cta}
 				</div>
 			</header>
+
+			{donateOpen && donation && <DonateModal gameId={game.id} gameTitle={game.title} info={donation} onClose={() => setDonateOpen(false)} onSkip={() => { setDonateOpen(false); download(false) }} skipLabel="Ohne Betrag laden" />}
 
 			<section className="game-detail__overview">
 				{lead && <p className="game-detail__lead">{lead}</p>}

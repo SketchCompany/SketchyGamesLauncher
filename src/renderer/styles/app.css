@@ -16,6 +16,7 @@
 @import "./web/suche-page.css";
 @import "./web/studio.css";
 @import "./web/settings.css";
+@import "./web/donate-modal.css";
 
 :root {
 	color-scheme: dark;
