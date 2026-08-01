@@ -137,6 +137,14 @@ export default function Product() {
 		return () => { alive = false }
 	}, [param])
 
+	// Aufruf der Produktseite als Interessensignal für die Vorschläge (P7). Einmal je Spiel-Id.
+	// Ob überhaupt gesendet wird, entscheidet der lokale Server (kein Token, Feature aus oder
+	// Widerspruch ⇒ nichts), und die API speichert höchstens einen Satz pro Tag. Ein misslungener
+	// Aufruf wird bewusst nicht wiederholt — er kostet nichts.
+	useEffect(() => {
+		send("/api/events", { events: [{ gameId: param, kind: "view" }] }, true).catch(() => {})
+	}, [param])
+
 	// Lokale Spielzeit fürs 15-Min-Gate (neu laden, wenn sich der Install-Status ändert).
 	useEffect(() => {
 		let alive = true

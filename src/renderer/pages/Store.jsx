@@ -1,5 +1,6 @@
 import { motion } from "framer-motion"
 import { useStore } from "../lib/store.jsx"
+import { useRecommendations } from "../lib/recommendations.jsx"
 import { fadeUp } from "../lib/motion.js"
 import { GameGridSkeleton } from "../components/Skeletons.jsx"
 import ErrorState from "../components/ErrorState.jsx"
@@ -21,6 +22,10 @@ const byDateAsc = (a, b) => (a.releaseDate ?? "").localeCompare(b.releaseDate ??
 export default function Store() {
 	// Gemeinsamer Store-Cache (einmal geladen, von allen Seiten geteilt) + Refresh/Rate-Limit.
 	const { data: store, error, loading, refresh } = useStore()
+	// Personalisierte Reihen — eigener Weg, weil sie am Konto hängen (siehe recommendations.jsx).
+	// Liefert nichts, wenn abgemeldet, Feature aus oder widersprochen; dann bleibt es bei den
+	// generischen Kategorien unten. Hooks müssen VOR jedem frühen return stehen.
+	const reco = useRecommendations("row", 12)
 
 	// Kopfzeile: Suchleiste (enthält den Refresh-Knopf ganz rechts) — in jedem Zustand sichtbar.
 	const topBar = <StoreSearchBar />
@@ -93,7 +98,13 @@ export default function Store() {
 
 			<PromoBanner games={promo} />
 
-			<GameRow title="Empfohlen für dich" icon="bi-stars" games={empfohlen} />
+			{/* Personalisiert, wenn die API etwas liefert — sonst die generische Kategorie. Beides
+			    unter derselben Überschrift und in derselben Komponente, damit kein Layoutsprung
+			    entsteht, wenn die Vorschläge kurz nach dem Katalog eintreffen. */}
+			<GameRow title={reco.main?.title ?? "Empfohlen für dich"} icon="bi-stars" games={reco.main?.games ?? empfohlen} reason={reco.main?.reason} />
+			{reco.rows.map(row => (
+				<GameRow key={row.key} title={row.title} icon={row.key === "undiscovered" ? "bi-compass" : "bi-collection"} games={row.games} reason={row.reason} />
+			))}
 			<GameRow title="Neu im Store" icon="bi-asterisk" games={neu} />
 			<GameRow title="Beliebt diese Woche" icon="bi-fire" games={bestofweek} />
 

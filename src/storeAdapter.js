@@ -23,6 +23,15 @@ const STORE_QUERY = `query LauncherStore {
 	}
 }`
 
+// Personalisierte Reihen (P7). Eigene Query, weil sie am Nutzer hängt und deshalb NICHT wie der
+// Katalog gecacht werden darf. Die Antwort trägt `personalized` mit: ist es false, hat der Server
+// die generische Kategorie geliefert (kein Nutzer, Feature aus oder Widerspruch) — die Oberfläche
+// darf die Reihe dann nicht „Für dich" nennen.
+const RECO_QUERY = `query LauncherReco($surface: String, $limit: Int) {
+	recommendations(surface: $surface, limit: $limit) { key title reason personalized items { ${ITEM_FIELDS} } }
+	personalizedCategories(limit: $limit) { key title reason personalized items { ${ITEM_FIELDS} } }
+}`
+
 /**
  * Holt die Build-Metadaten der API (nur veröffentlichte Spiele MIT aktuellem Build).
  * Rückgabe: Map id → { hasBuild, version, sha256, sizeBytes }. Bei Fehler leere Map
@@ -101,4 +110,39 @@ async function getStore(token, opts = {}) {
 	return result
 }
 
-module.exports = { getStore, fetchBuilds, STORE_QUERY, absolutizeMedia }
+// Eigener Cache für die Vorschläge, ebenfalls 60 s. Die API cached zusätzlich pro Nutzer
+// (10 Min) — hier geht es nur darum, dass ein Seitenwechsel im Launcher nicht jedes Mal eine
+// Anfrage auslöst.
+let recoCache = null // { data, token, at }
+
+/**
+ * Personalisierte Reihen für den Store. Wirft NICHT: kann die API nichts liefern, kommt eine
+ * leere Antwort zurück und die Oberfläche bleibt bei ihren generischen Kategorien. Ein Vorschlag
+ * ist ein Zusatz, kein Bestandteil des Stores.
+ * @param {string} token
+ * @param {{ surface?: "hero"|"row", limit?: number, force?: boolean }} [opts]
+ * @returns {Promise<{ main: object|null, rows: object[] }>}
+ */
+async function getRecommendations(token, opts = {}) {
+	const surface = opts.surface === "hero" ? "hero" : "row"
+	const limit = Math.min(24, Math.max(1, Math.round(opts.limit) || 12))
+	const key = surface + ":" + limit
+	if (!opts.force && recoCache && recoCache.token === token && recoCache.key === key && Date.now() - recoCache.at < STORE_CACHE_TTL_MS) {
+		return recoCache.data
+	}
+	try {
+		const [data, builds] = await Promise.all([func.graphql(RECO_QUERY, { surface, limit }, { token }), fetchBuilds(token)])
+		const toRow = (row) => ({ key: row.key, title: row.title, reason: row.reason || null, personalized: !!row.personalized, games: (row.items || []).map((g) => enrich(g, builds)) })
+		const result = {
+			main: data && data.recommendations ? toRow(data.recommendations) : null,
+			rows: data && Array.isArray(data.personalizedCategories) ? data.personalizedCategories.map(toRow) : [],
+		}
+		recoCache = { data: result, token, key, at: Date.now() }
+		return result
+	} catch (err) {
+		console.error("storeAdapter: Vorschläge nicht verfügbar:", err && err.message ? err.message : err)
+		return { main: null, rows: [] }
+	}
+}
+
+module.exports = { getStore, getRecommendations, fetchBuilds, STORE_QUERY, RECO_QUERY, absolutizeMedia }

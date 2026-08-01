@@ -2,8 +2,13 @@ import { useRef } from "react"
 import { Link } from "react-router-dom"
 import StoreCard from "./StoreCard.jsx"
 
-/** Horizontale Spiele-Reihe mit Scroll-Pfeilen (Port aus der Web-App). */
-export default function GameRow({ title, games, icon, moreTo }) {
+/**
+ * Horizontale Spiele-Reihe mit Scroll-Pfeilen (Port aus der Web-App).
+ *
+ * `reason` ist die Begründung einer personalisierten Reihe („Ähnlich zu X"). Eine Empfehlung ohne
+ * nachvollziehbaren Grund kann der Nutzer weder einordnen noch korrigieren.
+ */
+export default function GameRow({ title, games, icon, moreTo, reason }) {
 	const trackRef = useRef(null)
 
 	if (!games || games.length === 0) return null
@@ -17,9 +22,12 @@ export default function GameRow({ title, games, icon, moreTo }) {
 	return (
 		<section className="game-row">
 			<div className="game-row__head">
-				<h2 className="section-title">
-					{icon && <span className={`bi ${icon}`} aria-hidden="true" />} {title}
-				</h2>
+				<div className="game-row__heading">
+					<h2 className="section-title">
+						{icon && <span className={`bi ${icon}`} aria-hidden="true" />} {title}
+					</h2>
+					{reason && <p className="game-row__reason">{reason}</p>}
+				</div>
 				{moreTo && (
 					<Link to={moreTo} className="game-row__more">
 						Weitere anzeigen <span className="bi bi-chevron-right" aria-hidden="true" />

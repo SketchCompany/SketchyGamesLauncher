@@ -100,6 +100,50 @@ router.get("/store", async (req, res) => {
         res.json({ status: 0, data: err.toString() })
     }
 })
+// Personalisierte Vorschläge (P7). Getrennt vom Store, weil sie am Nutzer hängen und nicht in den
+// geteilten Katalog-Cache dürfen. Ohne Anmeldung KEIN Fehler: der Store zeigt dann einfach seine
+// generischen Kategorien weiter — ein fehlender Vorschlag ist kein Ausfall.
+router.get("/recommendations", async (req, res) => {
+    try{
+        const token = session.getToken()
+        if(!token) return res.json({ status: 1, data: { main: null, rows: [] } })
+        const surface = req.query.surface === "hero" ? "hero" : "row"
+        const limit = parseInt(req.query.limit, 10) || 12
+        const data = await storeAdapter.getRecommendations(token, { surface, limit, force: !!req.query.force })
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen." }) }
+        console.error(req.path, err)
+        res.json({ status: 1, data: { main: null, rows: [] } })
+    }
+})
+
+/**
+ * Nutzungsereignisse an die API. Gebündelt, und bewusst OHNE Wiederholung bei Fehlern: die API
+ * speichert höchstens einen Satz je Spiel, Art und Tag — ein verlorenes Ereignis kostet nichts,
+ * eine Wiederholungsschleife dagegen Bandbreite und Aufmerksamkeit im Log.
+ *
+ * Feature aus (403), Widerspruch des Nutzers (accepted: 0) und fehlendes Netz sehen hier
+ * absichtlich gleich aus: keiner der drei Fälle ist ein Problem des Launchers.
+ */
+async function sendEvents(events){
+    try{
+        const token = session.getToken()
+        if(!token || !Array.isArray(events) || events.length === 0) return 0
+        const data = await func.send("/v1/events", { events: events.slice(0, 50) }, { token })
+        return (data && data.accepted) || 0
+    }
+    catch(err){
+        console.warn("events: nicht übermittelt:", err && err.message ? err.message : err)
+        return 0
+    }
+}
+router.post("/events", async (req, res) => {
+    const accepted = await sendEvents(req.body && req.body.events)
+    res.json({ status: 1, data: { accepted } })
+})
+
 // --- Wunschliste (server-seitig, geteilte Tabelle mit der Web-App) ---
 router.get("/wishlist", async (req, res) => {
     try{
@@ -194,9 +238,10 @@ router.get("/meta", async (req, res) => {
         res.json({ status: 1, data })
     }
     catch(err){
-        // Kein Netz ⇒ keine Bezahl-Oberfläche. Die sichere Richtung.
+        // Kein Netz ⇒ keine Bezahl-Oberfläche und keine Erfassung. Die sichere Richtung, und für
+        // die Vorschläge auch die richtige: ohne Antwort bleibt es bei den generischen Kategorien.
         console.error(req.path, err)
-        res.json({ status: 1, data: { features: { payments: false, donations: false, subscriptions: false, playerSubscriptions: false } } })
+        res.json({ status: 1, data: { features: { payments: false, donations: false, subscriptions: false, playerSubscriptions: false, recommendations: false, eventTracking: false } } })
     }
 })
 // Nimmt DIESES Spiel freiwillige Zahlungen an, und in welchen Grenzen? (Fehler = nicht vorgesehen.)
@@ -649,6 +694,36 @@ router.post("/account/update", async (req, res) => {
         if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen. Bitte melde dich neu an." }) }
         console.error(req.path, err)
         res.json({ status: 0, data: err.toString() })
+    }
+})
+// Widerspruch gegen die personalisierten Vorschläge (P7). Der Wert liegt SERVERSEITIG am Konto,
+// nicht in den lokalen Einstellungen: er gilt für Web-App und Launcher gleichermaßen, und eine
+// Datei pro Rechner wäre für eine Datenschutz-Entscheidung die falsche Ablage.
+router.get("/account/privacy", async (req, res) => {
+    try{
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Nicht angemeldet." })
+        const data = await func.get("/v1/account/privacy", { token })
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen." }) }
+        console.error(req.path, err)
+        res.json({ status: 0, data: "Einstellung nicht abrufbar." })
+    }
+})
+router.post("/account/privacy", async (req, res) => {
+    try{
+        const token = session.getToken()
+        if(!token) return res.json({ status: 0, data: "Nicht angemeldet." })
+        if(typeof req.body.personalization !== "boolean") return res.json({ status: 0, data: "Ungültiger Wert." })
+        const data = await func.send("/v1/account/privacy", { personalization: req.body.personalization }, { token, method: "patch" })
+        res.json({ status: 1, data })
+    }
+    catch(err){
+        if(err instanceof func.ApiError && err.status === 401){ session.clearSession(); return res.json({ status: 0, sessionExpired: true, data: "Sitzung abgelaufen." }) }
+        console.error(req.path, err)
+        res.json({ status: 0, data: "Einstellung konnte nicht gespeichert werden." })
     }
 })
 router.get("/account/logout", async (req, res) => {
@@ -1173,6 +1248,11 @@ router.post("/games/start", async (req, res) => {
             const program = func.launchProgram(filepath)
             program.on("spawn", async function(){
                 playSessions.set(product.name, Date.now()) // Startzeit für Playtime-Tracking
+                // Interessensignal für die Vorschläge (P7). HIER und nicht im Renderer: dieser
+                // Handler deckt alle Startknöpfe auf einmal ab (Home, Bibliothek, Produktseite,
+                // Kontextmenü), das Spiel ist bereits lizenzgeprüft, und `product.name` IST die
+                // Spiel-Id (ownership.owns/addPlaytime rechnen ebenfalls damit).
+                sendEvents([{ gameId: product.name, kind: "play", value: 0 }])
                 const installs = JSON.parse(await func.read(config.installsFile))
                 for (let i = 0; i < installs.games.length; i++) {
                     const element = installs.games[i];
@@ -1216,7 +1296,14 @@ router.post("/games/start", async (req, res) => {
                     playSessions.delete(product.name)
                     if(startedAt){
                         const elapsedSec = Math.min(Math.floor((Date.now() - startedAt) / 1000), 6 * 60 * 60) // Deckel: 6h/Sitzung
-                        if(elapsedSec > 0) await addPlaytime(product.name, elapsedSec)
+                        if(elapsedSec > 0){
+                            await addPlaytime(product.name, elapsedSec)
+                            // Dieselbe Dauer noch einmal an die API: dort summiert der Konflikt-Zweig
+                            // sie auf den Tageseintrag auf. Ohne das wüsste das Profil nur, DASS
+                            // gestartet wurde — und ein Fehlstart nach zehn Sekunden zählte so viel
+                            // wie ein Abend.
+                            sendEvents([{ gameId: product.name, kind: "play", value: elapsedSec }])
+                        }
                     }
                 }
                 catch(err){ console.error(req.path, "playtime accumulate failed:", err) }
