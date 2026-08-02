@@ -6,18 +6,19 @@ const fs = require("fs")
 const path = require("path")
 const crypto = require("crypto")
 
-// Schreibt den Launcher-Shared-Key (Bot-Check-Bypass) verschleiert in ein gebündeltes, aber
-// git-ignoriertes Modul. Der Key steht NICHT im Klartext in der Datei: pro Build zufälliges Salt,
-// XOR über die Bytes, zur Laufzeit reassembliert. Kein echter Schutz gegen Extraktion aus dem
-// ausgelieferten Client — nur eine Hürde (das ASAR ist zusätzlich integritätsgeprüft, s. Fuses).
-function writeLauncherKeyModule(){
-  const key = process.env.SKETCHY_LAUNCHER_KEY || ""
+// Schreibt einen geteilten Schlüssel (Launcher-Shared-Key, interner Client-Key, …) verschleiert in
+// ein gebündeltes, aber git-ignoriertes Modul. Der Key steht NICHT im Klartext in der Datei: pro
+// Build zufälliges Salt, XOR über die Bytes, zur Laufzeit reassembliert. Kein echter Schutz gegen
+// Extraktion aus dem ausgelieferten Client — nur eine Hürde (das ASAR ist zusätzlich
+// integritätsgeprüft, s. Fuses).
+function writeObfuscatedKeyModule(envVar, filename, label){
+  const key = process.env[envVar] || ""
   const dir = path.join(__dirname, "src", "config")
-  const file = path.join(dir, "launcherKey.js")
+  const file = path.join(dir, filename)
   if(!key){
     // Kein Key in der Build-Env → leeres Modul (Dev nutzt ohnehin die .env-Laufzeitvariable).
     fs.writeFileSync(file, "// AUTO-GENERATED at build time — do not edit, do not commit.\nmodule.exports = \"\"\n")
-    console.warn("forge: SKETCHY_LAUNCHER_KEY not set — bundling an EMPTY launcher key.")
+    console.warn(`forge: ${envVar} not set — bundling an EMPTY ${label}.`)
     return
   }
   const bytes = Buffer.from(key, "utf8")
@@ -25,12 +26,12 @@ function writeLauncherKeyModule(){
   const xored = Buffer.from(bytes.map((b, i) => b ^ salt[i]))
   const content =
     "// AUTO-GENERATED at build time by forge.config.js — do not edit, do not commit.\n" +
-    "// Verschleierter Launcher-Shared-Key (XOR mit Build-Salt). Kein echter Extraktionsschutz.\n" +
+    `// Verschleierter ${label} (XOR mit Build-Salt). Kein echter Extraktionsschutz.\n` +
     "const s = " + JSON.stringify([...salt]) + "\n" +
     "const d = " + JSON.stringify([...xored]) + "\n" +
     "module.exports = Buffer.from(d.map((b, i) => b ^ s[i])).toString(\"utf8\")\n"
   fs.writeFileSync(file, content)
-  console.log("forge: wrote obfuscated launcher key module (" + bytes.length + " bytes).")
+  console.log(`forge: wrote obfuscated ${label} module (` + bytes.length + " bytes).")
 }
 
 module.exports = {
@@ -41,7 +42,8 @@ module.exports = {
     generateAssets: async () => {
       console.log("forge: building renderer (vite build)…")
       execSync("npm run build:renderer", { stdio: "inherit" })
-      writeLauncherKeyModule()
+      writeObfuscatedKeyModule("SKETCHY_LAUNCHER_KEY", "launcherKey.js", "launcher key")
+      writeObfuscatedKeyModule("SKETCHY_CLIENT_KEY", "clientKey.js", "client key")
     },
   },
   packagerConfig: {

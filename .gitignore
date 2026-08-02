@@ -5,6 +5,7 @@ src/data/
 src/tokens.js
 # Zur Build-Zeit generiertes, verschleiertes Launcher-Key-Modul (nie committen, wird gebündelt).
 src/config/launcherKey.js
+src/config/clientKey.js
 
 # Logs
 logs

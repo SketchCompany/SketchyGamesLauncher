@@ -36,7 +36,19 @@ function ReviewCard({ r, onEdit }) {
 				{r.mine && <span className="review-card__own-badge">Deine Rezension</span>}
 				<span className="review-card__author">{r.author}</span>
 			</div>
-			<p className="review-card__text">{r.text}</p>
+			{/*
+			 * Übernommene Sternbewertungen (api/scripts/import-star-ratings.ts) tragen keinen selbst
+			 * geschriebenen Text, sondern einen Platzhalter. Sie zählen in der Statistik mit, werden hier
+			 * aber als Herkunftshinweis dargestellt — sonst stünde auf jeder dieser Karten derselbe Satz,
+			 * als hätte ihn jemand verfasst. Dieselbe Darstellung wie in der Web-App (game-reviews.tsx).
+			 */}
+			{r.imported ? (
+				<p className="review-card__text review-card__text--imported">
+					<span className="bi bi-clock-history" aria-hidden="true" /> Übernommen aus einer früheren Sternbewertung — ohne eigenen Text.
+				</p>
+			) : (
+				<p className="review-card__text">{r.text}</p>
+			)}
 			<div className="review-card__foot">
 				{typeof r.hoursPlayed === "number" && <span>{r.hoursPlayed} Std. gespielt</span>}
 				<span>{formatDate(r.date)}</span>

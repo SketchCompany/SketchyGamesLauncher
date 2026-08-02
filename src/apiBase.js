@@ -29,6 +29,18 @@ function loadEmbeddedLauncherKey(){
 }
 const LAUNCHER_KEY = process.env.SKETCHY_LAUNCHER_KEY || loadEmbeddedLauncherKey()
 
+// Interner Client-Key (Header X-Client-Key == env CLIENT_KEY_LAUNCHER der API). Unabhängig vom
+// LAUNCHER_KEY oben: der beweist nur, dass Turnstile übersprungen werden darf (nur auf den
+// ohnehin öffentlichen Auth-Routen), dieser Key beweist der API bei JEDER schon geschützten
+// Anfrage, dass sie vom echten Launcher kommt — zusätzlich zu Session/Scope. Gleiches
+// Verschleierungs-/Build-Muster wie LAUNCHER_KEY (siehe forge.config.js), gleicher Vorbehalt:
+// in einem verteilten Client extrahierbar, kein starkes Geheimnis.
+function loadEmbeddedClientKey(){
+	try { return require("./config/clientKey") || "" }
+	catch { return "" }
+}
+const CLIENT_KEY = process.env.SKETCHY_CLIENT_KEY || loadEmbeddedClientKey()
+
 /** Baut die vollständige URL für einen /v1-relativen (oder absoluten) Pfad. */
 function apiUrl(path) {
 	if (/^https?:\/\//i.test(path)) return path // bereits absolut (z.B. server-gelieferte Medien-URLs)
@@ -45,7 +57,8 @@ function apiHeaders(opts = {}) {
 	if (opts.json !== false) headers["Content-Type"] = "application/json"
 	if (opts.token) headers["Authorization"] = "Bearer " + opts.token
 	if (LAUNCHER_KEY) headers["X-Launcher-Key"] = LAUNCHER_KEY
+	if (CLIENT_KEY) headers["X-Client-Key"] = CLIENT_KEY
 	return headers
 }
 
-module.exports = { API_BASE, LAUNCHER_KEY, apiUrl, apiHeaders }
+module.exports = { API_BASE, LAUNCHER_KEY, CLIENT_KEY, apiUrl, apiHeaders }

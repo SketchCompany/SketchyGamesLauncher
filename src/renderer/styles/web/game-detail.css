@@ -690,6 +690,16 @@ a.game-detail__cat:hover {
 	line-height: 1.6;
 	color: var(--text-secondary);
 }
+/* Übernommene Sternbewertung: die Stimme zählt mit, der Text ist nur ein Herkunftshinweis —
+   deshalb zurückgenommen und kursiv, damit sie nicht wie eine geschriebene Rezension wirkt.
+   Gleiche Darstellung wie in der Web-App (app/games/[id]/page.css). */
+.review-card__text--imported {
+	font-style: italic;
+	opacity: 0.72;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
 .review-card__foot {
 	display: flex;
 	justify-content: space-between;
